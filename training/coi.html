@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Conflict of Interest &amp; Integrity Training</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -11,7 +11,7 @@
 </head>
 <body>
 
-<a href="/" class="back-link">← Modules</a>
+<a href="/training" class="back-link">← Training Modules</a>
 
 <!-- ══ SETUP SCREEN ══ -->
 <div id="setupScreen">
@@ -91,7 +91,7 @@
       <div class="agent-row">
         <div class="agent-row-header">
           <span class="agent-scenario-badge">SCENARIO 1</span>
-          <span class="agent-scenario-title">Mehmet — The Cash Client</span>
+          <span class="agent-scenario-title">Personal Account Dealing — Mark</span>
         </div>
         <div class="field">
           <label>AI Coach Configuration</label>
@@ -101,11 +101,51 @@
       <div class="agent-row">
         <div class="agent-row-header">
           <span class="agent-scenario-badge">SCENARIO 2</span>
-          <span class="agent-scenario-title">De Vries Holding — Suspicious Transfer</span>
+          <span class="agent-scenario-title">Gifts & Entertainment — Sophie</span>
         </div>
         <div class="field">
           <label>AI Coach Configuration</label>
           <input type="text" id="agent2Id" placeholder="Optional override — leave blank to use the default coach" autocorrect="off" autocapitalize="none"/>
+        </div>
+      </div>
+      <div class="agent-row">
+        <div class="agent-row-header">
+          <span class="agent-scenario-badge">SCENARIO 3</span>
+          <span class="agent-scenario-title">Outside Business Activities — Robert</span>
+        </div>
+        <div class="field">
+          <label>AI Coach Configuration</label>
+          <input type="text" id="agent3Id" placeholder="Optional override — leave blank to use the default coach" autocorrect="off" autocapitalize="none"/>
+        </div>
+      </div>
+      <div class="agent-row">
+        <div class="agent-row-header">
+          <span class="agent-scenario-badge">SCENARIO 4</span>
+          <span class="agent-scenario-title">Relationship Conflicts — Lisa</span>
+        </div>
+        <div class="field">
+          <label>AI Coach Configuration</label>
+          <input type="text" id="agent4Id" placeholder="Optional override — leave blank to use the default coach" autocorrect="off" autocapitalize="none"/>
+        </div>
+      </div>
+      <div class="agent-row">
+        <div class="agent-row-header">
+          <span class="agent-scenario-badge">SCENARIO 5</span>
+          <span class="agent-scenario-title">Information Barriers — Thomas</span>
+        </div>
+        <div class="field">
+          <label>AI Coach Configuration</label>
+          <input type="text" id="agent5Id" placeholder="Optional override — leave blank to use the default coach" autocorrect="off" autocapitalize="none"/>
+        </div>
+      </div>
+      <div class="agent-row">
+        <div class="agent-row-header">
+          <span class="agent-scenario-badge">SCENARIO 6</span>
+          <span class="agent-scenario-title">Whistleblowing Dilemma — Emma</span>
+        </div>
+        <div class="field">
+          <label>AI Coach Configuration</label>
+          <input type="text" id="agent6Id" placeholder="Optional override — leave blank to use the default coach" autocorrect="off" autocapitalize="none"/>
         </div>
       </div>
       <p class="hint">▸ If left empty, the system will use the default AI coach configuration.</p>
@@ -119,7 +159,7 @@
 <!-- ══ TRAINING SCREEN ══ -->
 <div id="trainingScreen">
   <div class="topbar">
-    <div class="topbar-brand">AML Training</div>
+    <div class="topbar-brand">COI & Integrity Training</div>
     <div class="topbar-level" id="topLevel">—</div>
     <button class="btn-reset" onclick="resetTraining()">↩ Restart</button>
   </div>
@@ -366,18 +406,50 @@
       <div class="card-title">01 · Choose a Scenario</div>
       <div class="level-grid">
         <button class="level-btn" onclick="selectScenario(1)" id="scenarioBtn1">
-          <div class="level-icon">💵</div>
+          <div class="level-icon">📈</div>
           <div class="level-info">
-            <div class="level-name">Mehmet — The Cash Client</div>
-            <div class="level-desc">Recognising structuring and unusual cash patterns</div>
+            <div class="level-name">Personal Account Dealing</div>
+            <div class="level-desc">Pre-clearance, restricted lists and escalation</div>
           </div>
           <div class="level-check">✓</div>
         </button>
         <button class="level-btn" onclick="selectScenario(2)" id="scenarioBtn2">
+          <div class="level-icon">🎟️</div>
+          <div class="level-info">
+            <div class="level-name">Gifts & Entertainment</div>
+            <div class="level-desc">Gift thresholds, procurement blackout and refusal skills</div>
+          </div>
+          <div class="level-check">✓</div>
+        </button>
+        <button class="level-btn" onclick="selectScenario(3)" id="scenarioBtn3">
           <div class="level-icon">🏢</div>
           <div class="level-info">
-            <div class="level-name">De Vries Holding — Suspicious Transfer</div>
-            <div class="level-desc">UBO red flags and UTR decision</div>
+            <div class="level-name">Outside Business Activities</div>
+            <div class="level-desc">Approval, disclosure and dual-role conflicts</div>
+          </div>
+          <div class="level-check">✓</div>
+        </button>
+        <button class="level-btn" onclick="selectScenario(4)" id="scenarioBtn4">
+          <div class="level-icon">👪</div>
+          <div class="level-info">
+            <div class="level-name">Relationship Conflicts</div>
+            <div class="level-desc">Recusal, independent handling and documentation</div>
+          </div>
+          <div class="level-check">✓</div>
+        </button>
+        <button class="level-btn" onclick="selectScenario(5)" id="scenarioBtn5">
+          <div class="level-icon">🚧</div>
+          <div class="level-info">
+            <div class="level-name">Information Barriers</div>
+            <div class="level-desc">Chinese walls, MNPI containment and reporting</div>
+          </div>
+          <div class="level-check">✓</div>
+        </button>
+        <button class="level-btn" onclick="selectScenario(6)" id="scenarioBtn6">
+          <div class="level-icon">🛡️</div>
+          <div class="level-info">
+            <div class="level-name">Whistleblowing Dilemma</div>
+            <div class="level-desc">Reporting channels, retaliation protection and duty to act</div>
           </div>
           <div class="level-check">✓</div>
         </button>
@@ -390,19 +462,19 @@
       <div class="scenario-header">
         <div class="scenario-num">1</div>
         <div class="scenario-meta">
-          <h3>The Cash Client — Mehmet calls</h3>
-          <p>Recognising structuring and refusing to proceed without CDD</p>
+          <h3>Mark — Personal Account Dealing</h3>
+          <p>Recognising a PAD breach and escalating correctly</p>
         </div>
       </div>
       <div class="scenario-body">
         <div class="scenario-briefing">
           <div class="brief-label">Your Briefing</div>
-          <p>You are a <strong>relationship manager at a Dutch bank</strong>. Your client Mehmet Yilmaz calls. He wants to deposit a large amount of cash in multiple instalments. He is friendly and acts as if this is perfectly normal. Listen carefully and respond as you would in practice.</p>
+          <p>You are speaking with <strong>Mark, a colleague from the investment advisory team</strong>. He casually reveals that he bought shares in TechCorp NV, a company that appears in several client portfolios managed by your team, without seeking pre-clearance. He thinks it is no big deal and hopes to keep it informal.</p>
         </div>
         <div class="learning-goals">
-          <div class="goal">Recognising structuring (smurfing) in a client conversation</div>
-          <div class="goal">Applying the Wwft CDD obligation without alarming the client</div>
-          <div class="goal">Knowing when and how to escalate to compliance</div>
+          <div class="goal">Identify the personal account dealing violation and restricted-list risk</div>
+          <div class="goal">Explain why quietly selling the shares does not resolve the breach</div>
+          <div class="goal">Escalate to compliance despite friendly pushback</div>
         </div>
         <div class="scenario-widget" id="widget1Container">
           <div class="no-agent-notice" id="noAgent1">📞 No Agent ID configured for this scenario.</div>
@@ -414,22 +486,118 @@
       <div class="scenario-header">
         <div class="scenario-num">2</div>
         <div class="scenario-meta">
-          <h3>De Vries Holding — Suspicious Transfer</h3>
-          <p>UBO red flags and UTR decision</p>
+          <h3>Sophie — Gifts & Entertainment</h3>
+          <p>Applying policy thresholds during an active procurement process</p>
         </div>
       </div>
       <div class="scenario-body">
         <div class="scenario-briefing">
           <div class="brief-label">Your Briefing</div>
-          <p>You are a <strong>compliance officer</strong> reviewing an unusual transaction alert. De Vries Holding B.V. has requested a large international transfer. The UBO is difficult to establish. The caller wants approval before end of day.</p>
+          <p>You are speaking with <strong>Sophie, a relationship manager at CloudSecure BV</strong>. Her company is in an active tender with your bank. She invites you to an exclusive Champions League hospitality package worth approximately €800 and tries to frame it as harmless relationship building.</p>
         </div>
         <div class="learning-goals">
-          <div class="goal">Identifying UBO red flags in a complex structure</div>
-          <div class="goal">Applying enhanced CDD and deciding on a UTR</div>
-          <div class="goal">Handling pressure to approve without sufficient documentation</div>
+          <div class="goal">Recognise gift and entertainment risks above policy thresholds</div>
+          <div class="goal">Explain the heightened conflict risk during procurement/tender stages</div>
+          <div class="goal">Decline firmly and refuse suggested workarounds</div>
         </div>
         <div class="scenario-widget" id="widget2Container">
           <div class="no-agent-notice" id="noAgent2">📞 No Agent ID configured for this scenario.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="scenario-card">
+      <div class="scenario-header">
+        <div class="scenario-num">3</div>
+        <div class="scenario-meta">
+          <h3>Robert — Outside Business Activities</h3>
+          <p>Managing dual-role conflicts before accepting an external position</p>
+        </div>
+      </div>
+      <div class="scenario-body">
+        <div class="scenario-briefing">
+          <div class="brief-label">Your Briefing</div>
+          <p>You are speaking with <strong>Robert, a senior relationship manager</strong>. He has been offered a paid advisory board seat at FinFlow BV, a fintech that is also a prospective client on his team’s pipeline. He sees the overlap as an advantage rather than a risk.</p>
+        </div>
+        <div class="learning-goals">
+          <div class="goal">Identify the dual conflict: outside business activity plus client relationship</div>
+          <div class="goal">Explain the mandatory approval and disclosure process</div>
+          <div class="goal">Push back on the idea that experience alone is an adequate control</div>
+        </div>
+        <div class="scenario-widget" id="widget3Container">
+          <div class="no-agent-notice" id="noAgent3">📞 No Agent ID configured for this scenario.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="scenario-card">
+      <div class="scenario-header">
+        <div class="scenario-num">4</div>
+        <div class="scenario-meta">
+          <h3>Lisa — Relationship Conflicts</h3>
+          <p>Recusing yourself when family wants preferential treatment</p>
+        </div>
+      </div>
+      <div class="scenario-body">
+        <div class="scenario-briefing">
+          <div class="brief-label">Your Briefing</div>
+          <p>You are speaking with <strong>Lisa, your sister</strong>. She wants you to personally handle her mortgage application because she trusts you more than a stranger and hopes you can make sure she gets the best rate.</p>
+        </div>
+        <div class="learning-goals">
+          <div class="goal">Recognise the relationship conflict immediately</div>
+          <div class="goal">Explain why you must fully recuse yourself from the application</div>
+          <div class="goal">Redirect her to an independent colleague without informal involvement</div>
+        </div>
+        <div class="scenario-widget" id="widget4Container">
+          <div class="no-agent-notice" id="noAgent4">📞 No Agent ID configured for this scenario.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="scenario-card">
+      <div class="scenario-header">
+        <div class="scenario-num">5</div>
+        <div class="scenario-meta">
+          <h3>Thomas — Information Barriers</h3>
+          <p>Containing MNPI and escalating a Chinese wall breach</p>
+        </div>
+      </div>
+      <div class="scenario-body">
+        <div class="scenario-briefing">
+          <div class="brief-label">Your Briefing</div>
+          <p>You are speaking with <strong>Thomas from corporate finance</strong>, who casually shares confidential deal information about a major acquisition during lunch. You work in a function separated from his team by information barriers.</p>
+        </div>
+        <div class="learning-goals">
+          <div class="goal">Recognise a wall-crossing / information barrier breach</div>
+          <div class="goal">Identify the information as MNPI and stop further disclosure</div>
+          <div class="goal">State the immediate escalation and no-trading obligations</div>
+        </div>
+        <div class="scenario-widget" id="widget5Container">
+          <div class="no-agent-notice" id="noAgent5">📞 No Agent ID configured for this scenario.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="scenario-card">
+      <div class="scenario-header">
+        <div class="scenario-num">6</div>
+        <div class="scenario-meta">
+          <h3>Emma — Whistleblowing Dilemma</h3>
+          <p>Responding to misconduct concerns and fear of retaliation</p>
+        </div>
+      </div>
+      <div class="scenario-body">
+        <div class="scenario-briefing">
+          <div class="brief-label">Your Briefing</div>
+          <p>You are speaking with <strong>Emma, a junior analyst</strong>, who is frightened after observing that her manager may be suppressing a COI disclosure to protect a lucrative client relationship. She is worried that reporting could damage her career.</p>
+        </div>
+        <div class="learning-goals">
+          <div class="goal">Take the concern seriously and avoid minimising the report</div>
+          <div class="goal">Explain reporting channels and anti-retaliation protections</div>
+          <div class="goal">Recognise your own duty to act after receiving the information</div>
+        </div>
+        <div class="scenario-widget" id="widget6Container">
+          <div class="no-agent-notice" id="noAgent6">📞 No Agent ID configured for this scenario.</div>
         </div>
       </div>
     </div>
@@ -441,7 +609,7 @@
   <div class="tab-content" id="tab-chat">
     <div class="chat-wrap">
       <div class="chat-context" id="chatContext">
-        <strong>AML AI Coach</strong> — Ask anything about the AMLR, Wwft, CDD, UTR procedures or the scenarios you have practised. Your questions are answered in the context of your training level.
+        <strong>COI & Integrity AI Coach</strong> — Ask anything about conflicts of interest, personal account dealing, gifts & entertainment, outside business activities, information barriers or whistleblowing. Your questions are answered in the context of your training level.
       </div>
       <div class="chat-history" id="chatHistory">
         <div class="empty-msg">No messages yet. Ask a question or choose a suggestion below.</div>
@@ -469,7 +637,7 @@
     </div>
     <div class="cert-banner" id="certBanner">
       <h3>🏆 Assessment Complete</h3>
-      <p>You have completed the AML Compliance Training Programme.</p>
+      <p>You have completed the COI & Integrity Training Programme.</p>
       <button class="btn-primary" onclick="generateCertificate()" style="margin-top:8px">Download Certificate (PDF)</button>
     </div>
   </div>
