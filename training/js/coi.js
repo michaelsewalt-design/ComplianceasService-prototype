@@ -171,3 +171,109 @@ function setupChatSuggestions() {
     sqEl.appendChild(btn);
   }
 }
+
+// ─── EXAMPLES ──────────────────────────
+function loadExamples() {
+  var container = document.getElementById('examplesContainer');
+  if (!container) return;
+
+  container.innerHTML = '<div class="empty-msg"><span class="spinner"></span> Generating practice examples…</div>';
+
+  callClaude(
+    [{ role: 'user', content: EXAMPLE_PROMPTS[selectedLevel] }],
+    'You are a precise COI & Integrity trainer. Respond only with the requested JSON array.',
+    1200
+  ).then(function(reply) {
+    var clean = cleanJsonResponse(reply);
+    var examples = JSON.parse(clean);
+    window._examples = examples;
+
+    container.innerHTML = '';
+    if (!Array.isArray(examples)) { throw new Error('Examples response is not a valid array.'); }
+
+    for (var i = 0; i < examples.length; i++) {
+      var ex = examples[i] || {};
+      var el = document.createElement('div');
+      el.className = 'example-case';
+      el.id = 'example-' + i;
+      el.innerHTML = '<div class="example-case-header">'
+        + '<div class="example-case-num">' + (i + 1) + '</div>'
+        + '<div class="example-case-meta"><h3>' + escapeHtml(ex.title || ('Example ' + (i + 1))) + '</h3><p>Practice Example</p></div>'
+        + '</div>'
+        + '<div class="example-case-body">'
+        + '<div class="example-scenario"><div class="example-scenario-label">Scenario</div><p>' + safeTextToHtml(ex.scenario || '') + '</p></div>'
+        + '<div class="example-question"><div class="example-question-label">Question</div><p>' + safeTextToHtml(ex.question || '') + '</p></div>'
+        + '<div class="example-answer-area">'
+        + '<textarea class="example-textarea" id="example-answer-' + i + '" placeholder="Type your answer here…" rows="3"></textarea>'
+        + '<button class="btn-evaluate" id="example-btn-' + i + '" onclick="evaluateExample(' + i + ')">Evaluate Answer</button>'
+        + '</div>'
+        + '<div class="example-feedback" id="example-fb-' + i + '"></div>'
+        + '</div>';
+      container.appendChild(el);
+    }
+  }).catch(function(err) {
+    container.innerHTML = '<div class="empty-msg">⚠ Failed to load examples: ' + escapeHtml((err && err.message) || 'Unknown error') + '</div>';
+  });
+}
+
+function evaluateExample(idx) {
+  var answerEl = document.getElementById('example-answer-' + idx);
+  if (!answerEl) return;
+  var answer = answerEl.value.trim();
+  if (!answer) { alert('Please enter an answer first.'); return; }
+
+  var btn = document.getElementById('example-btn-' + idx);
+  btn.disabled = true;
+  btn.textContent = 'Evaluating…';
+
+  var ex = (window._examples && window._examples[idx]) || {};
+
+  var prompt = 'You are a COI & Integrity trainer. A trainee (' + LEVEL_LABELS[selectedLevel] + ') answered a practice example.\n\n'
+    + 'Scenario: ' + (ex.scenario || '') + '\nQuestion: ' + (ex.question || '') + '\nTrainee answer: ' + answer + '\n\n'
+    + 'Provide detailed learning feedback. This is NOT a pass/fail assessment — it is a learning exercise.\n\n'
+    + 'Return JSON only, no markdown:\n{\n  "quality": "good|partial|poor",\n  "goodPoints": "What the trainee did well (2-3 sentences)",\n  "attentionPoints": "Areas for improvement (2-3 sentences)",\n  "modelAnswer": "The ideal complete answer (3-5 sentences)"\n}';
+
+  callClaude(
+    [{ role: 'user', content: prompt }],
+    'You are a precise COI & Integrity trainer. Respond only with the requested JSON.',
+    800
+  ).then(function(reply) {
+    var clean = cleanJsonResponse(reply);
+    var parsed = JSON.parse(clean);
+
+    var fbEl = document.getElementById('example-fb-' + idx);
+    if (!fbEl) return;
+    fbEl.className = 'example-feedback visible ' + (parsed.quality || 'partial');
+    fbEl.innerHTML = '<div class="feedback-header">'
+      + '<span class="feedback-badge ' + (parsed.quality || 'partial') + '">'
+      + (parsed.quality === 'good' ? '✓ Strong Answer' : parsed.quality === 'poor' ? '✗ Needs Work' : '◑ Partial')
+      + '</span></div>'
+      + '<div class="feedback-section good-points"><strong>What You Did Well</strong>' + safeTextToHtml(parsed.goodPoints || '') + '</div>'
+      + '<div class="feedback-section attention-points"><strong>Points of Attention</strong>' + safeTextToHtml(parsed.attentionPoints || '') + '</div>'
+      + '<div class="feedback-section model-answer"><strong>Model Answer</strong>' + safeTextToHtml(parsed.modelAnswer || '') + '</div>';
+
+    btn.textContent = 'Evaluated ✓';
+    checkAllExamplesDone();
+  }).catch(function(err) {
+    var fbEl = document.getElementById('example-fb-' + idx);
+    if (fbEl) {
+      fbEl.className = 'example-feedback visible partial';
+      fbEl.innerHTML = '<p>⚠ Evaluation error: ' + escapeHtml((err && err.message) || 'Unknown error') + '</p>';
+    }
+    btn.disabled = false;
+    btn.textContent = 'Try Again';
+  });
+}
+
+function checkAllExamplesDone() {
+  if (!window._examples) return;
+  var allDone = true;
+  for (var i = 0; i < window._examples.length; i++) {
+    var fb = document.getElementById('example-fb-' + i);
+    if (!fb || !fb.classList.contains('visible')) { allDone = false; break; }
+  }
+  if (allDone) {
+    var continueBtn = document.getElementById('examplesContinueBtn');
+    if (continueBtn) continueBtn.style.display = 'block';
+  }
+}
