@@ -83,7 +83,7 @@ if (!authHeader || !authHeader.startsWith('Bearer ')) {
 return res.status(401).json({ valid: false });
 }
 const token = authHeader.slice(7);
-const valid = verifyToken(token, process.env.AUTH_SECRET);
+const valid = verifyToken(token, process.env.TRAINING_AUTH_SECRET);
 return res.status(valid ? 200 : 401).json({ valid });
 }
 
@@ -114,7 +114,7 @@ if (!password) {
 return res.status(400).json({ success: false, message: 'Password is required.' });
 }
 
-const correctPassword = process.env.SITE_PASSWORD;
+const correctPassword = process.env.TRAINING_SITE_PASSWORD;
 if (!correctPassword) {
 console.error('SITE_PASSWORD not configured');
 return res.status(500).json({ success: false, message: 'Server configuration error.' });
@@ -132,7 +132,7 @@ match = crypto.timingSafeEqual(passwordBuffer, correctBuffer);
 if (match) {
 // Reset attempts on success
 attempts.delete(ip);
-const token = generateToken(process.env.AUTH_SECRET);
+const token = generateToken(process.env.TRAINING_AUTH_SECRET);
 return res.status(200).json({ success: true, token });
 }
 
