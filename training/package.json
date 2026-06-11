@@ -1,0 +1,9 @@
+{
+"name": "compliance-training-platform",
+"version": "1.0.0",
+"private": true,
+"description": "Financial Compliance Training Platform - AML & MAR",
+"scripts": {
+"dev": "vercel dev"
+}
+}

@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>MAR Compliance Training</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/shared.css">
+<script src="https://elevenlabs.io/convai-widget/index.js" async></script>
+</head>
+<body>
+
+<a href="/training" class="back-link">← Training Modules</a>
+
+<!-- ══ SETUP SCREEN ══ -->
+<div id="setupScreen">
+  <div class="brand">
+    <div class="brand-badge">MAR · Market Abuse Regulation</div>
+    <h1>MAR Compliance<br><em>Training Module</em></h1>
+    <p>Interactive e-learning — EU 596/2014 · Insider trading · Market manipulation · STOR reporting · AFM supervision.</p>
+  </div>
+
+  <!-- Role / Level -->
+  <div class="card">
+    <div class="card-title">01 · Select Your Role</div>
+    <div class="level-grid">
+      <button class="level-btn" data-level="trader" onclick="selectLevel(this)">
+        <div class="level-icon">📈</div>
+        <div class="level-info">
+          <div class="level-name">Trader / Front Office</div>
+          <div class="level-desc">Practical recognition of market abuse in daily trading situations</div>
+        </div>
+        <div class="level-check">✓</div>
+      </button>
+      <button class="level-btn" data-level="compliance" onclick="selectLevel(this)">
+        <div class="level-icon">⚖️</div>
+        <div class="level-info">
+          <div class="level-name">Compliance Officer</div>
+          <div class="level-desc">In-depth MAR framework, STOR procedures, supervision and enforcement by the AFM</div>
+        </div>
+        <div class="level-check">✓</div>
+      </button>
+      <button class="level-btn" data-level="management" onclick="selectLevel(this)">
+        <div class="level-icon">🏛️</div>
+        <div class="level-info">
+          <div class="level-name">Senior Management / Board</div>
+          <div class="level-desc">Governance, personal liability and tone from the top</div>
+        </div>
+        <div class="level-check">✓</div>
+      </button>
+    </div>
+  </div>
+
+  <!-- Assessment Strictness -->
+  <div class="card" id="strictnessCard" style="display:none">
+    <div class="card-title">02 · Assessment Strictness</div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.5">Choose how strictly your final assessment answers will be evaluated.</p>
+    <div class="strictness-grid">
+      <button class="strictness-btn" data-strictness="hard" onclick="selectStrictness(this)">
+        <div class="strictness-dot dot-hard"></div>
+        <div class="strictness-info">
+          <div class="strictness-name">🔴 Strict</div>
+          <div class="strictness-desc">All answers must be complete and precise. Every detail counts.</div>
+        </div>
+        <div class="strictness-check">✓</div>
+      </button>
+      <button class="strictness-btn" data-strictness="normal" onclick="selectStrictness(this)">
+        <div class="strictness-dot dot-normal"></div>
+        <div class="strictness-info">
+          <div class="strictness-name">🟡 Standard</div>
+          <div class="strictness-desc">Core concepts must be correct. Minor gaps are acceptable.</div>
+        </div>
+        <div class="strictness-check">✓</div>
+      </button>
+      <button class="strictness-btn" data-strictness="light" onclick="selectStrictness(this)">
+        <div class="strictness-dot dot-light"></div>
+        <div class="strictness-info">
+          <div class="strictness-name">🟢 Lenient</div>
+          <div class="strictness-desc">Answers are accepted unless there is clearly no effort to engage with the topic.</div>
+        </div>
+        <div class="strictness-check">✓</div>
+      </button>
+    </div>
+  </div>
+
+  <!-- ElevenLabs Agents -->
+  <div class="card">
+    <div class="card-title">03 · Phone Scenarios (ElevenLabs)</div>
+    <div class="agent-cfg">
+      <div class="agent-row">
+        <div class="agent-row-header">
+          <span class="agent-scenario-badge">SCENARIO 1</span>
+          <span class="agent-scenario-title">Erik — The Insider Tip</span>
+        </div>
+        <div class="field">
+          <label>AI Coach Configuration</label>
+          <input type="text" id="agent1Id" placeholder="Optional override — leave blank to use the default coach" autocorrect="off" autocapitalize="none"/>
+        </div>
+      </div>
+      <div class="agent-row">
+        <div class="agent-row-header">
+          <span class="agent-scenario-badge">SCENARIO 2</span>
+          <span class="agent-scenario-title">Van der Berg — Suspicious Client</span>
+        </div>
+        <div class="field">
+          <label>AI Coach Configuration</label>
+          <input type="text" id="agent2Id" placeholder="Optional override — leave blank to use the default coach" autocorrect="off" autocapitalize="none"/>
+        </div>
+      </div>
+      <p class="hint">▸ If left empty, the system will use the default AI coach configuration.</p>
+    </div>
+  </div>
+
+  <button class="btn-primary" id="startBtn" onclick="startTraining()" disabled>Start Training →</button>
+  <div style="height:16px"></div>
+</div>
+
+<!-- ══ TRAINING SCREEN ══ -->
+<div id="trainingScreen">
+  <div class="topbar">
+    <div class="topbar-brand">MAR Training</div>
+    <div class="topbar-level" id="topLevel">—</div>
+    <button class="btn-reset" onclick="resetTraining()">↩ Restart</button>
+  </div>
+
+  <!-- Step bar: 5 steps -->
+  <div class="steps-bar">
+    <div class="step active" id="step1" onclick="showTab('theory')">
+      <div class="step-circle" id="sc1">1</div>
+      <div class="step-label">Theory</div>
+    </div>
+    <div class="step-divider"></div>
+    <div class="step" id="step2" onclick="showTab('examples')">
+      <div class="step-circle" id="sc2">2</div>
+      <div class="step-label">Examples</div>
+    </div>
+    <div class="step-divider"></div>
+    <div class="step" id="step3" onclick="showTab('scenario')">
+      <div class="step-circle" id="sc3">3</div>
+      <div class="step-label">Scenarios</div>
+    </div>
+    <div class="step-divider"></div>
+    <div class="step" id="step4" onclick="showTab('chat')">
+      <div class="step-circle" id="sc4">4</div>
+      <div class="step-label">AI Coach</div>
+    </div>
+    <div class="step-divider"></div>
+    <div class="step" id="step5" onclick="showTab('quiz')">
+      <div class="step-circle" id="sc5">5</div>
+      <div class="step-label">Assessment</div>
+    </div>
+  </div>
+
+  <!-- ── TAB 1: THEORY ── -->
+  <div class="tab-content active" id="tab-theory">
+    <div class="theory-intro">
+      <h2>What is the Market Abuse Regulation?</h2>
+      <p>The MAR (EU 596/2014) is the European regulation prohibiting and combating market abuse. It applies directly in all EU member states and defines two main prohibitions: insider trading and market manipulation. In the Netherlands, the AFM supervises compliance.</p>
+    </div>
+
+    <div class="accordion">
+      <div class="acc-item" id="acc1">
+        <div class="acc-header" onclick="toggleAcc('acc1')">
+          <div class="acc-header-left"><span class="acc-icon">🔒</span>
+            <div><div class="acc-title">Insider Trading</div><div class="acc-article">Art. 7–11 MAR</div></div>
+          </div><span class="acc-chevron">▼</span>
+        </div>
+        <div class="acc-body">
+          <p><strong>Inside information</strong> is information that: (1) is not public, (2) is precise, (3) relates to a financial instrument or issuer, and (4) would be price-sensitive if disclosed.</p>
+          <p>It is prohibited to trade, attempt to trade, or disclose inside information (tipping).</p>
+          <div class="example">
+            <div class="ex-label">Example</div>
+            <p>You hear from a colleague that company X will issue a profit warning next week. You sell shares in X before the announcement. This is illegal insider trading — even if you did not actively seek out the information.</p>
+          </div>
+          <div id="theory-trader-1" style="display:none;margin-top:12px">
+            <span class="level-tag tag-trader">TRADER</span>
+            <div class="red-flags">
+              <p style="font-size:13px;color:var(--text);margin-bottom:6px"><strong>Stop immediately if you hear this:</strong></p>
+              <div class="flag"><p>"I heard they are about to announce something..."</p></div>
+              <div class="flag"><p>Details about a merger, acquisition or earnings surprise before publication</p></div>
+              <div class="flag"><p>A request to keep the information "to yourself"</p></div>
+            </div>
+            <p style="margin-top:10px">👉 Do not trade. Hang up the phone. Inform compliance <em>the same day</em>.</p>
+          </div>
+          <div id="theory-compliance-1" style="display:none;margin-top:12px">
+            <span class="level-tag tag-compliance">COMPLIANCE</span>
+            <p>Maintain and enforce a robust <strong>insider list</strong> procedure. All persons with access to inside information must be placed on the list immediately. Chinese walls must be documented and regularly tested. Art. 18 MAR requires insider lists to be available to the AFM within 2 days of request.</p>
+          </div>
+          <div id="theory-management-1" style="display:none;margin-top:12px">
+            <span class="level-tag tag-management">MANAGEMENT</span>
+            <p>Board members must ensure that information barriers exist and are enforced. Personal liability arises if inside information flows across business lines without adequate controls. Document all governance decisions relating to inside information at board level.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="acc-item" id="acc2">
+        <div class="acc-header" onclick="toggleAcc('acc2')">
+          <div class="acc-header-left"><span class="acc-icon">📉</span>
+            <div><div class="acc-title">Market Manipulation</div><div class="acc-article">Art. 12–15 MAR</div></div>
+          </div><span class="acc-chevron">▼</span>
+        </div>
+        <div class="acc-body">
+          <p>Market manipulation covers behaviour that gives <strong>false or misleading price signals</strong>, keeps a price at an artificial level, or disseminates misleading information.</p>
+          <p><strong>Transaction-based manipulation:</strong> Wash trading, spoofing, layering, painting the tape, ramping.</p>
+          <p><strong>Information-based manipulation:</strong> Spreading false rumours, misleading press releases, pump-and-dump via social media.</p>
+          <div class="example">
+            <div class="ex-label">Example — Spoofing</div>
+            <p>You place large limit orders that you immediately withdraw as soon as the price moves. The aim is to create the appearance of activity. This is spoofing and explicitly prohibited under Art. 12(2)(c) MAR.</p>
+          </div>
+          <div id="theory-trader-2" style="display:none;margin-top:12px">
+            <span class="level-tag tag-trader">TRADER</span>
+            <div class="red-flags">
+              <p style="font-size:13px;color:var(--text);margin-bottom:6px"><strong>Red flags in client orders:</strong></p>
+              <div class="flag"><p>Orders placed just before market close that influence the closing price</p></div>
+              <div class="flag"><p>Large orders that are quickly withdrawn (spoofing)</p></div>
+              <div class="flag"><p>Transactions with no apparent economic purpose</p></div>
+            </div>
+          </div>
+          <div id="theory-compliance-2" style="display:none;margin-top:12px">
+            <span class="level-tag tag-compliance">COMPLIANCE</span>
+            <p>Surveillance systems must monitor <strong>order and transaction patterns</strong>. ESMA has identified specific patterns in its Q&As and guidelines. Ensure a documented escalation process for alerts. Not every alert is a STOR — qualitative assessment is required.</p>
+          </div>
+          <div id="theory-management-2" style="display:none;margin-top:12px">
+            <span class="level-tag tag-management">MANAGEMENT</span>
+            <p>Ensure the board receives periodic reports on surveillance findings and STOR volumes. A significant rise or fall in STORs is a material signal for the governance framework.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="acc-item" id="acc3">
+        <div class="acc-header" onclick="toggleAcc('acc3')">
+          <div class="acc-header-left"><span class="acc-icon">📋</span>
+            <div><div class="acc-title">STOR — Suspicious Transaction Reporting</div><div class="acc-article">Art. 16 MAR</div></div>
+          </div><span class="acc-chevron">▼</span>
+        </div>
+        <div class="acc-body">
+          <p>Investment firms and market operators are required to report suspicious transactions and orders to the AFM via a <strong>Suspicious Transaction and Order Report (STOR)</strong>.</p>
+          <p><strong>When:</strong> As soon as a reasonable suspicion of market abuse exists — not only after certainty. <em>When in doubt: report.</em></p>
+          <p><strong>Deadline:</strong> As soon as possible, normally within <strong>one business day</strong> of the suspicion arising.</p>
+          <p><strong>Confidentiality:</strong> The client must <u>not</u> be informed that a STOR has been filed (tipping-off prohibition).</p>
+          <div id="theory-compliance-3" style="display:none;margin-top:12px">
+            <span class="level-tag tag-compliance">COMPLIANCE</span>
+            <p>STORs are submitted via the <strong>AFM portal</strong>. Always document the decision-making process: even the decision <em>not</em> to file must be reasoned and recorded. The AFM may request substantiation during an investigation.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="acc-item" id="acc4">
+        <div class="acc-header" onclick="toggleAcc('acc4')">
+          <div class="acc-header-left"><span class="acc-icon">🔊</span>
+            <div><div class="acc-title">Market Sounding</div><div class="acc-article">Art. 11 MAR</div></div>
+          </div><span class="acc-chevron">▼</span>
+        </div>
+        <div class="acc-body">
+          <p>Market sounding is the practice of informing potential investors <em>before</em> the announcement of a transaction. This is permitted, but only through <strong>strict procedures</strong>.</p>
+          <p>The disclosing market participant must: (1) obtain consent before starting, (2) confirm the MNPI status, (3) keep detailed records of the conversation, and (4) place the recipient in a walled garden.</p>
+        </div>
+      </div>
+
+      <div class="acc-item" id="acc5">
+        <div class="acc-header" onclick="toggleAcc('acc5')">
+          <div class="acc-header-left"><span class="acc-icon">⚡</span>
+            <div><div class="acc-title">Sanctions and Enforcement</div><div class="acc-article">Art. 30–34 MAR</div></div>
+          </div><span class="acc-chevron">▼</span>
+        </div>
+        <div class="acc-body">
+          <p><strong>Administrative (AFM):</strong> Fines for legal entities up to <strong>€15 million</strong> or 15% of annual turnover. For natural persons up to <strong>€5 million</strong>. Publication of sanctions (naming and shaming).</p>
+          <p><strong>Criminal law:</strong> Intentional conduct may be prosecuted. Maximum sentence: <strong>6 years imprisonment</strong> and a category 5 fine (€900,000).</p>
+          <div class="example">
+            <div class="ex-label">AFM Enforcement Practice</div>
+            <p>The AFM publishes STOR statistics and enforcement decisions annually. Enforcement cases are published via administrative decisions at afm.nl.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-primary" onclick="completeStep(1); showTab('examples')">Continue to Examples →</button>
+  </div>
+
+  <!-- ── TAB 2: EXAMPLES ── -->
+  <div class="tab-content" id="tab-examples">
+    <div class="examples-intro">
+      <h2>Practice Examples</h2>
+      <p>Read each scenario carefully and provide a short answer. The AI will evaluate your response and give detailed feedback on both strengths and areas for improvement. There is no pass/fail — this is purely a learning exercise.</p>
+    </div>
+
+    <div id="examplesContainer">
+      <div class="empty-msg"><span class="spinner"></span> Loading examples…</div>
+    </div>
+
+    <button class="btn-primary examples-continue" id="examplesContinueBtn" style="display:none" onclick="completeStep(2); showTab('scenario')">Continue to Scenarios →</button>
+  </div>
+
+  <!-- ── TAB 3: SCENARIOS ── -->
+  <div class="tab-content" id="tab-scenario">
+    <div class="card">
+      <div class="card-title">01 · Choose a Scenario</div>
+      <div class="level-grid">
+        <button class="level-btn" onclick="selectScenario(1)" id="scenarioBtn1">
+          <div class="level-icon">📞</div>
+          <div class="level-info">
+            <div class="level-name">Erik — Insider Tip</div>
+            <div class="level-desc">Recognising inside information in a phone call</div>
+          </div>
+          <div class="level-check">✓</div>
+        </button>
+        <button class="level-btn" onclick="selectScenario(2)" id="scenarioBtn2">
+          <div class="level-icon">⚠️</div>
+          <div class="level-info">
+            <div class="level-name">Van der Berg — Suspicious Client</div>
+            <div class="level-desc">Red flags and STOR decision</div>
+          </div>
+          <div class="level-check">✓</div>
+        </button>
+      </div>
+    </div>
+
+    <div style="height:16px"></div>
+
+    <div class="scenario-card">
+      <div class="scenario-header">
+        <div class="scenario-num">1</div>
+        <div class="scenario-meta">
+          <h3>The Insider Tip — Erik calls</h3>
+          <p>Recognising and refusing inside information</p>
+        </div>
+      </div>
+      <div class="scenario-body">
+        <div class="scenario-briefing">
+          <div class="brief-label">Your Briefing</div>
+          <p>You are a <strong>trader at a Dutch bank</strong>. Your colleague Erik Vermeer calls you. He sounds relaxed and acts as if he is doing you a favour. Pay close attention to what he says and respond as you would in practice.</p>
+        </div>
+        <div class="learning-goals">
+          <div class="goal">Recognising inside information in an informal conversation</div>
+          <div class="goal">Responding correctly: refusing without damaging the relationship</div>
+          <div class="goal">Knowing the next step (reporting to compliance)</div>
+        </div>
+        <div class="scenario-widget" id="widget1Container">
+          <div class="no-agent-notice" id="noAgent1">📞 No Agent ID configured for this scenario.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="scenario-card">
+      <div class="scenario-header">
+        <div class="scenario-num">2</div>
+        <div class="scenario-meta">
+          <h3>Van der Berg — Suspicious Client</h3>
+          <p>Red flags and STOR decision</p>
+        </div>
+      </div>
+      <div class="scenario-body">
+        <div class="scenario-briefing">
+          <div class="brief-label">Your Briefing</div>
+          <p>You are a <strong>compliance officer at a Dutch investment firm</strong>. Van der Berg, a long-standing client, has placed an unusually large options order just before a major announcement. Surveillance has flagged the order.</p>
+        </div>
+        <div class="learning-goals">
+          <div class="goal">Identifying MAR red flags in trading patterns</div>
+          <div class="goal">Deciding whether to file a STOR with the AFM</div>
+          <div class="goal">Handling the tipping-off prohibition</div>
+        </div>
+        <div class="scenario-widget" id="widget2Container">
+          <div class="no-agent-notice" id="noAgent2">📞 No Agent ID configured for this scenario.</div>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-primary" onclick="completeStep(3); showTab('chat')">Continue to AI Coach →</button>
+  </div>
+
+  <!-- ── TAB 4: AI COACH ── -->
+  <div class="tab-content" id="tab-chat">
+    <div class="chat-wrap">
+      <div class="chat-context" id="chatContext">
+        <strong>MAR AI Coach</strong> — Ask anything about MAR, insider trading, market manipulation, STOR procedures or the scenarios you have practised. Your questions are answered in the context of your training level.
+      </div>
+      <div class="chat-history" id="chatHistory">
+        <div class="empty-msg">No messages yet. Ask a question or choose a suggestion below.</div>
+      </div>
+      <div class="chat-input-row">
+        <textarea class="chat-input" id="chatInput" placeholder="Ask a question…" rows="1" onkeydown="handleChatKey(event)" oninput="autoResize(this)"></textarea>
+        <button class="btn-send" id="sendBtn" onclick="sendChat()">➤</button>
+      </div>
+    </div>
+    <div class="suggested-questions" id="suggestedQs"></div>
+    <button class="btn-primary" onclick="completeStep(4); showTab('quiz')">Continue to Assessment →</button>
+  </div>
+
+  <!-- ── TAB 5: ASSESSMENT ── -->
+  <div class="tab-content" id="tab-quiz">
+    <div class="quiz-intro">
+      <h3>Final Assessment</h3>
+      <p>Answer all three questions. Each answer is evaluated individually by AI. You will receive feedback immediately after checking each answer.</p>
+    </div>
+    <div class="strictness-banner" id="strictnessBanner"></div>
+    <div id="quizQuestions"><div class="empty-msg"><span class="spinner"></span> Generating questions…</div></div>
+    <div class="quiz-submit-wrap" id="submitWrap" style="display:none">
+      <button class="btn-primary" id="submitQuizBtn" onclick="submitAllQuiz()">Submit All Answers</button>
+      <p class="quiz-submit-note">You can also check answers one by one above.</p>
+    </div>
+    <div class="cert-banner" id="certBanner">
+      <h3>🏆 Assessment Complete</h3>
+      <p>You have completed the MAR Compliance Training Programme.</p>
+      <button class="btn-primary" onclick="generateCertificate()" style="margin-top:8px">Download Certificate (PDF)</button>
+    </div>
+  </div>
+
+  <!-- Bottom Nav -->
+  <div class="bottom-nav">
+    <button class="nav-btn active" id="nav-theory" onclick="showTab('theory')"><div class="nav-icon">📚</div><div class="nav-label">Theory</div></button>
+    <button class="nav-btn" id="nav-examples" onclick="showTab('examples')"><div class="nav-icon">🎯</div><div class="nav-label">Examples</div></button>
+    <button class="nav-btn" id="nav-scenario" onclick="showTab('scenario')"><div class="nav-icon">📞</div><div class="nav-label">Scenarios</div></button>
+    <button class="nav-btn" id="nav-chat" onclick="showTab('chat')"><div class="nav-icon">🤖</div><div class="nav-label">AI Coach</div></button>
+    <button class="nav-btn" id="nav-quiz" onclick="showTab('quiz')"><div class="nav-icon">✅</div><div class="nav-label">Assessment</div></button>
+  </div>
+</div>
+
+<!-- Certificate Popup -->
+<div class="popup-overlay hidden" id="popupOverlay">
+  <div class="popup" id="popupContent"></div>
+</div>
+
+<script src="js/shared.js"></script>
+<script src="js/mar.js"></script>
+</body>
+</html>

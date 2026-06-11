@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Conflict of Interest &amp; Integrity Training</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/shared.css">
+<script src="https://elevenlabs.io/convai-widget/index.js" async></script>
+</head>
+<body>
+
+<a href="/" class="back-link">← Modules</a>
+
+<!-- ══ SETUP SCREEN ══ -->
+<div id="setupScreen">
+  <div class="brand">
+    <div class="brand-badge">COI · Conflict of Interest &amp; Integrity</div>
+    <h1>Conflict of Interest<br><em>&amp; Integrity Training</em></h1>
+    <p>Interactive e-learning — Dutch Wft · Bgfo · Banker's Oath · MiFID II integrity requirements · AI coaching and realistic scenarios.</p>
+  </div>
+
+  <!-- Role / Level -->
+  <div class="card">
+    <div class="card-title">01 · Select Your Role</div>
+    <div class="level-grid">
+      <button class="level-btn" data-level="analyst" onclick="selectLevel(this)">
+        <div class="level-icon">🔍</div>
+        <div class="level-info">
+          <div class="level-name">Analyst</div>
+          <div class="level-desc">Day-to-day integrity dilemmas, personal dealing rules, gift &amp; entertainment policies</div>
+        </div>
+        <div class="level-check">✓</div>
+      </button>
+      <button class="level-btn" data-level="compliance" onclick="selectLevel(this)">
+        <div class="level-icon">⚖️</div>
+        <div class="level-info">
+          <div class="level-name">Compliance Officer</div>
+          <div class="level-desc">COI framework design, monitoring, SIRA integration, whistleblowing procedures</div>
+        </div>
+        <div class="level-check">✓</div>
+      </button>
+      <button class="level-btn" data-level="management" onclick="selectLevel(this)">
+        <div class="level-icon">🏛️</div>
+        <div class="level-info">
+          <div class="level-name">Senior Management / Board</div>
+          <div class="level-desc">Governance, tone from the top, Banker's Oath obligations, personal liability</div>
+        </div>
+        <div class="level-check">✓</div>
+      </button>
+    </div>
+  </div>
+
+  <!-- Assessment Strictness -->
+  <div class="card" id="strictnessCard" style="display:none">
+    <div class="card-title">02 · Assessment Strictness</div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.5">Choose how strictly your final assessment answers will be evaluated.</p>
+    <div class="strictness-grid">
+      <button class="strictness-btn" data-strictness="hard" onclick="selectStrictness(this)">
+        <div class="strictness-dot dot-hard"></div>
+        <div class="strictness-info">
+          <div class="strictness-name">🔴 Strict</div>
+          <div class="strictness-desc">All answers must be complete and precise. Every detail counts.</div>
+        </div>
+        <div class="strictness-check">✓</div>
+      </button>
+      <button class="strictness-btn" data-strictness="normal" onclick="selectStrictness(this)">
+        <div class="strictness-dot dot-normal"></div>
+        <div class="strictness-info">
+          <div class="strictness-name">🟡 Standard</div>
+          <div class="strictness-desc">Core concepts must be correct. Minor gaps are acceptable.</div>
+        </div>
+        <div class="strictness-check">✓</div>
+      </button>
+      <button class="strictness-btn" data-strictness="light" onclick="selectStrictness(this)">
+        <div class="strictness-dot dot-light"></div>
+        <div class="strictness-info">
+          <div class="strictness-name">🟢 Lenient</div>
+          <div class="strictness-desc">Answers are accepted unless there is clearly no effort to engage with the topic.</div>
+        </div>
+        <div class="strictness-check">✓</div>
+      </button>
+    </div>
+  </div>
+
+  <!-- ElevenLabs Agents -->
+  <div class="card">
+    <div class="card-title">03 · Phone Scenarios (ElevenLabs)</div>
+    <div class="agent-cfg">
+      <div class="agent-row">
+        <div class="agent-row-header">
+          <span class="agent-scenario-badge">SCENARIO 1</span>
+          <span class="agent-scenario-title">Mehmet — The Cash Client</span>
+        </div>
+        <div class="field">
+          <label>AI Coach Configuration</label>
+          <input type="text" id="agent1Id" placeholder="Optional override — leave blank to use the default coach" autocorrect="off" autocapitalize="none"/>
+        </div>
+      </div>
+      <div class="agent-row">
+        <div class="agent-row-header">
+          <span class="agent-scenario-badge">SCENARIO 2</span>
+          <span class="agent-scenario-title">De Vries Holding — Suspicious Transfer</span>
+        </div>
+        <div class="field">
+          <label>AI Coach Configuration</label>
+          <input type="text" id="agent2Id" placeholder="Optional override — leave blank to use the default coach" autocorrect="off" autocapitalize="none"/>
+        </div>
+      </div>
+      <p class="hint">▸ If left empty, the system will use the default AI coach configuration.</p>
+    </div>
+  </div>
+
+  <button class="btn-primary" id="startBtn" onclick="startTraining()" disabled>Start Training →</button>
+  <div style="height:16px"></div>
+</div>
+
+<!-- ══ TRAINING SCREEN ══ -->
+<div id="trainingScreen">
+  <div class="topbar">
+    <div class="topbar-brand">AML Training</div>
+    <div class="topbar-level" id="topLevel">—</div>
+    <button class="btn-reset" onclick="resetTraining()">↩ Restart</button>
+  </div>
+
+  <!-- Step bar: 5 steps -->
+  <div class="steps-bar">
+    <div class="step active" id="step1" onclick="showTab('theory')">
+      <div class="step-circle" id="sc1">1</div>
+      <div class="step-label">Theory</div>
+    </div>
+    <div class="step-divider"></div>
+    <div class="step" id="step2" onclick="showTab('examples')">
+      <div class="step-circle" id="sc2">2</div>
+      <div class="step-label">Examples</div>
+    </div>
+    <div class="step-divider"></div>
+    <div class="step" id="step3" onclick="showTab('scenario')">
+      <div class="step-circle" id="sc3">3</div>
+      <div class="step-label">Scenarios</div>
+    </div>
+    <div class="step-divider"></div>
+    <div class="step" id="step4" onclick="showTab('chat')">
+      <div class="step-circle" id="sc4">4</div>
+      <div class="step-label">AI Coach</div>
+    </div>
+    <div class="step-divider"></div>
+    <div class="step" id="step5" onclick="showTab('quiz')">
+      <div class="step-circle" id="sc5">5</div>
+      <div class="step-label">Assessment</div>
+    </div>
+  </div>
+
+  <!-- ── TAB 1: THEORY ── -->
+  <div class="tab-content active" id="tab-theory">
+    <div class="theory-container">
+
+      <div class="theory-section" id="theory-analyst-1" style="display:none">
+        <h2>1 · What Are Conflicts of Interest?</h2>
+        <p>A <strong>conflict of interest</strong> (COI) arises when a person or organisation has competing loyalties or interests that could improperly influence their professional judgment or decision-making. In financial services, COI management is a cornerstone of <em>integrity</em> — the obligation to act honestly, carefully and in the client's best interest.</p>
+        <div class="highlight-box"><strong>Key principle:</strong> A conflict exists whenever the interests of a financial undertaking, its employees, tied agents or clients diverge, creating a risk of detriment to one or more clients or to the integrity of the market.</div>
+        <p>Conflicts may be <strong>actual</strong> (already occurring), <strong>potential</strong> (likely to arise), or <strong>perceived</strong> (appear to exist to a reasonable observer). All three categories must be identified, recorded and managed.</p>
+      </div>
+
+      <div class="theory-section" id="theory-analyst-2" style="display:none">
+        <h2>2 · Types of Conflicts You Will Encounter</h2>
+        <h3>Personal Conflicts</h3>
+        <ul>
+          <li><strong>Personal account dealing (PAD)</strong> — trading in financial instruments for personal benefit using knowledge gained at work. Pre-clearance and holding periods apply.</li>
+          <li><strong>Gifts &amp; entertainment</strong> — receiving or offering hospitality that could compromise objectivity. Most firms set thresholds (e.g. €50–100) above which approval or refusal is required.</li>
+          <li><strong>Outside business activities (OBA)</strong> — side jobs, board seats or advisory roles that create divided loyalties. Pre-approval required.</li>
+          <li><strong>Relationship conflicts</strong> — family, friends or close relations as clients, suppliers or counterparties.</li>
+        </ul>
+        <h3>Organisational Conflicts</h3>
+        <ul>
+          <li>Proprietary trading vs. client order execution</li>
+          <li>Investment research independence vs. corporate finance revenue</li>
+          <li>Cross-selling incentives and remuneration structures</li>
+          <li>Advising both buyer and seller in the same transaction</li>
+        </ul>
+      </div>
+
+      <div class="theory-section" id="theory-analyst-3" style="display:none">
+        <h2>3 · Key Policies You Must Know</h2>
+        <h3>Gift &amp; Entertainment Policy</h3>
+        <ul>
+          <li>Gifts above the threshold must be reported or declined</li>
+          <li>Entertainment during tender/procurement processes is typically prohibited</li>
+          <li>All gifts received or given must be logged in the central gift register</li>
+          <li>Cash and cash equivalents are always prohibited</li>
+        </ul>
+        <h3>Personal Account Dealing (PAD)</h3>
+        <ul>
+          <li>Pre-clearance required before executing personal trades</li>
+          <li>Minimum holding periods (e.g. 30–90 days)</li>
+          <li>Restricted lists block instruments related to client mandates or deals</li>
+          <li>Annual portfolio and brokerage account declarations</li>
+        </ul>
+        <h3>Outside Business Activities</h3>
+        <ul>
+          <li>Pre-approval for any paid or unpaid external role</li>
+          <li>Annual re-confirmation of all existing OBAs</li>
+          <li>Assessment of time commitment, reputational risk and potential conflicts</li>
+        </ul>
+      </div>
+
+      <div class="theory-section" id="theory-analyst-4" style="display:none">
+        <h2>4 · The Banker's Oath &amp; Your Obligations</h2>
+        <p>Since 2015, all employees in the Dutch banking sector must take the <strong>Banker's Oath</strong> (<em>Bankierseed</em>). Key commitments include:</p>
+        <div class="highlight-box">
+          <ul style="margin:0;padding-left:18px">
+            <li>I will perform my duties with <strong>integrity and care</strong></li>
+            <li>I will carefully weigh all interests — clients, shareholders, employees and society</li>
+            <li>I will keep the interests of the client <strong>central</strong></li>
+            <li>I will not abuse my <strong>knowledge</strong></li>
+            <li>I will act <strong>openly and with integrity</strong> and be accountable for my conduct</li>
+          </ul>
+        </div>
+        <p>Violations can lead to disciplinary proceedings before <strong>Stichting Tuchtrecht Banken</strong>, with sanctions ranging from a reprimand to a 3-year professional ban.</p>
+      </div>
+
+      <div class="theory-section" id="theory-analyst-5" style="display:none">
+        <h2>5 · When in Doubt: Escalate</h2>
+        <p>If you identify or suspect a conflict of interest:</p>
+        <ul>
+          <li><strong>Disclose</strong> the conflict to your manager and/or compliance immediately</li>
+          <li><strong>Do not</strong> take any action that could benefit from the conflict before it is resolved</li>
+          <li>Use the <strong>whistleblowing channel</strong> if you suspect someone is suppressing a COI disclosure</li>
+          <li>Remember: silence can amount to <strong>complicity</strong></li>
+        </ul>
+        <div class="highlight-box"><strong>Rule of thumb:</strong> If you would not be comfortable seeing your action described in a newspaper headline, it is probably a conflict that needs to be disclosed.</div>
+      </div>
+
+      <!-- COMPLIANCE OFFICER THEORY -->
+      <div class="theory-section" id="theory-compliance-1" style="display:none">
+        <h2>1 · Regulatory Framework for COI Management</h2>
+        <h3>Wft &amp; Bgfo</h3>
+        <p>The <strong>Wet op het financieel toezicht (Wft)</strong> and <strong>Besluit Gedragstoezicht financiële ondernemingen (Bgfo)</strong> require every financial undertaking to maintain a <strong>systematic integrity risk analysis (SIRA)</strong> that covers COI as a risk category, implement policies and procedures to identify, prevent, manage and record conflicts, and disclose unmanageable conflicts to the client before providing a service.</p>
+        <h3>MiFID II</h3>
+        <p>For investment firms, <strong>MiFID II</strong> (Articles 23, 16(3)) and Delegated Regulation 2017/565 (Articles 33–35) impose detailed requirements: maintain a COI policy proportionate to size and complexity, establish information barriers where necessary, maintain a COI register, and ensure remuneration structures do not create conflicts.</p>
+        <h3>DNB / AFM Expectations</h3>
+        <p><strong>DNB</strong> expects controlled and ethical business operations with COI management as a core component. <strong>AFM</strong> monitors quality of COI policies, inducement arrangements, PAD controls and independence of compliance, risk and internal audit functions.</p>
+      </div>
+
+      <div class="theory-section" id="theory-compliance-2" style="display:none">
+        <h2>2 · Information Barriers (Chinese Walls)</h2>
+        <ul>
+          <li><strong>Physical separation</strong> — separate offices/floors for conflicted departments</li>
+          <li><strong>Logical separation</strong> — restricted IT access, separate shared drives and databases</li>
+          <li><strong>Wall-crossing procedures</strong> — formal process with compliance oversight for bringing someone "over the wall"</li>
+          <li><strong>Clean teams / ring-fencing</strong> — restricting information to a defined group during sensitive transactions</li>
+        </ul>
+        <p>The compliance function must maintain documentation of all wall-crossings including: the names of persons involved, the reason, date/time, and conditions under which they may return to their normal duties.</p>
+      </div>
+
+      <div class="theory-section" id="theory-compliance-3" style="display:none">
+        <h2>3 · Whistleblowing Framework</h2>
+        <p>The <strong>Dutch Whistleblowers Authority Act</strong> (<em>Wet bescherming klokkenluiders</em>, 2023 update implementing EU Directive 2019/1937) requires:</p>
+        <ul>
+          <li>Internal reporting channel accessible to all employees</li>
+          <li>Appointment of a <strong>trusted person</strong> (<em>vertrouwenspersoon</em>)</li>
+          <li>Protection against <strong>retaliation</strong> (dismissal, demotion, harassment)</li>
+          <li>Diligent and confidential investigation of reports</li>
+          <li>Feedback to the reporter within a reasonable timeframe</li>
+        </ul>
+      </div>
+
+      <div class="theory-section" id="theory-compliance-4" style="display:none">
+        <h2>4 · COI Register &amp; SIRA Integration</h2>
+        <p>A compliant COI register must document: the identified conflict, parties involved, assessment of materiality, management measures applied, and residual risk acceptance. This register feeds into the institution's SIRA, ensuring integrity risks are systematically captured alongside AML, sanctions and fraud risks.</p>
+        <h3>Inducements &amp; Remuneration</h3>
+        <p>Under MiFID II, inducements are only permissible if they enhance the quality of service to the client and do not impair the firm's duty to act in the client's best interest. Variable remuneration structures must be assessed for COI implications, particularly where they incentivise sales of in-house products over better alternatives.</p>
+      </div>
+
+      <div class="theory-section" id="theory-compliance-5" style="display:none">
+        <h2>5 · Enforcement &amp; Consequences</h2>
+        <table class="theory-table">
+          <thead><tr><th>Level</th><th>Possible Consequences</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Individual</strong></td><td>Disciplinary action, dismissal, Banker's Oath proceedings (Stichting Tuchtrecht Banken — up to 3-year ban), personal fines, criminal prosecution in severe cases</td></tr>
+            <tr><td><strong>Firm</strong></td><td>AFM/DNB enforcement actions, administrative fines (up to €5M or 10% annual turnover), licence conditions or withdrawal, client compensation claims, reputational harm</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- SENIOR MANAGEMENT THEORY -->
+      <div class="theory-section" id="theory-management-1" style="display:none">
+        <h2>1 · Board-Level Integrity Governance</h2>
+        <p>Under the Wft and Bgfo, the <strong>management board</strong> bears ultimate responsibility for ensuring the institution operates with integrity. This includes:</p>
+        <ul>
+          <li>Approving and periodically reviewing the COI policy and integrity framework</li>
+          <li>Setting the <strong>tone from the top</strong> — visibly demonstrating ethical leadership</li>
+          <li>Ensuring adequate resources for the compliance function</li>
+          <li>Maintaining personal compliance with the Banker's Oath</li>
+          <li>Overseeing the SIRA and ensuring COI is properly captured</li>
+        </ul>
+      </div>
+
+      <div class="theory-section" id="theory-management-2" style="display:none">
+        <h2>2 · Personal Liability &amp; The Banker's Oath</h2>
+        <p>As a board member, you have personally sworn the Banker's Oath and can face personal consequences for integrity failures:</p>
+        <div class="highlight-box">
+          <strong>Stichting Tuchtrecht Banken</strong> can sanction individual board members. DNB can issue personal fines and revoke fit &amp; proper assessments. In extreme cases, criminal prosecution for culpable negligence in maintaining ethical business operations is possible.
+        </div>
+        <p>The board must also ensure that <strong>whistleblowing reports</strong> reaching the executive level are handled with urgency, confidentiality and independence — particularly where they implicate fellow board members or senior management.</p>
+      </div>
+
+      <div class="theory-section" id="theory-management-3" style="display:none">
+        <h2>3 · Remuneration &amp; Incentive Structures</h2>
+        <p>The board is responsible for ensuring remuneration policies do not create perverse incentives:</p>
+        <ul>
+          <li>Variable pay must not incentivise behaviour contrary to client interests</li>
+          <li>Sales targets must be balanced with quality and compliance metrics</li>
+          <li>Claw-back provisions should cover integrity and compliance breaches</li>
+          <li>The remuneration committee should assess COI implications annually</li>
+        </ul>
+      </div>
+
+      <div class="theory-section" id="theory-management-4" style="display:none">
+        <h2>4 · Information Barriers &amp; Governance Conflicts</h2>
+        <p>At board level, conflicts often arise from:</p>
+        <ul>
+          <li><strong>Dual roles</strong> — serving on boards of group entities that may have conflicting interests</li>
+          <li><strong>Related-party transactions</strong> — ensuring proper recusal procedures exist</li>
+          <li><strong>Supervisory board oversight</strong> — ensuring the supervisory board has adequate independence</li>
+          <li><strong>M&amp;A and strategic decisions</strong> — managing conflicts where board members have personal interests</li>
+        </ul>
+        <p>Robust board-level recusal procedures and a comprehensive register of interests are essential governance controls.</p>
+      </div>
+
+      <div class="theory-section" id="theory-management-5" style="display:none">
+        <h2>5 · What DNB &amp; AFM Expect</h2>
+        <p>Regulators assess the board's integrity framework against these criteria:</p>
+        <ul>
+          <li>Is the COI policy comprehensive, up-to-date and proportionate?</li>
+          <li>Does the board demonstrably set the tone from the top?</li>
+          <li>Are adequate resources allocated to the compliance function?</li>
+          <li>Is there independent oversight via internal audit?</li>
+          <li>Are whistleblowing reports handled effectively and without retaliation?</li>
+          <li>Does the SIRA adequately capture and assess integrity risks?</li>
+          <li>Are enforcement trends and regulatory expectations actively monitored?</li>
+        </ul>
+        <div class="highlight-box"><strong>Board accountability:</strong> DNB and AFM increasingly hold individual board members accountable for systemic integrity failures. A passive stance ("I didn't know") is no longer an acceptable defence.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="tab-content" id="tab-examples">
+    <div class="examples-intro">
+      <h2>Practice Examples</h2>
+      <p>Read each scenario carefully and provide a short answer. The AI will evaluate your response and give detailed feedback on both strengths and areas for improvement. There is no pass/fail — this is purely a learning exercise.</p>
+    </div>
+
+    <div id="examplesContainer">
+      <div class="empty-msg"><span class="spinner"></span> Loading examples…</div>
+    </div>
+
+    <button class="btn-primary examples-continue" id="examplesContinueBtn" style="display:none" onclick="completeStep(2); showTab('scenario')">Continue to Scenarios →</button>
+  </div>
+
+  <!-- ── TAB 3: SCENARIOS ── -->
+  <div class="tab-content" id="tab-scenario">
+    <div class="card">
+      <div class="card-title">01 · Choose a Scenario</div>
+      <div class="level-grid">
+        <button class="level-btn" onclick="selectScenario(1)" id="scenarioBtn1">
+          <div class="level-icon">💵</div>
+          <div class="level-info">
+            <div class="level-name">Mehmet — The Cash Client</div>
+            <div class="level-desc">Recognising structuring and unusual cash patterns</div>
+          </div>
+          <div class="level-check">✓</div>
+        </button>
+        <button class="level-btn" onclick="selectScenario(2)" id="scenarioBtn2">
+          <div class="level-icon">🏢</div>
+          <div class="level-info">
+            <div class="level-name">De Vries Holding — Suspicious Transfer</div>
+            <div class="level-desc">UBO red flags and UTR decision</div>
+          </div>
+          <div class="level-check">✓</div>
+        </button>
+      </div>
+    </div>
+
+    <div style="height:16px"></div>
+
+    <div class="scenario-card">
+      <div class="scenario-header">
+        <div class="scenario-num">1</div>
+        <div class="scenario-meta">
+          <h3>The Cash Client — Mehmet calls</h3>
+          <p>Recognising structuring and refusing to proceed without CDD</p>
+        </div>
+      </div>
+      <div class="scenario-body">
+        <div class="scenario-briefing">
+          <div class="brief-label">Your Briefing</div>
+          <p>You are a <strong>relationship manager at a Dutch bank</strong>. Your client Mehmet Yilmaz calls. He wants to deposit a large amount of cash in multiple instalments. He is friendly and acts as if this is perfectly normal. Listen carefully and respond as you would in practice.</p>
+        </div>
+        <div class="learning-goals">
+          <div class="goal">Recognising structuring (smurfing) in a client conversation</div>
+          <div class="goal">Applying the Wwft CDD obligation without alarming the client</div>
+          <div class="goal">Knowing when and how to escalate to compliance</div>
+        </div>
+        <div class="scenario-widget" id="widget1Container">
+          <div class="no-agent-notice" id="noAgent1">📞 No Agent ID configured for this scenario.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="scenario-card">
+      <div class="scenario-header">
+        <div class="scenario-num">2</div>
+        <div class="scenario-meta">
+          <h3>De Vries Holding — Suspicious Transfer</h3>
+          <p>UBO red flags and UTR decision</p>
+        </div>
+      </div>
+      <div class="scenario-body">
+        <div class="scenario-briefing">
+          <div class="brief-label">Your Briefing</div>
+          <p>You are a <strong>compliance officer</strong> reviewing an unusual transaction alert. De Vries Holding B.V. has requested a large international transfer. The UBO is difficult to establish. The caller wants approval before end of day.</p>
+        </div>
+        <div class="learning-goals">
+          <div class="goal">Identifying UBO red flags in a complex structure</div>
+          <div class="goal">Applying enhanced CDD and deciding on a UTR</div>
+          <div class="goal">Handling pressure to approve without sufficient documentation</div>
+        </div>
+        <div class="scenario-widget" id="widget2Container">
+          <div class="no-agent-notice" id="noAgent2">📞 No Agent ID configured for this scenario.</div>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-primary" onclick="completeStep(3); showTab('chat')">Continue to AI Coach →</button>
+  </div>
+
+  <!-- ── TAB 4: AI COACH ── -->
+  <div class="tab-content" id="tab-chat">
+    <div class="chat-wrap">
+      <div class="chat-context" id="chatContext">
+        <strong>AML AI Coach</strong> — Ask anything about the AMLR, Wwft, CDD, UTR procedures or the scenarios you have practised. Your questions are answered in the context of your training level.
+      </div>
+      <div class="chat-history" id="chatHistory">
+        <div class="empty-msg">No messages yet. Ask a question or choose a suggestion below.</div>
+      </div>
+      <div class="chat-input-row">
+        <textarea class="chat-input" id="chatInput" placeholder="Ask a question…" rows="1" onkeydown="handleChatKey(event)" oninput="autoResize(this)"></textarea>
+        <button class="btn-send" id="sendBtn" onclick="sendChat()">➤</button>
+      </div>
+    </div>
+    <div class="suggested-questions" id="suggestedQs"></div>
+    <button class="btn-primary" onclick="completeStep(4); showTab('quiz')">Continue to Assessment →</button>
+  </div>
+
+  <!-- ── TAB 5: ASSESSMENT ── -->
+  <div class="tab-content" id="tab-quiz">
+    <div class="quiz-intro">
+      <h3>Final Assessment</h3>
+      <p>Answer all three questions. Each answer is evaluated individually by AI. You will receive feedback immediately after checking each answer.</p>
+    </div>
+    <div class="strictness-banner" id="strictnessBanner"></div>
+    <div id="quizQuestions"><div class="empty-msg"><span class="spinner"></span> Generating questions…</div></div>
+    <div class="quiz-submit-wrap" id="submitWrap" style="display:none">
+      <button class="btn-primary" id="submitQuizBtn" onclick="submitAllQuiz()">Submit All Answers</button>
+      <p class="quiz-submit-note">You can also check answers one by one above.</p>
+    </div>
+    <div class="cert-banner" id="certBanner">
+      <h3>🏆 Assessment Complete</h3>
+      <p>You have completed the AML Compliance Training Programme.</p>
+      <button class="btn-primary" onclick="generateCertificate()" style="margin-top:8px">Download Certificate (PDF)</button>
+    </div>
+  </div>
+
+  <!-- Bottom Nav -->
+  <div class="bottom-nav">
+    <button class="nav-btn active" id="nav-theory" onclick="showTab('theory')"><div class="nav-icon">📚</div><div class="nav-label">Theory</div></button>
+    <button class="nav-btn" id="nav-examples" onclick="showTab('examples')"><div class="nav-icon">🎯</div><div class="nav-label">Examples</div></button>
+    <button class="nav-btn" id="nav-scenario" onclick="showTab('scenario')"><div class="nav-icon">📞</div><div class="nav-label">Scenarios</div></button>
+    <button class="nav-btn" id="nav-chat" onclick="showTab('chat')"><div class="nav-icon">🤖</div><div class="nav-label">AI Coach</div></button>
+    <button class="nav-btn" id="nav-quiz" onclick="showTab('quiz')"><div class="nav-icon">✅</div><div class="nav-label">Assessment</div></button>
+  </div>
+</div>
+
+<!-- Certificate Popup -->
+<div class="popup-overlay hidden" id="popupOverlay">
+  <div class="popup" id="popupContent"></div>
+</div>
+
+<script src="js/shared.js"></script>
+<script src="js/coi.js"></script>
+</body>
+</html>

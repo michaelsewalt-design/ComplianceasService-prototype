@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>AML Compliance Training</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/shared.css">
+<script src="https://elevenlabs.io/convai-widget/index.js" async></script>
+</head>
+<body>
+
+<a href="/training" class="back-link">← Training Modules</a>
+
+<!-- ══ SETUP SCREEN ══ -->
+<div id="setupScreen">
+  <div class="brand">
+    <div class="brand-badge">AML · Anti-Money Laundering</div>
+    <h1>AML Compliance<br><em>Training Module</em></h1>
+    <p>Interactive e-learning — EU AMLR 2024/1624 · Dutch Wwft · AI coaching and realistic scenarios.</p>
+  </div>
+
+  <!-- Role / Level -->
+  <div class="card">
+    <div class="card-title">01 · Select Your Role</div>
+    <div class="level-grid">
+      <button class="level-btn" data-level="analyst" onclick="selectLevel(this)">
+        <div class="level-icon">🔍</div>
+        <div class="level-info">
+          <div class="level-name">Analyst</div>
+          <div class="level-desc">Practical CDD, transaction monitoring and escalation procedures</div>
+        </div>
+        <div class="level-check">✓</div>
+      </button>
+      <button class="level-btn" data-level="compliance" onclick="selectLevel(this)">
+        <div class="level-icon">⚖️</div>
+        <div class="level-info">
+          <div class="level-name">Compliance Officer</div>
+          <div class="level-desc">In-depth AMLR/Wwft framework, UTR procedures, DNB/AFM supervision</div>
+        </div>
+        <div class="level-check">✓</div>
+      </button>
+      <button class="level-btn" data-level="management" onclick="selectLevel(this)">
+        <div class="level-icon">🏛️</div>
+        <div class="level-info">
+          <div class="level-name">Senior Management / Board</div>
+          <div class="level-desc">Governance, personal liability, tone from the top and regulatory strategy</div>
+        </div>
+        <div class="level-check">✓</div>
+      </button>
+    </div>
+  </div>
+
+  <!-- Assessment Strictness -->
+  <div class="card" id="strictnessCard" style="display:none">
+    <div class="card-title">02 · Assessment Strictness</div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.5">Choose how strictly your final assessment answers will be evaluated.</p>
+    <div class="strictness-grid">
+      <button class="strictness-btn" data-strictness="hard" onclick="selectStrictness(this)">
+        <div class="strictness-dot dot-hard"></div>
+        <div class="strictness-info">
+          <div class="strictness-name">🔴 Strict</div>
+          <div class="strictness-desc">All answers must be complete and precise. Every detail counts.</div>
+        </div>
+        <div class="strictness-check">✓</div>
+      </button>
+      <button class="strictness-btn" data-strictness="normal" onclick="selectStrictness(this)">
+        <div class="strictness-dot dot-normal"></div>
+        <div class="strictness-info">
+          <div class="strictness-name">🟡 Standard</div>
+          <div class="strictness-desc">Core concepts must be correct. Minor gaps are acceptable.</div>
+        </div>
+        <div class="strictness-check">✓</div>
+      </button>
+      <button class="strictness-btn" data-strictness="light" onclick="selectStrictness(this)">
+        <div class="strictness-dot dot-light"></div>
+        <div class="strictness-info">
+          <div class="strictness-name">🟢 Lenient</div>
+          <div class="strictness-desc">Answers are accepted unless there is clearly no effort to engage with the topic.</div>
+        </div>
+        <div class="strictness-check">✓</div>
+      </button>
+    </div>
+  </div>
+
+  <!-- ElevenLabs Agents -->
+  <div class="card">
+    <div class="card-title">03 · Phone Scenarios (ElevenLabs)</div>
+    <div class="agent-cfg">
+      <div class="agent-row">
+        <div class="agent-row-header">
+          <span class="agent-scenario-badge">SCENARIO 1</span>
+          <span class="agent-scenario-title">Mehmet — The Cash Client</span>
+        </div>
+        <div class="field">
+          <label>AI Coach Configuration</label>
+          <input type="text" id="agent1Id" placeholder="Optional override — leave blank to use the default coach" autocorrect="off" autocapitalize="none"/>
+        </div>
+      </div>
+      <div class="agent-row">
+        <div class="agent-row-header">
+          <span class="agent-scenario-badge">SCENARIO 2</span>
+          <span class="agent-scenario-title">De Vries Holding — Suspicious Transfer</span>
+        </div>
+        <div class="field">
+          <label>AI Coach Configuration</label>
+          <input type="text" id="agent2Id" placeholder="Optional override — leave blank to use the default coach" autocorrect="off" autocapitalize="none"/>
+        </div>
+      </div>
+      <p class="hint">▸ If left empty, the system will use the default AI coach configuration.</p>
+    </div>
+  </div>
+
+  <button class="btn-primary" id="startBtn" onclick="startTraining()" disabled>Start Training →</button>
+  <div style="height:16px"></div>
+</div>
+
+<!-- ══ TRAINING SCREEN ══ -->
+<div id="trainingScreen">
+  <div class="topbar">
+    <div class="topbar-brand">AML Training</div>
+    <div class="topbar-level" id="topLevel">—</div>
+    <button class="btn-reset" onclick="resetTraining()">↩ Restart</button>
+  </div>
+
+  <!-- Step bar: 5 steps -->
+  <div class="steps-bar">
+    <div class="step active" id="step1" onclick="showTab('theory')">
+      <div class="step-circle" id="sc1">1</div>
+      <div class="step-label">Theory</div>
+    </div>
+    <div class="step-divider"></div>
+    <div class="step" id="step2" onclick="showTab('examples')">
+      <div class="step-circle" id="sc2">2</div>
+      <div class="step-label">Examples</div>
+    </div>
+    <div class="step-divider"></div>
+    <div class="step" id="step3" onclick="showTab('scenario')">
+      <div class="step-circle" id="sc3">3</div>
+      <div class="step-label">Scenarios</div>
+    </div>
+    <div class="step-divider"></div>
+    <div class="step" id="step4" onclick="showTab('chat')">
+      <div class="step-circle" id="sc4">4</div>
+      <div class="step-label">AI Coach</div>
+    </div>
+    <div class="step-divider"></div>
+    <div class="step" id="step5" onclick="showTab('quiz')">
+      <div class="step-circle" id="sc5">5</div>
+      <div class="step-label">Assessment</div>
+    </div>
+  </div>
+
+  <!-- ── TAB 1: THEORY ── -->
+  <div class="tab-content active" id="tab-theory">
+    <div class="theory-intro">
+      <h2>Anti-Money Laundering — AMLR & Wwft</h2>
+      <p>The new EU Anti-Money Laundering Regulation (AMLR 2024/1624) replaces the 4th AML Directive and directly applies in all member states. In the Netherlands, the Wwft remains the primary implementing law alongside AMLR. Together they impose rigorous CDD, monitoring and reporting obligations on financial institutions.</p>
+    </div>
+
+    <div class="accordion">
+      <div class="acc-item" id="acc1">
+        <div class="acc-header" onclick="toggleAcc('acc1')">
+          <div class="acc-header-left"><span class="acc-icon">🎯</span>
+            <div><div class="acc-title">What is Money Laundering?</div><div class="acc-article">Art. 2–3 AMLR / Art. 1 Wwft</div></div>
+          </div><span class="acc-chevron">▼</span>
+        </div>
+        <div class="acc-body">
+          <p>Money laundering is the process of making <strong>illegally obtained funds</strong> appear legitimate. It typically involves three stages: placement (introducing funds into the financial system), layering (obscuring the trail) and integration (merging proceeds into the legitimate economy).</p>
+          <p>The AMLR defines a broad set of <strong>obliged entities</strong> — including banks, payment institutions, crypto-asset service providers and certain professional services firms — who must implement AML controls.</p>
+          <div class="example">
+            <div class="ex-label">Example</div>
+            <p>A client deposits €9,500 in cash five times in one week. By staying just below the €10,000 reporting threshold, they attempt to avoid detection. This pattern — known as <strong>structuring or smurfing</strong> — is itself a criminal offence and a key red flag.</p>
+          </div>
+          <div id="theory-analyst-1" style="display:none;margin-top:12px">
+            <span class="level-tag tag-analyst">ANALYST</span>
+            <div class="red-flags">
+              <p style="font-size:13px;color:var(--text);margin-bottom:6px"><strong>Watch for these patterns:</strong></p>
+              <div class="flag"><p>Multiple cash deposits just below reporting thresholds</p></div>
+              <div class="flag"><p>Rapid movement of funds through multiple accounts</p></div>
+              <div class="flag"><p>Transactions inconsistent with the client's known business</p></div>
+            </div>
+          </div>
+          <div id="theory-compliance-1" style="display:none;margin-top:12px">
+            <span class="level-tag tag-compliance">COMPLIANCE</span>
+            <p>Ensure your transaction monitoring system generates alerts for structuring patterns. Document the rationale for both filing and <em>not</em> filing a UTR. DNB may audit these decisions.</p>
+          </div>
+          <div id="theory-management-1" style="display:none;margin-top:12px">
+            <span class="level-tag tag-management">MANAGEMENT</span>
+            <p>The board bears ultimate responsibility for an effective AML framework. AMLR introduces direct personal liability for senior management in cases of systemic failure. Ensure AML risk appetite is explicitly documented in governance frameworks.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="acc-item" id="acc2">
+        <div class="acc-header" onclick="toggleAcc('acc2')">
+          <div class="acc-header-left"><span class="acc-icon">🔍</span>
+            <div><div class="acc-title">Customer Due Diligence (CDD)</div><div class="acc-article">Art. 20–34 AMLR / Art. 3–11 Wwft</div></div>
+          </div><span class="acc-chevron">▼</span>
+        </div>
+        <div class="acc-body">
+          <p>CDD is the cornerstone of AML compliance. You must <strong>identify and verify</strong> the client, understand the purpose and nature of the relationship, identify the UBO (beneficial owner) and conduct ongoing monitoring. CDD must be applied at onboarding and whenever risk changes.</p>
+          <p><strong>Enhanced CDD (ECDD)</strong> applies to high-risk relationships including PEPs, high-risk jurisdictions and complex structures. ECDD requires senior management approval and more frequent reviews.</p>
+          <div class="example">
+            <div class="ex-label">Example</div>
+            <p>A holding company applies for a business account. The ultimate beneficial owner (UBO) is a resident of a high-risk country listed by FATF. Standard CDD is insufficient — ECDD is required: source of wealth, source of funds, senior approval and enhanced monitoring must all be documented.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="acc-item" id="acc3">
+        <div class="acc-header" onclick="toggleAcc('acc3')">
+          <div class="acc-header-left"><span class="acc-icon">📊</span>
+            <div><div class="acc-title">Transaction Monitoring & UTR</div><div class="acc-article">Art. 50–54 AMLR / Art. 16 Wwft</div></div>
+          </div><span class="acc-chevron">▼</span>
+        </div>
+        <div class="acc-body">
+          <p>Obliged entities must monitor transactions and report <strong>Unusual Transaction Reports (UTRs)</strong> to the FIU-Netherlands as soon as a transaction is identified as unusual — not only when certainty exists. The threshold is <strong>reasonable suspicion</strong>.</p>
+          <p><strong>Deadline:</strong> UTRs must be filed within 14 days of identifying an unusual transaction (or immediately for certain high-risk categories).</p>
+          <p><strong>Tipping-off prohibition:</strong> You must not inform the client or any third party that a UTR has been filed or is being considered.</p>
+          <div class="example">
+            <div class="ex-label">Example</div>
+            <p>A client transfers €180,000 to a cryptocurrency exchange in three transactions over five days. The client is a retired teacher with no prior investment history. This is inconsistent with their profile and must be investigated. If the suspicion cannot be resolved, a UTR must be filed.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="acc-item" id="acc4">
+        <div class="acc-header" onclick="toggleAcc('acc4')">
+          <div class="acc-header-left"><span class="acc-icon">🌍</span>
+            <div><div class="acc-title">PEPs, High-Risk Countries & Sanctions</div><div class="acc-article">Art. 35–40 AMLR / Art. 8 Wwft</div></div>
+          </div><span class="acc-chevron">▼</span>
+        </div>
+        <div class="acc-body">
+          <p>A <strong>Politically Exposed Person (PEP)</strong> is someone who holds or has held a prominent public function. PEPs always require enhanced CDD, including senior management approval and ongoing monitoring. Family members and close associates of PEPs are also in scope.</p>
+          <p>Clients or transactions connected to <strong>FATF grey- or blacklisted countries</strong>, or EU high-risk third countries, require enhanced CDD and additional controls. Always check against EU/OFAC/UN sanctions lists.</p>
+          <div class="example">
+            <div class="ex-label">Example</div>
+            <p>A client is the spouse of a former state secretary from a high-risk jurisdiction. Enhanced CDD is mandatory: verify source of wealth, obtain senior management approval and schedule annual review. A documented business rationale for Dutch banking must exist.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="acc-item" id="acc5">
+        <div class="acc-header" onclick="toggleAcc('acc5')">
+          <div class="acc-header-left"><span class="acc-icon">⚡</span>
+            <div><div class="acc-title">Sanctions & Enforcement</div><div class="acc-article">Art. 56–58 AMLR / Art. 27–29 Wwft</div></div>
+          </div><span class="acc-chevron">▼</span>
+        </div>
+        <div class="acc-body">
+          <p><strong>Administrative (DNB/AFM):</strong> Fines for legal entities up to <strong>€4 million or 10% of annual turnover</strong> under the Wwft. AMLR raises the ceiling to <strong>€10 million or 10% of group turnover</strong>. Enforcement decisions are published (naming and shaming).</p>
+          <p><strong>Criminal law:</strong> Intentional money laundering by the institution or its officers can be prosecuted. Maximum <strong>6 years imprisonment</strong> and category 5 fine (€900,000) for natural persons.</p>
+          <p><strong>AMLA:</strong> The new EU Anti-Money Laundering Authority gains direct supervisory powers over the 40–50 largest cross-border institutions from 2028.</p>
+          <div class="example">
+            <div class="ex-label">Enforcement Practice</div>
+            <p>DNB has issued several high-profile Wwft fines including multi-million-euro penalties for systematic CDD failures, inadequate transaction monitoring and late UTR reporting. Enforcement decisions are published at dnb.nl and afm.nl.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-primary" onclick="completeStep(1); showTab('examples')">Continue to Examples →</button>
+  </div>
+
+  <!-- ── TAB 2: EXAMPLES ── -->
+  <div class="tab-content" id="tab-examples">
+    <div class="examples-intro">
+      <h2>Practice Examples</h2>
+      <p>Read each scenario carefully and provide a short answer. The AI will evaluate your response and give detailed feedback on both strengths and areas for improvement. There is no pass/fail — this is purely a learning exercise.</p>
+    </div>
+
+    <div id="examplesContainer">
+      <div class="empty-msg"><span class="spinner"></span> Loading examples…</div>
+    </div>
+
+    <button class="btn-primary examples-continue" id="examplesContinueBtn" style="display:none" onclick="completeStep(2); showTab('scenario')">Continue to Scenarios →</button>
+  </div>
+
+  <!-- ── TAB 3: SCENARIOS ── -->
+  <div class="tab-content" id="tab-scenario">
+    <div class="card">
+      <div class="card-title">01 · Choose a Scenario</div>
+      <div class="level-grid">
+        <button class="level-btn" onclick="selectScenario(1)" id="scenarioBtn1">
+          <div class="level-icon">💵</div>
+          <div class="level-info">
+            <div class="level-name">Mehmet — The Cash Client</div>
+            <div class="level-desc">Recognising structuring and unusual cash patterns</div>
+          </div>
+          <div class="level-check">✓</div>
+        </button>
+        <button class="level-btn" onclick="selectScenario(2)" id="scenarioBtn2">
+          <div class="level-icon">🏢</div>
+          <div class="level-info">
+            <div class="level-name">De Vries Holding — Suspicious Transfer</div>
+            <div class="level-desc">UBO red flags and UTR decision</div>
+          </div>
+          <div class="level-check">✓</div>
+        </button>
+      </div>
+    </div>
+
+    <div style="height:16px"></div>
+
+    <div class="scenario-card">
+      <div class="scenario-header">
+        <div class="scenario-num">1</div>
+        <div class="scenario-meta">
+          <h3>The Cash Client — Mehmet calls</h3>
+          <p>Recognising structuring and refusing to proceed without CDD</p>
+        </div>
+      </div>
+      <div class="scenario-body">
+        <div class="scenario-briefing">
+          <div class="brief-label">Your Briefing</div>
+          <p>You are a <strong>relationship manager at a Dutch bank</strong>. Your client Mehmet Yilmaz calls. He wants to deposit a large amount of cash in multiple instalments. He is friendly and acts as if this is perfectly normal. Listen carefully and respond as you would in practice.</p>
+        </div>
+        <div class="learning-goals">
+          <div class="goal">Recognising structuring (smurfing) in a client conversation</div>
+          <div class="goal">Applying the Wwft CDD obligation without alarming the client</div>
+          <div class="goal">Knowing when and how to escalate to compliance</div>
+        </div>
+        <div class="scenario-widget" id="widget1Container">
+          <div class="no-agent-notice" id="noAgent1">📞 No Agent ID configured for this scenario.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="scenario-card">
+      <div class="scenario-header">
+        <div class="scenario-num">2</div>
+        <div class="scenario-meta">
+          <h3>De Vries Holding — Suspicious Transfer</h3>
+          <p>UBO red flags and UTR decision</p>
+        </div>
+      </div>
+      <div class="scenario-body">
+        <div class="scenario-briefing">
+          <div class="brief-label">Your Briefing</div>
+          <p>You are a <strong>compliance officer</strong> reviewing an unusual transaction alert. De Vries Holding B.V. has requested a large international transfer. The UBO is difficult to establish. The caller wants approval before end of day.</p>
+        </div>
+        <div class="learning-goals">
+          <div class="goal">Identifying UBO red flags in a complex structure</div>
+          <div class="goal">Applying enhanced CDD and deciding on a UTR</div>
+          <div class="goal">Handling pressure to approve without sufficient documentation</div>
+        </div>
+        <div class="scenario-widget" id="widget2Container">
+          <div class="no-agent-notice" id="noAgent2">📞 No Agent ID configured for this scenario.</div>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-primary" onclick="completeStep(3); showTab('chat')">Continue to AI Coach →</button>
+  </div>
+
+  <!-- ── TAB 4: AI COACH ── -->
+  <div class="tab-content" id="tab-chat">
+    <div class="chat-wrap">
+      <div class="chat-context" id="chatContext">
+        <strong>AML AI Coach</strong> — Ask anything about the AMLR, Wwft, CDD, UTR procedures or the scenarios you have practised. Your questions are answered in the context of your training level.
+      </div>
+      <div class="chat-history" id="chatHistory">
+        <div class="empty-msg">No messages yet. Ask a question or choose a suggestion below.</div>
+      </div>
+      <div class="chat-input-row">
+        <textarea class="chat-input" id="chatInput" placeholder="Ask a question…" rows="1" onkeydown="handleChatKey(event)" oninput="autoResize(this)"></textarea>
+        <button class="btn-send" id="sendBtn" onclick="sendChat()">➤</button>
+      </div>
+    </div>
+    <div class="suggested-questions" id="suggestedQs"></div>
+    <button class="btn-primary" onclick="completeStep(4); showTab('quiz')">Continue to Assessment →</button>
+  </div>
+
+  <!-- ── TAB 5: ASSESSMENT ── -->
+  <div class="tab-content" id="tab-quiz">
+    <div class="quiz-intro">
+      <h3>Final Assessment</h3>
+      <p>Answer all three questions. Each answer is evaluated individually by AI. You will receive feedback immediately after checking each answer.</p>
+    </div>
+    <div class="strictness-banner" id="strictnessBanner"></div>
+    <div id="quizQuestions"><div class="empty-msg"><span class="spinner"></span> Generating questions…</div></div>
+    <div class="quiz-submit-wrap" id="submitWrap" style="display:none">
+      <button class="btn-primary" id="submitQuizBtn" onclick="submitAllQuiz()">Submit All Answers</button>
+      <p class="quiz-submit-note">You can also check answers one by one above.</p>
+    </div>
+    <div class="cert-banner" id="certBanner">
+      <h3>🏆 Assessment Complete</h3>
+      <p>You have completed the AML Compliance Training Programme.</p>
+      <button class="btn-primary" onclick="generateCertificate()" style="margin-top:8px">Download Certificate (PDF)</button>
+    </div>
+  </div>
+
+  <!-- Bottom Nav -->
+  <div class="bottom-nav">
+    <button class="nav-btn active" id="nav-theory" onclick="showTab('theory')"><div class="nav-icon">📚</div><div class="nav-label">Theory</div></button>
+    <button class="nav-btn" id="nav-examples" onclick="showTab('examples')"><div class="nav-icon">🎯</div><div class="nav-label">Examples</div></button>
+    <button class="nav-btn" id="nav-scenario" onclick="showTab('scenario')"><div class="nav-icon">📞</div><div class="nav-label">Scenarios</div></button>
+    <button class="nav-btn" id="nav-chat" onclick="showTab('chat')"><div class="nav-icon">🤖</div><div class="nav-label">AI Coach</div></button>
+    <button class="nav-btn" id="nav-quiz" onclick="showTab('quiz')"><div class="nav-icon">✅</div><div class="nav-label">Assessment</div></button>
+  </div>
+</div>
+
+<!-- Certificate Popup -->
+<div class="popup-overlay hidden" id="popupOverlay">
+  <div class="popup" id="popupContent"></div>
+</div>
+
+<script src="js/shared.js"></script>
+<script src="js/aml.js"></script>
+</body>
+</html>
