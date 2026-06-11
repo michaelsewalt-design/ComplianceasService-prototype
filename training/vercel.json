@@ -2,48 +2,56 @@
   "version": 2,
   "routes": [
     {
-      "src": "/api/auth",
-      "dest": "/api/auth.js"
+      "src": "/assets/(.*)",
+      "dest": "/assets/$1"
     },
     {
-      "src": "/api/claude",
-      "dest": "/api/claude.js"
+      "src": "/training/api/auth",
+      "dest": "/training/api/auth.js"
     },
     {
-      "src": "/api/config",
-      "dest": "/api/config.js"
+      "src": "/training/api/claude",
+      "dest": "/training/api/claude.js"
+    },
+    {
+      "src": "/training/api/config",
+      "dest": "/training/api/config.js"
+    },
+    {
+      "src": "/training/css/(.*)",
+      "dest": "/training/css/$1"
+    },
+    {
+      "src": "/training/js/(.*)",
+      "dest": "/training/js/$1"
+    },
+    {
+      "src": "/training/login.html",
+      "dest": "/training/login.html"
+    },
+    {
+      "src": "/training/aml.html",
+      "dest": "/training/aml.html"
+    },
+    {
+      "src": "/training/mar.html",
+      "dest": "/training/mar.html"
+    },
+    {
+      "src": "/training/index.html",
+      "dest": "/training/index.html"
+    },
+    {
+      "src": "/training/?",
+      "dest": "/training/index.html"
     },
     {
       "src": "/index.html",
       "dest": "/index.html"
     },
     {
-      "src": "/login.html",
-      "dest": "/login.html"
-    },
-    {
-      "src": "/aml.html",
-      "dest": "/aml.html"
-    },
-    {
-      "src": "/mar.html",
-      "dest": "/mar.html"
-    },
-    {
-      "src": "/coi.html",
-      "dest": "/coi.html"
-    },
-    {
-      "src": "/css/(.*)",
-      "dest": "/css/$1"
-    },
-    {
-      "src": "/js/(.*)",
-      "dest": "/js/$1"
-    },
-    {
       "src": "/",
-      "dest": "/login.html"
+      "dest": "/index.html"
     }
   ]
 }
