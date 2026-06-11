@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Compliance as a Service Portal</title>
+  <meta name="description" content="Public landing page for the Compliance as a Service platform." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/shared/portal.css" />
+</head>
+<body>
+  <div class="page-shell">
+    <header class="hero">
+      <div class="hero-copy">
+        <span class="eyebrow">Compliance as a Service</span>
+        <h1>One portal for training, operations, and compliance tooling.</h1>
+        <p>
+          Launch the modules your teams need today and keep room to expand with future compliance services.
+          This landing page is public and contains no sensitive information.
+        </p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#modules">Explore modules</a>
+          <a class="btn btn-secondary" href="#roadmap">View roadmap</a>
+        </div>
+      </div>
+      <div class="hero-panel">
+        <div class="hero-panel-card">
+          <div class="hero-panel-icon">🛡️</div>
+          <div>
+            <h2>Secure-by-module access</h2>
+            <p>Each module can keep its own login flow, code, and API surface while the main portal stays public.</p>
+          </div>
+        </div>
+        <div class="hero-stats">
+          <div class="stat-card">
+            <strong>3</strong>
+            <span>Active modules</span>
+          </div>
+          <div class="stat-card">
+            <strong>4+</strong>
+            <span>Roadmap ideas</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section id="modules" class="section">
+        <div class="section-head">
+          <div>
+            <span class="section-kicker">Available now</span>
+            <h2>Core modules</h2>
+          </div>
+          <p class="section-intro">Each card links to its own module entry point. Authentication can be handled separately per module.</p>
+        </div>
+
+        <div class="module-grid">
+          <a class="module-card active" href="/training" aria-label="Open Training Module">
+            <div class="module-icon">🎓</div>
+            <div class="module-body">
+              <div class="module-meta">
+                <span class="status live">Live module</span>
+                <span class="surface-tag">Learning</span>
+              </div>
+              <h3>Training Module</h3>
+              <p>Launch role-based training journeys such as AML, MAR, and future compliance learning tracks.</p>
+            </div>
+            <div class="module-footer">
+              <span>Open module</span>
+              <span class="arrow">→</span>
+            </div>
+          </a>
+
+          <a class="module-card active" href="/incident-request" aria-label="Open Incident and Request Module">
+            <div class="module-icon">📝</div>
+            <div class="module-body">
+              <div class="module-meta">
+                <span class="status live">Prototype module</span>
+                <span class="surface-tag">Workflow</span>
+              </div>
+              <h3>Incident &amp; Request Module</h3>
+              <p>Handle internal compliance incidents, approvals, requests, and intake workflows from one workspace.</p>
+            </div>
+            <div class="module-footer">
+              <span>Open module</span>
+              <span class="arrow">→</span>
+            </div>
+          </a>
+
+          <a class="module-card active" href="/screening" aria-label="Open Adverse Media Check Module">
+            <div class="module-icon">🔎</div>
+            <div class="module-body">
+              <div class="module-meta">
+                <span class="status live">Prototype module</span>
+                <span class="surface-tag">Screening</span>
+              </div>
+              <h3>Adverse Media Check Module</h3>
+              <p>Run adverse media, sanctions, and broader screening workflows through a dedicated compliance interface.</p>
+            </div>
+            <div class="module-footer">
+              <span>Open module</span>
+              <span class="arrow">→</span>
+            </div>
+          </a>
+        </div>
+      </section>
+
+      <section id="roadmap" class="section">
+        <div class="section-head">
+          <div>
+            <span class="section-kicker">Coming soon</span>
+            <h2>Future module ideas</h2>
+          </div>
+          <p class="section-intro">Reserved cards for possible future services. These are intentionally non-clickable for now.</p>
+        </div>
+
+        <div class="module-grid roadmap-grid">
+          <article class="module-card disabled" aria-disabled="true">
+            <div class="module-icon">📚</div>
+            <div class="module-body">
+              <div class="module-meta">
+                <span class="status soon">Coming soon</span>
+                <span class="surface-tag">Policy</span>
+              </div>
+              <h3>Policy Library</h3>
+              <p>A central place for policies, procedures, attestations, and version-controlled reference content.</p>
+            </div>
+            <div class="module-footer muted"><span>Not yet available</span></div>
+          </article>
+
+          <article class="module-card disabled" aria-disabled="true">
+            <div class="module-icon">🎁</div>
+            <div class="module-body">
+              <div class="module-meta">
+                <span class="status soon">Coming soon</span>
+                <span class="surface-tag">Register</span>
+              </div>
+              <h3>Gifts &amp; Hospitality Register</h3>
+              <p>Capture submissions, approvals, thresholds, and reporting around gifts, entertainment, and hospitality.</p>
+            </div>
+            <div class="module-footer muted"><span>Not yet available</span></div>
+          </article>
+
+          <article class="module-card disabled" aria-disabled="true">
+            <div class="module-icon">📣</div>
+            <div class="module-body">
+              <div class="module-meta">
+                <span class="status soon">Coming soon</span>
+                <span class="surface-tag">Speak-up</span>
+              </div>
+              <h3>Whistleblower / Speak-Up</h3>
+              <p>Enable protected intake, triage, and case handling for internal disclosures and speak-up channels.</p>
+            </div>
+            <div class="module-footer muted"><span>Not yet available</span></div>
+          </article>
+
+          <article class="module-card disabled" aria-disabled="true">
+            <div class="module-icon">📊</div>
+            <div class="module-body">
+              <div class="module-meta">
+                <span class="status soon">Coming soon</span>
+                <span class="surface-tag">Insights</span>
+              </div>
+              <h3>Compliance Dashboard</h3>
+              <p>Provide consolidated management reporting, KRIs, action tracking, and module-level oversight metrics.</p>
+            </div>
+            <div class="module-footer muted"><span>Not yet available</span></div>
+          </article>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
