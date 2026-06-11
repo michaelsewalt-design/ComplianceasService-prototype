@@ -16,7 +16,7 @@ try {
 const crypto = require('crypto');
 const [data, signature] = token.split('.');
 const expectedSig = crypto
-.createHmac('sha256', process.env.AUTH_SECRET)
+.createHmac('sha256', process.env.TRAINING_AUTH_SECRET)
 .update(data)
 .digest('base64url');
 

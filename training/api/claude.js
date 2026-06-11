@@ -16,7 +16,7 @@ try {
 const [data, signature] = token.split('.');
 const crypto = require('crypto');
 const expectedSig = crypto
-.createHmac('sha256', process.env.AUTH_SECRET)
+.createHmac('sha256', process.env.TRAINING_AUTH_SECRET)
 .update(data)
 .digest('base64url');
 
@@ -39,7 +39,7 @@ if (!messages || !Array.isArray(messages)) {
 return res.status(400).json({ error: 'Messages array is required' });
 }
 
-const apiKey = process.env.ANTHROPIC_API_KEY;
+const apiKey = process.env.TRAINING_ANTHROPIC_API_KEY;
 if (!apiKey) {
 console.error('ANTHROPIC_API_KEY not configured');
 return res.status(500).json({ error: 'Server configuration error' });

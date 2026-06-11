@@ -8,7 +8,7 @@ const LOCKOUT_MS = 15 * 60 * 1000;
 module.exports = async (req, res) => {
   res.setHeader('Content-Type', 'application/json');
 
-  if (!process.env.AUTH_SECRET || !process.env.SITE_PASSWORD) {
+  if (!process.env.TRAINING_AUTH_SECRET || !process.env.TRAINING_SITE_PASSWORD) {
     console.error('Missing required environment variables');
     return res.status(500).json({
       success: false,
