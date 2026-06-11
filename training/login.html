@@ -345,7 +345,7 @@
                 errDiv.style.display = "none";
 
                 var xhr = new XMLHttpRequest();
-                xhr.open("POST", "/training/api/auth", true);
+                xhr.open("POST", "/api/auth", true);
                 xhr.setRequestHeader("Content-Type", "application/json");
                 xhr.onreadystatechange = function() {
                     if (xhr.readyState !== 4) return;
@@ -386,7 +386,7 @@
                 var tok = sessionStorage.getItem("ct_token");
                 if (!tok) return false;
                 var checkXhr = new XMLHttpRequest();
-                checkXhr.open("GET", "/training/api/auth", true);
+                checkXhr.open("GET", "/api/auth", true);
                 checkXhr.setRequestHeader("Authorization", "Bearer " + tok);
                 checkXhr.onreadystatechange = function() {
                     if (checkXhr.readyState !== 4) return;
