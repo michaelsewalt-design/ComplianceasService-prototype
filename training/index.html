@@ -24,6 +24,23 @@
   --radius:   14px;
 }
 
+.top-actions {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  right: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 20;
+}
+
+.top-actions .back-link,
+.top-actions .logout-link {
+  position: static;
+}
+
+
 html, body {
   height: 100%;
   background: var(--bg);
@@ -228,7 +245,11 @@ body::before {
 </head>
 <body>
 
-<a href="" class="logout-link" onclick="sessionStorage.removeItem('ct_token'); window.location.href='/training/login.html'; return false;">Logout</a>
+<div class="top-actions">
+  <a href="/" class="back-link">← Back to Main Portal</a>
+  <a href="" class="logout-link" onclick="sessionStorage.removeItem('ct_token'); window.location.href='/training/login.html'; return false;">Logout</a>
+</div>
+
 
 <div class="page">
 
