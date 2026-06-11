@@ -51,7 +51,7 @@ var STRICTNESS_LABELS = {
 };
 
 var STRICTNESS_INSTRUCTIONS = {
-  hard: 'Evaluate STRICTLY. The answer must be complete, precise and reference the correct legal framework (AMLR/Wwft articles). Any missing element, vague phrasing or factual error results in "onvoldoende". Only answers that are fully correct and comprehensive receive "goed". Partial answers that cover the main point but miss important details receive "gedeeltelijk".',
+  hard: 'Evaluate STRICTLY. The answer must be complete, precise and reference the correct legal or policy framework where relevant (for example Wft, Bgfo, MiFID II, Delegated Regulation 2017/565, the Banker\'s Oath or whistleblowing protections). Any missing key control, vague phrasing or factual error results in "onvoldoende". Only answers that are fully correct and comprehensive receive "goed". Partial answers that cover the main point but miss important details receive "gedeeltelijk".',
 
   normal: 'Evaluate at a STANDARD level. The answer should demonstrate understanding of the core concepts. Minor omissions or imprecise phrasing are acceptable if the main point is correct. Clearly wrong answers or fundamental misunderstandings result in "onvoldoende". Reasonable answers with the right direction receive "gedeeltelijk". Solid answers covering the key points receive "goed".',
 
@@ -77,18 +77,13 @@ document.addEventListener('DOMContentLoaded', function() {
   if (!requireAuth()) return;
 
   loadConfig().then(function(config) {
-    if (config && config.aml) {
-      var a1Input = document.getElementById('agent1Id');
-      var a2Input = document.getElementById('agent2Id');
-
-      if (a1Input) {
-        a1Input.dataset.defaultAgent = config.coi.agent1 || '';
-        a1Input.placeholder = 'Optional override — leave blank to use the default coach';
-      }
-
-      if (a2Input) {
-        a2Input.dataset.defaultAgent = config.coi.agent2 || '';
-        a2Input.placeholder = 'Optional override — leave blank to use the default coach';
+    if (config && config.coi) {
+      for (var i = 1; i <= 6; i++) {
+        var input = document.getElementById('agent' + i + 'Id');
+        if (input) {
+          input.dataset.defaultAgent = config.coi['agent' + i] || '';
+          input.placeholder = 'Optional override — leave blank to use the default coach';
+        }
       }
     }
   });
@@ -96,11 +91,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // ─── START TRAINING ────────────────────
 function startTraining() {
-  var agent1Input = document.getElementById('agent1Id');
-  var agent2Input = document.getElementById('agent2Id');
-
-  agent1Id = agent1Input.value.trim() || agent1Input.dataset.defaultAgent || '';
-  agent2Id = agent2Input.value.trim() || agent2Input.dataset.defaultAgent || '';
+  window.coiAgentIds = [];
+  for (var i = 1; i <= 6; i++) {
+    var input = document.getElementById('agent' + i + 'Id');
+    window.coiAgentIds.push((input && (input.value.trim() || input.dataset.defaultAgent)) || '');
+  }
 
   document.getElementById('topLevel').textContent = LEVEL_LABELS[selectedLevel];
 
@@ -129,129 +124,27 @@ function startTraining() {
   loadQuiz();
 }
 
-// ─── EXAMPLES ──────────────────────────
-function loadExamples() {
-  var container = document.getElementById('examplesContainer');
-  container.innerHTML = '<div class="empty-msg"><span class="spinner"></span> Generating practice examples…</div>';
-
-  callClaude(
-    [{ role: 'user', content: EXAMPLE_PROMPTS[selectedLevel] }],
-    'You are a precise COI & Integrity trainer. Respond only with the requested JSON array.',
-    1200
-  ).then(function(reply) {
-    var clean = cleanJsonResponse(reply);
-    var examples = JSON.parse(clean);
-    window._examples = examples;
-
-    container.innerHTML = '';
-    if (!Array.isArray(examples)) { throw new Error('Examples response is not a valid array.'); }
-    for (var i = 0; i < examples.length; i++) {
-      var ex = examples[i] || {};
-      var el = document.createElement('div');
-      el.className = 'example-case';
-      el.id = 'example-' + i;
-      el.innerHTML = '<div class="example-case-header">'
-        + '<div class="example-case-num">' + (i + 1) + '</div>'
-        + '<div class="example-case-meta"><h3>' + escapeHtml(ex.title || ('Example ' + (i + 1))) + '</h3><p>Practice Example</p></div>'
-        + '</div>'
-        + '<div class="example-case-body">'
-        + '<div class="example-scenario"><div class="example-scenario-label">Scenario</div><p>' + safeTextToHtml(ex.scenario || '') + '</p></div>'
-        + '<div class="example-question"><div class="example-question-label">Question</div><p>' + safeTextToHtml(ex.question || '') + '</p></div>'
-        + '<div class="example-answer-area">'
-        + '<textarea class="example-textarea" id="example-answer-' + i + '" placeholder="Type your answer here…" rows="3"></textarea>'
-        + '<button class="btn-evaluate" id="example-btn-' + i + '" onclick="evaluateExample(' + i + ')">Evaluate Answer</button>'
-        + '</div>'
-        + '<div class="example-feedback" id="example-fb-' + i + '"></div>'
-        + '</div>';
-      container.appendChild(el);
-    }
-  }).catch(function(err) {
-    container.innerHTML = '<div class="empty-msg">⚠ Failed to load examples: ' + escapeHtml(err.message || 'Unknown error') + '</div>';
-  });
-}
-
-function evaluateExample(idx) {
-  var answer = document.getElementById('example-answer-' + idx).value.trim();
-  if (!answer) { alert('Please enter an answer first.'); return; }
-
-  var btn = document.getElementById('example-btn-' + idx);
-  btn.disabled = true;
-  btn.textContent = 'Evaluating…';
-
-  var ex = window._examples[idx];
-
-  var prompt = 'You are a COI & Integrity trainer. A trainee (' + LEVEL_LABELS[selectedLevel] + ') answered a practice example.\n\n'
-    + 'Scenario: ' + (ex.scenario || '') + '\nQuestion: ' + (ex.question || '') + '\nTrainee answer: ' + answer + '\n\n'
-    + 'Provide detailed learning feedback. This is NOT a pass/fail assessment — it is a learning exercise.\n\n'
-    + 'Return JSON only, no markdown:\n{\n  "quality": "good|partial|poor",\n  "goodPoints": "What the trainee did well (2-3 sentences)",\n  "attentionPoints": "Areas for improvement (2-3 sentences)",\n  "modelAnswer": "The ideal complete answer (3-5 sentences)"\n}';
-
-  callClaude(
-    [{ role: 'user', content: prompt }],
-    'You are a precise COI & Integrity trainer. Respond only with the requested JSON.',
-    800
-  ).then(function(reply) {
-    var clean = cleanJsonResponse(reply);
-    var parsed = JSON.parse(clean);
-
-    var fbEl = document.getElementById('example-fb-' + idx);
-    fbEl.className = 'example-feedback visible ' + (parsed.quality || 'partial');
-    fbEl.innerHTML = '<div class="feedback-header">'
-      + '<span class="feedback-badge ' + (parsed.quality || 'partial') + '">'
-      + (parsed.quality === 'good' ? '✓ Strong Answer' : parsed.quality === 'poor' ? '✗ Needs Work' : '◑ Partial')
-      + '</span></div>'
-      + '<div class="feedback-section good-points"><strong>What You Did Well</strong>' + safeTextToHtml(parsed.goodPoints || '') + '</div>'
-      + '<div class="feedback-section attention-points"><strong>Points of Attention</strong>' + safeTextToHtml(parsed.attentionPoints || '') + '</div>'
-      + '<div class="feedback-section model-answer"><strong>Model Answer</strong>' + safeTextToHtml(parsed.modelAnswer || '') + '</div>';
-
-    btn.textContent = 'Evaluated ✓';
-    checkAllExamplesDone();
-  }).catch(function(err) {
-    var fbEl = document.getElementById('example-fb-' + idx);
-    fbEl.className = 'example-feedback visible partial';
-    fbEl.innerHTML = '<p>⚠ Evaluation error: ' + escapeHtml(err.message || 'Unknown error') + '</p>';
-    btn.disabled = false;
-    btn.textContent = 'Try Again';
-  });
-}
-
-function checkAllExamplesDone() {
-  if (!window._examples) return;
-  var allDone = true;
-  for (var i = 0; i < window._examples.length; i++) {
-    var fb = document.getElementById('example-fb-' + i);
-    if (!fb || !fb.classList.contains('visible')) { allDone = false; break; }
-  }
-  if (allDone) {
-    var continueBtn = document.getElementById('examplesContinueBtn');
-    if (continueBtn) continueBtn.style.display = 'block';
-  }
-}
-
 // ─── SCENARIOS ─────────────────────────
 function selectScenario(n) {
   activeScenario = n;
-  var btns = document.querySelectorAll('#scenarioBtn1, #scenarioBtn2');
+  var btns = document.querySelectorAll('[id^="scenarioBtn"]');
   for (var i = 0; i < btns.length; i++) { btns[i].classList.remove('selected'); }
   document.getElementById('scenarioBtn' + n).classList.add('selected');
 
-  var w1 = document.getElementById('widget1Container');
-  var w2 = document.getElementById('widget2Container');
-  w1.innerHTML = '';
-  w2.innerHTML = '';
-
-  if (n === 1) {
-    loadAgent('widget1Container', agent1Id);
-    w2.style.display = 'none';
-    w1.style.display = 'flex';
-  } else {
-    loadAgent('widget2Container', agent2Id);
-    w1.style.display = 'none';
-    w2.style.display = 'flex';
+  for (var c = 1; c <= 6; c++) {
+    var widget = document.getElementById('widget' + c + 'Container');
+    if (!widget) continue;
+    widget.innerHTML = '';
+    widget.style.display = (c === n ? 'flex' : 'none');
   }
+
+  var agentId = (window.coiAgentIds && window.coiAgentIds[n - 1]) || '';
+  loadAgent('widget' + n + 'Container', agentId);
 }
 
 function loadAgent(containerId, agentId) {
   var container = document.getElementById(containerId);
+  if (!container) return;
   if (!agentId) {
     container.innerHTML = '<div class="no-agent-notice">📞 No Agent ID configured for this scenario.</div>';
     return;
