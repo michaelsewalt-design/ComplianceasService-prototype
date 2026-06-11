@@ -28,7 +28,7 @@ function callClaude(messages, systemPrompt, maxTokens) {
         return Promise.reject(new Error("Not authenticated"));
     }
 
-    return fetch("/training/api/claude", {
+    return fetch("/api/claude", {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -65,7 +65,7 @@ function loadConfig() {
     var token = getToken();
     if (!token) return Promise.resolve(null);
 
-    return fetch("/training/api/config", {
+    return fetch("/api/config", {
         headers: { "Authorization": "Bearer " + token }
     }).then(function(resp) {
         if (!resp.ok) return null;
