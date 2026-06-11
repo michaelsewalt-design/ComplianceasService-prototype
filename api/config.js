@@ -41,6 +41,15 @@ agent2: process.env.AML_AGENT_2 || ''
 mar: {
 agent1: process.env.MAR_AGENT_1 || '',
 agent2: process.env.MAR_AGENT_2 || ''
+},
+
+coi: {
+  agent1: process.env.COI_AGENT_1 || '',
+  agent2: process.env.COI_AGENT_2 || '',
+  agent3: process.env.COI_AGENT_3 || '',
+  agent4: process.env.COI_AGENT_4 || '',
+  agent5: process.env.COI_AGENT_5 || '',
+  agent6: process.env.COI_AGENT_6 || ''
 }
 });
 };
