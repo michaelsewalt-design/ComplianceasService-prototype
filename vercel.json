@@ -6,16 +6,16 @@
       "dest": "/assets/$1"
     },
     {
-      "src": "/training/api/auth",
-      "dest": "/training/api/auth.js"
+      "src": "/api/auth",
+      "dest": "/api/auth.js"
     },
     {
-      "src": "/training/api/claude",
-      "dest": "/training/api/claude.js"
+      "src": "/api/claude",
+      "dest": "/api/claude.js"
     },
     {
-      "src": "/training/api/config",
-      "dest": "/training/api/config.js"
+      "src": "/api/config",
+      "dest": "/api/config.js"
     },
     {
       "src": "/training/css/(.*)",
