@@ -1,0 +1,62 @@
+{
+  "version": 2,
+  "routes": [
+    {
+      "src": "/assets/(.*)",
+      "dest": "/assets/$1"
+    },
+    {
+      "src": "/training/api/auth",
+      "dest": "/training/api/auth.js"
+    },
+    {
+      "src": "/training/api/claude",
+      "dest": "/training/api/claude.js"
+    },
+    {
+      "src": "/training/api/config",
+      "dest": "/training/api/config.js"
+    },
+    {
+      "src": "/training/css/(.*)",
+      "dest": "/training/css/$1"
+    },
+    {
+      "src": "/training/js/(.*)",
+      "dest": "/training/js/$1"
+    },
+    {
+      "src": "/training/login.html",
+      "dest": "/training/login.html"
+    },
+    {
+      "src": "/training/aml.html",
+      "dest": "/training/aml.html"
+    },
+    {
+      "src": "/training/mar.html",
+      "dest": "/training/mar.html"
+    },
+    
+    {
+      "src": "/training/coi.html",
+      "dest": "/training/coi.html"
+    },
+    {
+      "src": "/training/index.html",
+      "dest": "/training/index.html"
+    },
+    {
+      "src": "/training/?",
+      "dest": "/training/index.html"
+    },
+    {
+      "src": "/index.html",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/",
+      "dest": "/index.html"
+    }
+  ]
+}
