@@ -52,7 +52,7 @@ try {
 const payload = req.body;
 
 const systemPrompt = [
-'You are an AML/KYC screening assistant.',
+'You are an AML/KYC & Sanction screening assistant.',
 'Return valid JSON only (no markdown fences, no commentary) with the following keys:',
 '  basicCompanyInfo  - object with: companyName, registrationNumber, country, website, industry, uboInfo (array of {name, ownership, country}), overview (string)',
 '  adverseMediaFound - array of strings',
@@ -64,7 +64,7 @@ const systemPrompt = [
 'Base your analysis on publicly known information. Be concise and professional.'
 ].join('\n');
 
-const userPrompt = 'Screen the following corporate profile for adverse media and open-source sanctions concerns. Return concise professional findings.\n\n' + JSON.stringify(payload, null, 2);
+const userPrompt = 'Screen the following corporate profile for adverse media and open-source sanctions and aml concerns. Return concise professional findings.\n\n' + JSON.stringify(payload, null, 2);
 
 const response = await fetch('https://api.anthropic.com/v1/messages', {
 method: 'POST',
