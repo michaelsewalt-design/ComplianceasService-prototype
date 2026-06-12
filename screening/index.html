@@ -8,14 +8,13 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/screening/screening.css" />
+  screening/screening.css" />
 </head>
 <body>
   <div class="container">
     <nav class="back-bar">
-      <a href="/" class="back-link">&larr; Back to Portal</a>
+      /" class="back-link">&larr; Back to Portal</a>
     </nav>
-
     <section class="hero">
       <h1>Adverse Media &amp; Open-Source Sanctions Screening</h1>
       <p>
@@ -23,7 +22,6 @@
         with a risk score and export options.
       </p>
     </section>
-
     <div class="grid">
       <div class="left-column stack">
         <div class="card">
@@ -62,7 +60,6 @@
                   </div>
                 </div>
               </div>
-
               <div class="form-section">
                 <h3>UBO Information</h3>
                 <div id="uboContainer" class="stack"></div>
@@ -71,20 +68,17 @@
                 </div>
                 <div class="fine-print">You can add zero, one, or multiple UBO entries. UBO data is optional.</div>
               </div>
-
               <div class="form-section">
                 <h3>Generate Screening Report</h3>
                 <div class="row-actions">
                   <button type="submit" class="btn-primary" id="sendBtn">Generate Report</button>
                   <div class="loader" id="loader"><span class="spinner"></span>Generating report&hellip;</div>
                 </div>
-                
               </div>
             </form>
           </div>
         </div>
       </div>
-
       <div class="card report-wrap">
         <div class="card-header">
           <h2>Standard Report Output</h2>
@@ -110,11 +104,22 @@
             </div>
           </div>
           <div id="reportContent" style="display:none;"></div>
+
+          <!-- ── Follow-up Chat Section ── -->
+          <div id="chatSection" style="display:none;">
+            <h3 class="chat-heading">Follow-up Questions</h3>
+            <div id="chatMessages"></div>
+            <div class="chat-input-row">
+              <textarea id="chatInput" placeholder="Ask a follow-up question about this report..." rows="2"></textarea>
+              <button type="button" class="btn-primary" id="chatSendBtn">Send</button>
+            </div>
+            <div class="chat-loader" id="chatLoader" style="display:none;"><span class="spinner"></span>Generating answer&hellip;</div>
+            <button type="button" class="btn-secondary chat-append-btn" id="appendChatBtn" disabled>Add Answers to Report</button>
+          </div>
         </div>
       </div>
     </div>
   </div>
-
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script src="/screening/screening.js" defer></script>
 </body>
