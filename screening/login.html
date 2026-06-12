@@ -12,6 +12,7 @@
             margin: 0;
             padding: 0;
         }
+
         :root {
             --bg:       #07101e;
             --surface:  #0d1a2e;
@@ -24,6 +25,7 @@
             --success:  #4ade80;
             --danger:   #f87171;
         }
+
         html, body {
             height: 100%;
             background-color: var(--bg);
@@ -31,6 +33,7 @@
             font-family: 'Inter', sans-serif;
             overflow-x: hidden;
         }
+
         body::before {
             content: '';
             position: fixed; inset: 0; pointer-events: none; z-index: 0;
@@ -38,6 +41,7 @@
                 radial-gradient(ellipse 90% 50% at 0% 0%, rgba(58,123,213,0.07) 0%, transparent 60%),
                 radial-gradient(ellipse 60% 40% at 100% 100%, rgba(201,168,76,0.06) 0%, transparent 60%);
         }
+
         .login-page {
             position: relative;
             z-index: 1;
@@ -50,10 +54,12 @@
             max-width: 420px;
             margin: 0 auto;
         }
+
         .login-brand {
             text-align: center;
             margin-bottom: 28px;
         }
+
         .login-badge {
             display: inline-block;
             border: 1px solid rgba(201,168,76,0.4);
@@ -66,6 +72,7 @@
             margin-bottom: 24px;
             background: rgba(201,168,76,0.05);
         }
+
         .login-brand h1 {
             font-family: 'Playfair Display', serif;
             font-size: 32px;
@@ -74,15 +81,18 @@
             line-height: 1.15;
             margin-bottom: 12px;
         }
+
         .login-brand h1 span {
             font-style: italic;
             color: var(--gold);
         }
+
         .login-brand p {
             font-size: 13px;
             color: var(--muted);
             line-height: 1.7;
         }
+
         .login-box {
             width: 100%;
             background-color: var(--surface);
@@ -91,6 +101,7 @@
             padding: 24px;
             margin-bottom: 28px;
         }
+
         .login-box-title {
             font-family: 'JetBrains Mono', monospace;
             font-size: 10px;
@@ -99,15 +110,18 @@
             color: var(--gold);
             margin-bottom: 16px;
         }
+
         .login-field {
             margin-bottom: 16px;
         }
+
         .login-field label {
             display: block;
             font-size: 12px;
             color: var(--muted);
             margin-bottom: 6px;
         }
+
         .login-field input {
             display: block;
             width: 100%;
@@ -123,12 +137,15 @@
             appearance: none;
             transition: border-color 0.2s;
         }
+
         .login-field input:focus {
             border-color: var(--gold);
         }
+
         .login-field input::placeholder {
             color: var(--muted);
         }
+
         .login-error {
             background-color: rgba(248,113,113,0.1);
             border: 1px solid rgba(248,113,113,0.3);
@@ -140,6 +157,7 @@
             display: none;
             line-height: 1.5;
         }
+
         .login-lockout {
             background-color: rgba(248,113,113,0.08);
             border: 1px solid rgba(248,113,113,0.25);
@@ -152,6 +170,7 @@
             display: none;
             line-height: 1.5;
         }
+
         .login-submit {
             display: block;
             width: 100%;
@@ -168,19 +187,23 @@
             transition: opacity 0.2s;
             margin-top: 4px;
         }
+
         .login-submit:hover {
             opacity: 0.9;
         }
+
         .login-submit:disabled {
             opacity: 0.4;
             cursor: not-allowed;
         }
+
         .login-attempts {
             font-size: 11px;
             color: var(--muted);
             text-align: center;
             margin-top: 12px;
         }
+
         .login-footer {
             font-size: 11px;
             color: var(--muted);
@@ -188,6 +211,7 @@
             font-family: 'JetBrains Mono', monospace;
             letter-spacing: 0.05em;
         }
+
         @keyframes fadeUp {
             from { opacity: 0; transform: translateY(12px); }
             to   { opacity: 1; transform: translateY(0); }
@@ -197,32 +221,44 @@
     </style>
 </head>
 <body>
+
     <div class="login-page">
+
         <div class="login-brand">
             <div class="login-badge">ADVERSE MEDIA SCREENING</div>
             <h1>Secure <span>Login</span></h1>
             <p>Enter your access password to continue to the screening module.</p>
         </div>
+
         <div class="login-box">
             <div class="login-box-title">Authentication</div>
+
             <div class="login-lockout" id="lockoutMsg">
                 Too many failed attempts. Please wait <strong id="lockoutTimer">15:00</strong> before trying again.
             </div>
+
             <form id="loginForm" action="javascript:void(0);" method="post">
                 <div class="login-field">
                     <label for="passwordInput">Access Password</label>
                     <input type="password" id="passwordInput" name="password" placeholder="Enter password..." autocomplete="current-password" required>
                 </div>
+
                 <div class="login-error" id="errorMsg">Invalid password.</div>
+
                 <button type="submit" class="login-submit" id="loginBtn">Login</button>
             </form>
+
             <div class="login-attempts" id="attemptsInfo"></div>
         </div>
-        <div class="login-footer">&copy; Compliance as a Service &mdash; Screening Module</div>
+
+        <div class="login-footer">© Compliance as a Service — Screening Module</div>
+
     </div>
+
     <script>
         (function() {
             "use strict";
+
             var MAX_ATTEMPTS = 10;
             var LOCKOUT_MS = 900000;
             var timerRef = null;
@@ -240,6 +276,7 @@
 
             function writeLockout(att, until) {
                 localStorage.setItem("sc_lockout", JSON.stringify({ attempts: att, lockedUntil: until }));
+
             }
 
             function isLocked() {
@@ -297,7 +334,6 @@
             function doLogin(evt) {
                 evt.preventDefault();
                 if (isLocked()) { refreshUI(); return false; }
-
                 var pwInput = document.getElementById("passwordInput");
                 var errDiv = document.getElementById("errorMsg");
                 var btn = document.getElementById("loginBtn");
@@ -323,7 +359,6 @@
                         window.location.href = "/screening/index.html";
                         return;
                     }
-
                     var ld = readLockout();
                     var newAtt = ld.attempts + 1;
                     if (newAtt >= MAX_ATTEMPTS) {
