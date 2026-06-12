@@ -1,4 +1,4 @@
-import crypto from 'crypto';
+const crypto = require('crypto');
 
 const TOKEN_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
@@ -13,12 +13,12 @@ function verifyToken(token, secret) {
   const expected = crypto.createHmac('sha256', secret).update(ts).digest('hex');
   try {
     return crypto.timingSafeEqual(Buffer.from(hmacHex, 'hex'), Buffer.from(expected, 'hex'));
-  } catch {
+  } catch (e) {
     return false;
   }
 }
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   /* CORS headers */
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -51,16 +51,16 @@ export default async function handler(req, res) {
     const systemPrompt = [
       'You are an AML/KYC screening assistant.',
       'Return valid JSON only (no markdown fences, no commentary) with the following keys:',
-      '  basicCompanyInfo  \u2013 object with: companyName, registrationNumber, country, website, industry, uboInfo (array of {name, ownership, country}), overview (string)',
-      '  adverseMediaFound \u2013 array of strings',
-      '  companyAnalysis   \u2013 string',
-      '  amlRisks          \u2013 array of strings',
-      '  shortSummary      \u2013 string',
-      '  riskRating        \u2013 "HIGH", "MEDIUM", or "LOW"',
+      '  basicCompanyInfo  - object with: companyName, registrationNumber, country, website, industry, uboInfo (array of {name, ownership, country}), overview (string)',
+      '  adverseMediaFound - array of strings',
+      '  companyAnalysis   - string',
+      '  amlRisks          - array of strings',
+      '  shortSummary      - string',
+      '  riskRating        - "HIGH", "MEDIUM", or "LOW"',
       'Base your analysis on publicly known information. Be concise and professional.'
     ].join('\n');
 
-    const userPrompt = `Screen the following corporate profile for adverse media and open-source sanctions concerns. Return concise professional findings.\n\n${JSON.stringify(payload, null, 2)}`;
+    const userPrompt = 'Screen the following corporate profile for adverse media and open-source sanctions concerns. Return concise professional findings.\n\n' + JSON.stringify(payload, null, 2);
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -87,11 +87,11 @@ export default async function handler(req, res) {
 
     /* Extract text content from Claude response */
     const textContent = Array.isArray(data.content)
-      ? data.content.map(part => part.text || '').join('\n')
+      ? data.content.map(function(part) { return part.text || ''; }).join('\n')
       : '';
 
     /* Strip potential markdown fences */
-    let cleaned = textContent.trim();
+    var cleaned = textContent.trim();
     if (cleaned.startsWith('```')) {
       cleaned = cleaned.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
     }
@@ -103,4 +103,4 @@ export default async function handler(req, res) {
     console.error('Screening API error:', error);
     return res.status(500).json({ error: 'Internal server error', message: error.message });
   }
-}
+};

@@ -1,4 +1,4 @@
-import crypto from 'crypto';
+const crypto = require('crypto');
 
 const TOKEN_MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
 
@@ -24,12 +24,12 @@ function verifyToken(token, secret) {
   const expected = crypto.createHmac('sha256', secret).update(ts).digest('hex');
   try {
     return crypto.timingSafeEqual(Buffer.from(hmacHex, 'hex'), Buffer.from(expected, 'hex'));
-  } catch {
+  } catch (e) {
     return false;
   }
 }
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -76,4 +76,4 @@ export default async function handler(req, res) {
   }
 
   return res.status(405).json({ error: 'Method not allowed' });
-}
+};
