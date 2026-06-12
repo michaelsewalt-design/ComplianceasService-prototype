@@ -1,11 +1,11 @@
 export default async function handler(req, res) {
   try {
-    const url = "https://news.google.com/rss/search?q=compliance+regulation+AML+DORA&hl=en-US&gl=US&ceid=US:en";
+    const url = "https://news.google.com/rss/search?q=compliance+AML+DORA&hl=en-US&gl=US&ceid=US:en";
 
     const response = await fetch(url);
     const xml = await response.text();
 
-    const items = [...xml.matchAll(/<item>(.*?)<\/item>/gs)].slice(0,4);
+    const items = [...xml.matchAll(/<item>(.*?)<\/item>/gs)].slice(0, 4);
 
     const news = items.map(item => {
       const content = item[1];
