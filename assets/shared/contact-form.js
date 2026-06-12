@@ -16,7 +16,7 @@
     return;
   }
 
-  const CONTACT_EMAIL = 'michael.sewalt@protiviti.com'; // <-- change this
+  const CONTACT_EMAIL = 'michael.sewalt@protiviti.nl'; // <-- change this
   let lastFocusedElement = null;
   let jspdfLoadingPromise = null;
 
