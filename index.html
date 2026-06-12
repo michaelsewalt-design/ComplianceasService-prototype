@@ -8,7 +8,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/shared/portal.css" />
+  <link rel="stylesheet" href="/assets/shared/portal.css" />
+  <link rel="stylesheet" href="/assets/shared/contact-form.css" />
 </head>
 <body>
   <div class="page-shell">
@@ -23,9 +24,17 @@
           <a class="btn btn-primary" href="#modules">Explore modules</a>
           <a class="btn btn-secondary" href="#roadmap">View roadmap</a>
         </div>
-      </div>
-     
-       
+        <div class="contact-hero-cta-wrap">
+          <button
+            type="button"
+            class="contact-hero-cta"
+            data-open-contact-modal
+            aria-haspopup="dialog"
+            aria-controls="contact-modal"
+          >
+            Contact PROTIVITI Compliance advisory services
+          </button>
+        </div>
       </div>
     </header>
 
@@ -36,7 +45,6 @@
             <span class="section-kicker">Available now</span>
             <h2>Core modules</h2>
           </div>
-        
         </div>
 
         <div class="module-grid">
@@ -96,7 +104,6 @@
             <span class="section-kicker">Coming soon</span>
             <h2>Future module ideas</h2>
           </div>
-      
         </div>
 
         <div class="module-grid roadmap-grid">
@@ -155,5 +162,77 @@
       </section>
     </main>
   </div>
+
+  <div class="contact-modal" id="contact-modal" hidden>
+    <div class="contact-modal__backdrop" data-close-contact-modal></div>
+    <div class="contact-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="contact-modal-title">
+      <button type="button" class="contact-modal__close" data-close-contact-modal aria-label="Close contact form">×</button>
+
+      <div class="contact-modal__header">
+        <span class="contact-modal__eyebrow">Contact</span>
+        <h2 id="contact-modal-title">PROTIVITI Compliance advisory services</h2>
+        <p>Use this form to request access, submit an advisory request, or propose a new service-module idea.</p>
+      </div>
+
+      <form id="contact-request-form" class="contact-form" novalidate>
+        <div class="contact-form__grid">
+          <label class="contact-field">
+            <span>Full name</span>
+            <input type="text" name="fullName" autocomplete="name" required />
+          </label>
+
+          <label class="contact-field">
+            <span>Company</span>
+            <input type="text" name="company" autocomplete="organization" required />
+          </label>
+
+          <label class="contact-field">
+            <span>Job title</span>
+            <input type="text" name="jobTitle" autocomplete="organization-title" required />
+          </label>
+
+          <label class="contact-field">
+            <span>Email</span>
+            <input type="email" name="email" autocomplete="email" required />
+          </label>
+        </div>
+
+        <label class="contact-field">
+          <span>Message type</span>
+          <select name="messageType" id="message-type-select" required>
+            <option value="">Select a message type</option>
+            <option value="access">Request Access to service module</option>
+            <option value="advisory">Advisory Request</option>
+            <option value="suggestion">Suggestion for Service Module</option>
+          </select>
+        </label>
+
+        <div id="module-request-block" class="contact-conditional-block" hidden>
+          <label class="contact-field">
+            <span>Service module</span>
+            <select name="serviceModule" id="service-module-select">
+              <option value="">Select a service module</option>
+            </select>
+          </label>
+        </div>
+
+        <div id="message-box-block" class="contact-conditional-block" hidden>
+          <label class="contact-field">
+            <span id="message-box-label">Request details</span>
+            <textarea name="details" id="details-textarea" rows="6" placeholder="Please provide the details of your request."></textarea>
+          </label>
+        </div>
+
+        <div class="contact-form__actions">
+          <button type="submit" class="btn btn-primary contact-submit-btn">Submit request</button>
+          <button type="button" class="btn btn-secondary" data-close-contact-modal>Cancel</button>
+        </div>
+
+        <p class="contact-form__status" id="contact-form-status" role="status" aria-live="polite"></p>
+      </form>
+    </div>
+  </div>
+
+  <script src="/assets/shared/contact-form.js" defer></script>
 </body>
 </html>
