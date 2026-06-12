@@ -366,3 +366,14 @@ clearReportBtn.addEventListener('click', function() {
   appendChatBtn.disabled = true;
   appendChatBtn.textContent = 'Add Answers to Report';
 });
+
+/* ── Quick Search Buttons ── */
+document.querySelectorAll('.quick-search-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    var companyName = document.getElementById('companyName').value.trim();
+    if (!companyName) { alert('Enter a company name first.'); return; }
+    var suffix = btn.getAttribute('data-suffix');
+    var query = companyName + ' ' + suffix;
+    window.open('https://www.google.com/search?q=' + encodeURIComponent(query), '_blank');
+  });
+});
