@@ -4,7 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Compliance as a Service Portal</title>
-
+  <meta name="description" content="Public landing page for the Compliance as a Service platform." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/assets/shared/portal.css" />
   <link rel="stylesheet" href="/assets/shared/contact-form.css" />
   <link rel="stylesheet" href="/assets/shared/news.css" />
@@ -13,12 +16,12 @@
   <div class="page-shell">
 
     <header class="hero">
-      <div class="hero-top">
+      <div class="hero-grid">
         <div class="hero-copy">
           <span class="eyebrow">Compliance as a Service</span>
           <h1>One portal for training, operations, and compliance tooling.</h1>
           <p>
-            Launch the modules your teams need today and stay up to date with the latest regulatory developments.
+            Launch the modules your teams need today and keep room to expand with future compliance services.
           </p>
 
           <div class="hero-actions">
@@ -27,39 +30,59 @@
           </div>
 
           <div class="contact-hero-cta-wrap">
-            <button class="contact-hero-cta" data-open-contact-modal>
+            <button
+              type="button"
+              class="contact-hero-cta"
+              data-open-contact-modal
+              aria-haspopup="dialog"
+              aria-controls="contact-modal"
+            >
               Contact PROTIVITI Compliance advisory services
             </button>
           </div>
         </div>
 
-        <div class="news-box">
+        <aside class="news-box">
           <h3>Latest Compliance News</h3>
           <ul id="news-list">
             <li>Loading...</li>
           </ul>
-        </div>
+        </aside>
       </div>
     </header>
 
     <main>
       <section id="modules" class="section">
         <div class="section-head">
-          <h2>Core modules</h2>
+          <div>
+            <span class="section-kicker">Available now</span>
+            <h2>Core modules</h2>
+          </div>
         </div>
 
         <div class="module-grid">
+
           <a class="module-card active" href="/training">
-            <h3>Training Module</h3>
+            <div class="module-body">
+              <h3>Training Module</h3>
+              <p>Role-based compliance training journeys.</p>
+            </div>
           </a>
 
           <a class="module-card active" href="/incident-request">
-            <h3>Incident & Request Module</h3>
+            <div class="module-body">
+              <h3>Incident & Request Module</h3>
+              <p>Handle compliance workflows.</p>
+            </div>
           </a>
 
           <a class="module-card active" href="/screening">
-            <h3>Adverse Media Check Module</h3>
+            <div class="module-body">
+              <h3>Adverse Media Check Module</h3>
+              <p>Screening workflows.</p>
+            </div>
           </a>
+
         </div>
       </section>
     </main>
