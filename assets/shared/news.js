@@ -5,6 +5,11 @@ async function loadNews() {
     const res = await fetch("/api/news");
     const data = await res.json();
 
+    if (!Array.isArray(data) || data.length === 0) {
+      list.innerHTML = "<li>No news available</li>";
+      return;
+    }
+
     list.innerHTML = "";
 
     data.forEach(article => {
