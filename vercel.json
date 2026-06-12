@@ -1,62 +1,30 @@
 {
   "version": 2,
+  "builds": [
+    { "src": "api/**/*.js", "use": "@vercel/node" },
+    { "src": "index.html", "use": "@vercel/static" },
+    { "src": "screening/**", "use": "@vercel/static" },
+    { "src": "training/**", "use": "@vercel/static" },
+    { "src": "assets/**", "use": "@vercel/static" }
+  ],
   "routes": [
+    { "src": "/api/auth",      "dest": "/api/auth.js" },
+    { "src": "/api/claude",    "dest": "/api/claude.js" },
+    { "src": "/api/config",    "dest": "/api/config.js" },
+    { "src": "/api/screening", "dest": "/api/screening.js" },
+    { "src": "/screening$",           "dest": "/screening/index.html" },
+    { "src": "/screening/(.*)",       "dest": "/screening/$1" },
+    { "src": "/training$",            "dest": "/training/index.html" },
+    { "src": "/training/(.*)",        "dest": "/training/$1" },
+    { "src": "/assets/(.*)",          "dest": "/assets/$1" },
+    { "src": "/(.*)",                 "dest": "/$1" }
+  ],
+  "headers": [
     {
-      "src": "/assets/(.*)",
-      "dest": "/assets/$1"
-    },
-    {
-      "src": "/api/auth",
-      "dest": "/api/auth.js"
-    },
-    {
-      "src": "/api/claude",
-      "dest": "/api/claude.js"
-    },
-    {
-      "src": "/api/config",
-      "dest": "/api/config.js"
-    },
-    {
-      "src": "/training/css/(.*)",
-      "dest": "/training/css/$1"
-    },
-    {
-      "src": "/training/js/(.*)",
-      "dest": "/training/js/$1"
-    },
-    {
-      "src": "/training/login.html",
-      "dest": "/training/login.html"
-    },
-    {
-      "src": "/training/aml.html",
-      "dest": "/training/aml.html"
-    },
-    {
-      "src": "/training/mar.html",
-      "dest": "/training/mar.html"
-    },
-    
-    {
-      "src": "/training/coi.html",
-      "dest": "/training/coi.html"
-    },
-    {
-      "src": "/training/index.html",
-      "dest": "/training/index.html"
-    },
-    {
-      "src": "/training/?",
-      "dest": "/training/index.html"
-    },
-    {
-      "src": "/index.html",
-      "dest": "/index.html"
-    },
-    {
-      "src": "/",
-      "dest": "/index.html"
+      "source": "/assets/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
     }
   ]
 }
