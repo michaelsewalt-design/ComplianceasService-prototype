@@ -1,79 +1,146 @@
 const crypto = require('crypto');
 
-const TOKEN_MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
+// Simple in-memory rate limiting per IP
+const attempts = new Map();
+const MAX_ATTEMPTS = 10;
+const LOCKOUT_MS = 15 * 60 * 1000;
 
-function makeToken(secret) {
-  const ts = String(Date.now());
-  const hmac = crypto.createHmac('sha256', secret).update(ts).digest('hex');
-  return hmac + '.' + ts;
+
+
+function cleanupAttempts() {
+const now = Date.now();
+for (const [ip, data] of attempts.entries()) {
+if (data.lockedUntil && data.lockedUntil < now) {
+attempts.delete(ip);
+}
+}
+}
+
+function getClientIP(req) {
+return (
+req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
+req.headers['x-real-ip'] ||
+req.connection?.remoteAddress ||
+'unknown'
+);
+}
+
+function generateToken(secret) {
+const payload = {
+authenticated: true,
+iat: Date.now(),
+exp: Date.now() + 24 * 60 * 60 * 1000
+};
+const data = Buffer.from(JSON.stringify(payload)).toString('base64url');
+const signature = crypto
+.createHmac('sha256', secret)
+.update(data)
+.digest('base64url');
+return `${data}.${signature}`;
 }
 
 function verifyToken(token, secret) {
-  if (!token || typeof token !== 'string') return false;
-  const parts = token.split('.');
-  if (parts.length !== 2) return false;
+try {
+const [data, signature] = token.split('.');
+if (!data || !signature) return false;
 
-  const [hmacHex, ts] = parts;
-  const timestamp = parseInt(ts, 10);
-  if (isNaN(timestamp)) return false;
+const expectedSig = crypto
+.createHmac('sha256', secret)
+.update(data)
+.digest('base64url');
 
-  // Check expiry
-  if (Date.now() - timestamp > TOKEN_MAX_AGE_MS) return false;
+if (signature !== expectedSig) return false;
 
-  // Verify HMAC
-  const expected = crypto.createHmac('sha256', secret).update(ts).digest('hex');
-  try {
-    return crypto.timingSafeEqual(Buffer.from(hmacHex, 'hex'), Buffer.from(expected, 'hex'));
-  } catch (e) {
-    return false;
-  }
+const payload = JSON.parse(Buffer.from(data, 'base64url').toString());
+if (payload.exp < Date.now()) return false;
+
+return payload.authenticated === true;
+} catch {
+return false;
+}
 }
 
-module.exports = async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+module.exports = async (req, res) => {
+res.setHeader('Content-Type', 'application/json');
 
-  if (req.method === 'OPTIONS') return res.status(200).end();
+// GET = verify existing token
+if (req.method === 'GET') {
+const authHeader = req.headers.authorization;
+if (!authHeader || !authHeader.startsWith('Bearer ')) {
+return res.status(401).json({ valid: false });
+}
+const token = authHeader.slice(7);
+const valid = verifyToken(token, process.env.SCREENING_AUTH_SECRET);
+return res.status(valid ? 200 : 401).json({ valid });
+}
 
-  const sitePassword = process.env.SCREENING_SITE_PASSWORD;
-  const authSecret = process.env.SCREENING_AUTH_SECRET;
+// POST = login
+if (req.method !== 'POST') {
+return res.status(405).json({ error: 'Method not allowed' });
+}
 
-  if (!sitePassword || !authSecret) {
-    return res.status(500).json({ success: false, message: 'Authentication is not configured.' });
-  }
+cleanupAttempts();
 
-  /* ── POST: Login ── */
-  if (req.method === 'POST') {
-    const { password } = req.body || {};
+const ip = getClientIP(req);
+const ipData = attempts.get(ip) || { count: 0, lockedUntil: 0 };
 
-    if (!password || typeof password !== 'string') {
-      return res.status(400).json({ success: false, message: 'Password is required.' });
-    }
+// Check lockout
+if (ipData.lockedUntil && ipData.lockedUntil > Date.now()) {
+const remaining = Math.ceil((ipData.lockedUntil - Date.now()) / 1000);
+return res.status(429).json({
+success: false,
+message: `Too many attempts. Locked for ${Math.ceil(remaining / 60)} minutes.`,
+lockedUntil: ipData.lockedUntil,
+remainingSeconds: remaining
+});
+}
 
-    // Constant-time comparison
-    const pwBuf = Buffer.from(password);
-    const expectedBuf = Buffer.from(sitePassword);
-    const match = pwBuf.length === expectedBuf.length && crypto.timingSafeEqual(pwBuf, expectedBuf);
+const { password } = req.body || {};
 
-    if (!match) {
-      return res.status(401).json({ success: false, message: 'Invalid password.' });
-    }
+if (!password) {
+return res.status(400).json({ success: false, message: 'Password is required.' });
+}
 
-    const token = makeToken(authSecret);
-    return res.status(200).json({ success: true, token });
-  }
+const correctPassword = process.env.SCREENING_SITE_PASSWORD;
+if (!correctPassword) {
+console.error('SCREENING_SITE_PASSWORD not configured');
+return res.status(500).json({ success: false, message: 'Server configuration error.' });
+}
 
-  /* ── GET: Verify token ── */
-  if (req.method === 'GET') {
-    const authHeader = req.headers.authorization || '';
-    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
+// Timing-safe comparison
+const passwordBuffer = Buffer.from(password);
+const correctBuffer = Buffer.from(correctPassword);
 
-    if (verifyToken(token, authSecret)) {
-      return res.status(200).json({ valid: true });
-    }
-    return res.status(401).json({ valid: false });
-  }
+let match = false;
+if (passwordBuffer.length === correctBuffer.length) {
+match = crypto.timingSafeEqual(passwordBuffer, correctBuffer);
+}
 
-  return res.status(405).json({ error: 'Method not allowed' });
+if (match) {
+// Reset attempts on success
+attempts.delete(ip);
+const token = generateToken(process.env.SCREENING_AUTH_SECRET);
+return res.status(200).json({ success: true, token });
+}
+
+// Failed attempt
+ipData.count += 1;
+if (ipData.count >= MAX_ATTEMPTS) {
+ipData.lockedUntil = Date.now() + LOCKOUT_MS;
+attempts.set(ip, ipData);
+return res.status(429).json({
+success: false,
+message: `Too many failed attempts. Locked for 15 minutes.`,
+lockedUntil: ipData.lockedUntil
+});
+}
+
+attempts.set(ip, ipData);
+const remaining = MAX_ATTEMPTS - ipData.count;
+
+return res.status(401).json({
+success: false,
+message: `Invalid password. ${remaining} attempt${remaining !== 1 ? 's' : ''} remaining.`,
+attemptsRemaining: remaining
+});
 };
