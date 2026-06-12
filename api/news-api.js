@@ -5,7 +5,7 @@ export default async function handler(req, res) {
     const response = await fetch(url);
     const xml = await response.text();
 
-    const items = [...xml.matchAll(/<item>(.*?)<\/item>/gs)].slice(0, 4);
+    const items = [...xml.matchAll(/<item>(.*?)<\/item>/gs)].slice(0,4);
 
     const news = items.map(item => {
       const content = item[1];
