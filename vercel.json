@@ -13,6 +13,7 @@
     { "src": "/api/config",           "dest": "/api/config.js" },
     { "src": "/api/news",             "dest": "/api/news.js" },
     { "src": "/api/screening-auth",   "dest": "/api/screening-auth.js" },
+    { "src": "/api/screening-chat",   "dest": "/api/screening-chat.js" },
     { "src": "/api/screening",        "dest": "/api/screening.js" },
     { "src": "/screening/login$",     "dest": "/screening/login.html" },
     { "src": "/screening$",           "dest": "/screening/login.html" },
