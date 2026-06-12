@@ -1,80 +1,235 @@
 <!DOCTYPE html>
-<html lang='en'>
+<html lang="en">
 <head>
-  <meta charset='UTF-8'>
-  <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Compliance as a Service Portal</title>
-  <link rel='stylesheet' href='/assets/shared/portal.css'>
-  <link rel='stylesheet' href='/assets/shared/contact-form.css'>
-  <link rel='stylesheet' href='/assets/shared/news.css'>
+  <meta name="description" content="Public landing page for the Compliance as a Service platform." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/shared/portal.css" />
+  <link rel="stylesheet" href="/assets/shared/contact-form.css" />
+  <link rel="stylesheet" href="/assets/shared/news.css" />
 </head>
 <body>
-  <div class='page-shell'>
-
-    <header class='hero'>
-      <div class='hero-grid'>
-
-        <div class='hero-copy'>
-          <span class='eyebrow'>Compliance as a Service</span>
+  <div class="page-shell">
+    <header class="hero">
+      <div class="hero-with-news">
+        <div class="hero-copy">
+          <span class="eyebrow">Compliance as a Service</span>
           <h1>One portal for training, operations, and compliance tooling.</h1>
-          <p>Launch the modules your teams need today.</p>
-
-          <div class='hero-actions'>
-            <a class='btn btn-primary' href='#modules'>Explore modules</a>
-            <a class='btn btn-secondary' href='#roadmap'>View roadmap</a>
+          <p>
+            Launch the modules your teams need today and keep room to expand with future compliance services.
+          </p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="#modules">Explore modules</a>
+            <a class="btn btn-secondary" href="#roadmap">View roadmap</a>
           </div>
-
-          <div class='contact-hero-cta-wrap'>
-            <button class='contact-hero-cta' data-open-contact-modal>
+          <div class="contact-hero-cta-wrap">
+            <button
+              type="button"
+              class="contact-hero-cta"
+              data-open-contact-modal
+              aria-haspopup="dialog"
+              aria-controls="contact-modal"
+            >
               Contact PROTIVITI Compliance advisory services
             </button>
           </div>
         </div>
 
-        <aside class='news-box'>
-          <h3>Latest Compliance News</h3>
-          <ul id='news-list'>
-            <li>Loading...</li>
+        <aside class="news-box" aria-labelledby="news-box-title">
+          <div class="news-box__head">
+            <span class="news-box__eyebrow">Public sources</span>
+            <h3 id="news-box-title">Latest Compliance News</h3>
+          </div>
+          <ul id="news-list" class="news-list">
+            <li class="news-list__status">Loading...</li>
           </ul>
         </aside>
-
       </div>
     </header>
 
     <main>
-      <section id='modules' class='section'>
-        <div class='section-head'>
-          <h2>Core modules</h2>
+      <section id="modules" class="section">
+        <div class="section-head">
+          <div>
+            <span class="section-kicker">Available now</span>
+            <h2>Core modules</h2>
+          </div>
         </div>
-
-        <div class='module-grid'>
-          <a class='module-card active' href='/training'>
-            <div class='module-body'>
+        <div class="module-grid">
+          <a class="module-card active" href="/training" aria-label="Open Training Module">
+            <div class="module-icon">🎓</div>
+            <div class="module-body">
+              <div class="module-meta">
+                <span class="status live">Live module</span>
+                <span class="surface-tag">Learning</span>
+              </div>
               <h3>Training Module</h3>
-              <p>Compliance training journeys</p>
+              <p>Launch role-based training journeys such as AML, MAR, and future compliance learning tracks.</p>
+            </div>
+            <div class="module-footer">
+              <span>Open module</span>
+              <span class="arrow">→</span>
             </div>
           </a>
-
-          <a class='module-card active' href='/incident-request'>
-            <div class='module-body'>
-              <h3>Incident & Request Module</h3>
-              <p>Workflow handling</p>
+          <a class="module-card active" href="/incident-request" aria-label="Open Incident and Request Module">
+            <div class="module-icon">📝</div>
+            <div class="module-body">
+              <div class="module-meta">
+                <span class="status live">Prototype module</span>
+                <span class="surface-tag">Workflow</span>
+              </div>
+              <h3>Incident &amp; Request Module</h3>
+              <p>Handle internal compliance incidents, approvals, requests, and intake workflows from one workspace.</p>
+            </div>
+            <div class="module-footer">
+              <span>Open module</span>
+              <span class="arrow">→</span>
             </div>
           </a>
-
-          <a class='module-card active' href='/screening'>
-            <div class='module-body'>
-              <h3>Adverse Media Check</h3>
-              <p>Screening workflows</p>
+          <a class="module-card active" href="/screening" aria-label="Open Adverse Media Check Module">
+            <div class="module-icon">🔎</div>
+            <div class="module-body">
+              <div class="module-meta">
+                <span class="status live">Prototype module</span>
+                <span class="surface-tag">Screening</span>
+              </div>
+              <h3>Adverse Media Check Module</h3>
+              <p>Run adverse media, sanctions, and broader screening workflows through a dedicated compliance interface.</p>
+            </div>
+            <div class="module-footer">
+              <span>Open module</span>
+              <span class="arrow">→</span>
             </div>
           </a>
         </div>
       </section>
-    </main>
 
+      <section id="roadmap" class="section">
+        <div class="section-head">
+          <div>
+            <span class="section-kicker">Coming soon</span>
+            <h2>Future module ideas</h2>
+          </div>
+        </div>
+        <div class="module-grid roadmap-grid">
+          <article class="module-card disabled" aria-disabled="true">
+            <div class="module-icon">📚</div>
+            <div class="module-body">
+              <div class="module-meta">
+                <span class="status soon">Coming soon</span>
+                <span class="surface-tag">Policy</span>
+              </div>
+              <h3>Policy Library</h3>
+              <p>A central place for policies, procedures, attestations, and version-controlled reference content.</p>
+            </div>
+            <div class="module-footer muted"><span>Not yet available</span></div>
+          </article>
+          <article class="module-card disabled" aria-disabled="true">
+            <div class="module-icon">🎁</div>
+            <div class="module-body">
+              <div class="module-meta">
+                <span class="status soon">Coming soon</span>
+                <span class="surface-tag">Register</span>
+              </div>
+              <h3>Gifts &amp; Hospitality Register</h3>
+              <p>Capture submissions, approvals, thresholds, and reporting around gifts, entertainment, and hospitality.</p>
+            </div>
+            <div class="module-footer muted"><span>Not yet available</span></div>
+          </article>
+          <article class="module-card disabled" aria-disabled="true">
+            <div class="module-icon">📣</div>
+            <div class="module-body">
+              <div class="module-meta">
+                <span class="status soon">Coming soon</span>
+                <span class="surface-tag">Speak-up</span>
+              </div>
+              <h3>Whistleblower / Speak-Up</h3>
+              <p>Enable protected intake, triage, and case handling for internal disclosures and speak-up channels.</p>
+            </div>
+            <div class="module-footer muted"><span>Not yet available</span></div>
+          </article>
+          <article class="module-card disabled" aria-disabled="true">
+            <div class="module-icon">📊</div>
+            <div class="module-body">
+              <div class="module-meta">
+                <span class="status soon">Coming soon</span>
+                <span class="surface-tag">Insights</span>
+              </div>
+              <h3>Compliance Dashboard</h3>
+              <p>Provide consolidated management reporting, KRIs, action tracking, and module-level oversight metrics.</p>
+            </div>
+            <div class="module-footer muted"><span>Not yet available</span></div>
+          </article>
+        </div>
+      </section>
+    </main>
   </div>
 
-  <script src='/assets/shared/contact-form.js' defer></script>
-  <script src='/assets/shared/news.js' defer></script>
+  <div class="contact-modal" id="contact-modal" hidden>
+    <div class="contact-modal__backdrop" data-close-contact-modal></div>
+    <div class="contact-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="contact-modal-title">
+      <button type="button" class="contact-modal__close" data-close-contact-modal aria-label="Close contact form">×</button>
+      <div class="contact-modal__header">
+        <span class="contact-modal__eyebrow">Contact</span>
+        <h2 id="contact-modal-title">PROTIVITI Compliance advisory services</h2>
+        <p>Use this form to request access, submit an advisory request, or propose a new service-module idea.</p>
+      </div>
+      <form id="contact-request-form" class="contact-form" novalidate>
+        <div class="contact-form__grid">
+          <label class="contact-field">
+            <span>Full name</span>
+            <input type="text" name="fullName" autocomplete="name" required />
+          </label>
+          <label class="contact-field">
+            <span>Company</span>
+            <input type="text" name="company" autocomplete="organization" required />
+          </label>
+          <label class="contact-field">
+            <span>Job title</span>
+            <input type="text" name="jobTitle" autocomplete="organization-title" required />
+          </label>
+          <label class="contact-field">
+            <span>Email</span>
+            <input type="email" name="email" autocomplete="email" required />
+          </label>
+        </div>
+        <label class="contact-field">
+          <span>Message type</span>
+          <select name="messageType" id="message-type-select" required>
+            <option value="">Select a message type</option>
+            <option value="access">Request Access to service module</option>
+            <option value="advisory">Advisory Request</option>
+            <option value="suggestion">Suggestion for Service Module</option>
+          </select>
+        </label>
+        <div id="module-request-block" class="contact-conditional-block" hidden>
+          <label class="contact-field">
+            <span>Service module</span>
+            <select name="serviceModule" id="service-module-select">
+              <option value="">Select a service module</option>
+            </select>
+          </label>
+        </div>
+        <div id="message-box-block" class="contact-conditional-block" hidden>
+          <label class="contact-field">
+            <span id="message-box-label">Request details</span>
+            <textarea name="details" id="details-textarea" rows="6" placeholder="Please provide the details of your request."></textarea>
+          </label>
+        </div>
+        <div class="contact-form__actions">
+          <button type="submit" class="btn btn-primary contact-submit-btn">Submit request</button>
+          <button type="button" class="btn btn-secondary" data-close-contact-modal>Cancel</button>
+        </div>
+        <p class="contact-form__status" id="contact-form-status" role="status" aria-live="polite"></p>
+      </form>
+    </div>
+  </div>
+
+  <script src="/assets/shared/contact-form.js" defer></script>
+  <script src="/assets/shared/news.js" defer></script>
 </body>
 </html>
