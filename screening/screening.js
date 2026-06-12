@@ -113,7 +113,7 @@ function renderReport(report) {
 
   var bi = report.basicCompanyInfo || {};
   reportContent.innerHTML =
-    '<div class="report-header"><div class="report-title"><h1>KYC Screening Report</h1>' +
+    '<div class="report-header"><div class="report-title"><h1>Adverse Media Screening Report</h1>' +
     '<p>Corporate adverse media and open-source sanctions screening output</p></div>' +
     '<div><div class="risk-pill '+getRiskClass(risk)+'">Overall Risk: '+escapeHtml(risk)+'</div></div></div>' +
     '<section class="section"><h2><span>Basic Company Info</span><span class="badge">Standard Section</span></h2>' +
