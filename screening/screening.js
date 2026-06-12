@@ -7,7 +7,6 @@
     window.location.href = '/screening/login.html';
     return;
   }
-  // Verify token server-side (synchronous to block page render)
   const xhr = new XMLHttpRequest();
   xhr.open('GET', '/api/screening-auth', false);
   xhr.setRequestHeader('Authorization', 'Bearer ' + token);
@@ -92,8 +91,6 @@ function collectUboData() {
 }
 
 addUboBtn.addEventListener('click', () => uboContainer.appendChild(createUboItem()));
-
-// Start with one empty UBO row
 uboContainer.appendChild(createUboItem());
 
 /* ── Risk Scoring ── */
@@ -303,11 +300,20 @@ downloadWordBtn.addEventListener('click', () => {
   document.body.removeChild(link);
 });
 
-/* ── Export: PDF (Print) ── */
+/* ── Export: PDF (Direct Download) ── */
 
 downloadPdfBtn.addEventListener('click', () => {
   if (!latestReport) return;
-  window.print();
+  const element = document.getElementById('reportContent');
+  const safeName = (latestReport.basicCompanyInfo?.companyName || 'KYC_Report').replace(/[^a-z0-9]+/gi, '_');
+  const opt = {
+    margin:     10,
+    filename:   safeName + '_KYC_Screening_Report.pdf',
+    image:      { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true },
+    jsPDF:      { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  };
+  html2pdf().set(opt).from(element).save();
 });
 
 /* ── Clear Report ── */

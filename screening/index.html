@@ -17,9 +17,10 @@
     </nav>
 
     <section class="hero">
-      <h1>Adverse Media &amp; Open-Source Sanctions Screening</h1>
+      <h1>KYC Adverse Media &amp; Open-Source Sanctions Screening</h1>
       <p>
-        Corporate screening module. The interface collects company information  and renders the result into a standard report template
+        Corporate screening module. The interface collects company information, sends the payload
+        to a server-side Claude API endpoint, and renders the result into a standard report template
         with a risk score and export options.
       </p>
     </section>
@@ -78,7 +79,7 @@
                   <button type="submit" class="btn-primary" id="sendBtn">Generate Report</button>
                   <div class="loader" id="loader"><span class="spinner"></span>Generating report&hellip;</div>
                 </div>
-                
+                <div class="fine-print">The API key is configured securely on the server. No credentials are exposed in the browser.</div>
               </div>
             </form>
           </div>
@@ -115,6 +116,7 @@
     </div>
   </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script src="/screening/screening.js" defer></script>
 </body>
 </html>
