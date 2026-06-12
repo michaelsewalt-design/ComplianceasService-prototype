@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Adverse Media &amp; Sanctions Screening — Compliance as a Service</title>
+  <meta name="description" content="KYC adverse media and open-source sanctions screening module." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/screening/screening.css" />
+</head>
+<body>
+  <div class="container">
+    <nav class="back-bar">
+      <a href="/" class="back-link">&larr; Back to Portal</a>
+    </nav>
+
+    <section class="hero">
+      <h1>KYC Adverse Media &amp; Open-Source Sanctions Screening</h1>
+      <p>
+        Corporate screening module. The interface collects company information, sends the payload
+        to a server-side Claude API endpoint, and renders the result into a standard report template
+        with a risk score and export options.
+      </p>
+    </section>
+
+    <div class="grid">
+      <div class="left-column stack">
+        <div class="card">
+          <div class="card-header">
+            <h2>Screening Input</h2>
+            <p>Complete the fields below and submit to generate a screening report.</p>
+          </div>
+          <div class="card-body">
+            <form id="kycForm">
+              <div class="form-section">
+                <h3>Company Details</h3>
+                <div class="form-grid">
+                  <div class="full">
+                    <label class="required" for="companyName">Corporation Name</label>
+                    <input id="companyName" name="companyName" type="text" placeholder="Enter corporation name" required />
+                  </div>
+                  <div>
+                    <label for="registrationNumber">Registration Number</label>
+                    <input id="registrationNumber" name="registrationNumber" type="text" placeholder="e.g. 12345678" />
+                  </div>
+                  <div>
+                    <label for="country">Country / Jurisdiction</label>
+                    <input id="country" name="country" type="text" placeholder="e.g. Netherlands" />
+                  </div>
+                  <div>
+                    <label for="website">Website</label>
+                    <input id="website" name="website" type="text" placeholder="e.g. www.company.com" />
+                  </div>
+                  <div>
+                    <label for="industry">Industry</label>
+                    <input id="industry" name="industry" type="text" placeholder="e.g. Financial Services" />
+                  </div>
+                  <div class="full">
+                    <label for="freeText">Additional Company Context</label>
+                    <textarea id="freeText" name="freeText" placeholder="Add any additional information about the corporation, ownership structure, business model, counterparties, jurisdiction exposure, expected activity, or screening considerations."></textarea>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-section">
+                <h3>UBO Information</h3>
+                <div id="uboContainer" class="stack"></div>
+                <div class="row-actions">
+                  <button type="button" class="btn-secondary" id="addUboBtn">+ Add UBO</button>
+                </div>
+                <div class="fine-print">You can add zero, one, or multiple UBO entries. UBO data is optional.</div>
+              </div>
+
+              <div class="form-section">
+                <h3>Generate Screening Report</h3>
+                <div class="row-actions">
+                  <button type="submit" class="btn-primary" id="sendBtn">Generate Report</button>
+                  <div class="loader" id="loader"><span class="spinner"></span>Generating report&hellip;</div>
+                </div>
+                <div class="fine-print">The API key is configured securely on the server. No credentials are exposed in the browser.</div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <div class="card report-wrap">
+        <div class="card-header">
+          <h2>Standard Report Output</h2>
+          <p>Sections: Basic Company Info, Adverse Media Found, Company Analysis, AML Risks, Summary / Conclusion, and an overall risk score.</p>
+        </div>
+        <div class="status-bar">
+          <div class="status-left">
+            <span class="dot" id="statusDot"></span>
+            <span id="statusText">No report generated yet.</span>
+          </div>
+          <span id="reportTimestamp">&mdash;</span>
+        </div>
+        <div class="toolbar">
+          <button type="button" class="btn-light" id="downloadWordBtn" disabled>Download Word</button>
+          <button type="button" class="btn-light" id="downloadPdfBtn" disabled>Download PDF</button>
+          <button type="button" class="btn-danger" id="clearReportBtn">Clear Report</button>
+        </div>
+        <div class="report" id="reportArea">
+          <div class="empty" id="emptyState">
+            <div>
+              <h3>No report available</h3>
+              <p>Complete the input form and press <strong>Generate Report</strong> to create a KYC screening report.</p>
+            </div>
+          </div>
+          <div id="reportContent" style="display:none;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/screening/screening.js" defer></script>
+</body>
+</html>
