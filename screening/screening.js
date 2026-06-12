@@ -128,7 +128,14 @@ function renderReport(report) {
     '<section class="section"><h2>Adverse Media Found</h2>'+makeBulletList(report.adverseMediaFound,'No adverse media findings were returned.')+'</section>' +
     '<section class="section"><h2>Analyses of the Company</h2><p>'+escapeHtml(report.companyAnalysis||'No company analysis available.')+'</p></section>' +
     '<section class="section"><h2>Risks of AML</h2>'+makeBulletList(report.amlRisks,'No explicit AML risks were returned.')+'</section>' +
-    '<section class="section"><h2>Short Summary / Conclusion</h2><div class="summary-box"><p>'+escapeHtml(report.shortSummary||'No summary available.')+'</p></div></section>';
+    '<section class="section"><h2>Short Summary / Conclusion</h2><div class="summary-box"><p>'+escapeHtml(report.shortSummary||'No summary available.')+'</p></div></section>'
+
++ '<section class="section disclaimer"><h2>Disclaimer</h2>'
++ '<p class="disclaimer-text">This report has been generated using artificial intelligence (AI) and open-source data. '
++ 'It is intended for informational and preliminary screening purposes only and does not constitute legal, financial, or compliance advice. '
++ 'The information contained herein may be incomplete, inaccurate, or outdated. No representation or warranty, express or implied, is made as to the accuracy or completeness of the content. '
++ 'Any decisions made on the basis of this report are taken entirely at the user\'s own risk. '
++ 'This report should be reviewed and validated by a qualified compliance professional before being relied upon for any regulatory, business, or legal purpose.</p></section>';
 
   emptyState.style.display = 'none';
   reportContent.style.display = 'block';

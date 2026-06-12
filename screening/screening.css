@@ -247,6 +247,14 @@ textarea { min-height: 80px; resize: vertical; }
 .qa-question { font-weight: 600; color: var(--primary); margin-bottom: 6px; }
 .qa-answer { line-height: 1.7; }
 
+/* ── Disclaimer ── */
+.disclaimer-text {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.7;
+  font-style: italic;
+}
+
 /* ── Print ── */
 @media print {
   .hero, .left-column, .toolbar, .status-bar, .fine-print, .back-bar, #chatSection { display: none !important; }
