@@ -255,6 +255,10 @@ textarea { min-height: 80px; resize: vertical; }
   font-style: italic;
 }
 
+.risk-analysis-box {
+  border-left-color: var(--warn);
+}
+
 /* ── Print ── */
 @media print {
   .hero, .left-column, .toolbar, .status-bar, .fine-print, .back-bar, #chatSection { display: none !important; }
