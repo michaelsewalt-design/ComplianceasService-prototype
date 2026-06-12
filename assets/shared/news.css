@@ -1,9 +1,7 @@
 .hero-with-news {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
-  gap: 28px;
-  align-items: start;
+  grid-template-columns: minmax(600px, 1fr) 280px;
 }
+
 
 .news-box {
   background: rgba(255,255,255,0.96);
