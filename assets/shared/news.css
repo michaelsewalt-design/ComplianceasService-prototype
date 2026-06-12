@@ -1,11 +1,11 @@
-.hero-top {
-  display:flex;
-  justify-content:space-between;
-  align-items:flex-start;
+.hero-grid {
+  display:grid;
+  grid-template-columns: 1fr 320px;
+  gap: 40px;
+  align-items:start;
 }
 
 .news-box {
-  width:320px;
   background:#fff;
   padding:16px;
   border-radius:12px;
@@ -30,4 +30,10 @@
   text-decoration:none;
   color:#1a73e8;
   font-size:14px;
+}
+
+@media (max-width: 900px){
+  .hero-grid{
+    grid-template-columns:1fr;
+  }
 }
