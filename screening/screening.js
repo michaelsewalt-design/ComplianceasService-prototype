@@ -127,12 +127,14 @@ function renderReport(report) {
     '<p>'+escapeHtml(bi.overview||'No company overview available.')+'</p></section>' +
     '<section class="section"><h2>Adverse Media Found</h2>'+makeBulletList(report.adverseMediaFound,'No adverse media findings were returned.')+'</section>' +
     '<section class="section"><h2>Analyses of the Company</h2><p>'+escapeHtml(report.companyAnalysis||'No company analysis available.')+'</p></section>' +
-    '<section class="section"><h2>Risks of AML</h2>'+makeBulletList(report.amlRisks,'No explicit AML risks were returned.')+'</section>' +
+  
+
+  '<section class="section"><h2>Risks of AML</h2>'+makeBulletList(report.amlRisks,'No explicit AML risks were returned.')+'</section>'
    
 + '<section class="section"><h2>Risk Analysis</h2>'
 + '<div class="summary-box risk-analysis-box"><p>'
 + escapeHtml(report.riskAnalysis || 'No risk analysis available.')
-+ '</p></div></section>'
++ '</p></div></section>'+
 
 '<section class="section"><h2>Short Summary / Conclusion</h2><div class="summary-box"><p>'+escapeHtml(report.shortSummary||'No summary available.')+'</p></div></section>'
 
