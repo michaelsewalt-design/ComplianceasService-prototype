@@ -1,46 +1,55 @@
 export default async function handler(req, res) {
-  res.setHeader('Cache-Control', 's-maxage=1800, stale-while-revalidate=3600');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Cache-Control', 'public, s-maxage=1800, max-age=1800, stale-while-revalidate=3600');
+
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  const MAX_ITEMS = 8;
+  const RSS_URL = 'https://news.google.com/rss/search?q=compliance+regulation+financial+AML+sanctions&hl=en&gl=US&ceid=US:en';
 
   try {
-    const rssUrl = 'https://news.google.com/rss/search?q=compliance+regulation+AML+DORA&hl=en-US&gl=US&ceid=US:en';
-    const response = await fetch(rssUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; ComplianceNewsBot/1.0)'
-      }
+    const response = await fetch(RSS_URL, {
+      headers: { 'User-Agent': 'CompliancePortal/1.0' }
     });
 
     if (!response.ok) {
-      return res.status(502).json({ error: 'Failed to fetch RSS feed' });
+      console.error('RSS fetch failed:', response.status);
+      return res.status(200).json([]);
     }
 
     const xml = await response.text();
-    const itemRegex = /<item>([\s\S]*?)<\/item>/g;
-    const titleRegex = /<title>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/title>/i;
-    const linkRegex = /<link>([\s\S]*?)<\/link>/i;
 
-    const results = [];
+    /* Parse <item> blocks with regex (no XML library needed) */
+    const items = [];
+    const itemRegex = /<item>([\s\S]*?)<\/item>/gi;
     let match;
 
-    while ((match = itemRegex.exec(xml)) !== null && results.length < 4) {
-      const item = match[1];
-      const titleMatch = item.match(titleRegex);
-      const linkMatch = item.match(linkRegex);
+    while ((match = itemRegex.exec(xml)) !== null && items.length < MAX_ITEMS) {
+      const block = match[1];
 
-      if (!titleMatch || !linkMatch) continue;
+      const titleMatch = block.match(/<title><!\[CDATA\[(.*?)\]\]>|<title>(.*?)<\/title>/);
+      const linkMatch = block.match(/<link>(.*?)<\/link>|<link><!\[CDATA\[(.*?)\]\]>/);
+      const sourceMatch = block.match(/<source[^>]*>(.*?)<\/source>|<source[^>]*><!\[CDATA\[(.*?)\]\]><\/source>/);
+      const dateMatch = block.match(/<pubDate>(.*?)<\/pubDate>/);
 
-      const title = titleMatch[1]
-        .replace(/&amp;/g, '&')
-        .replace(/&#39;/g, "'")
-        .replace(/&quot;/g, '"')
-        .trim();
-      const link = linkMatch[1].trim();
+      const title = titleMatch ? (titleMatch[1] || titleMatch[2] || '').trim() : '';
+      const link = linkMatch ? (linkMatch[1] || linkMatch[2] || '').trim() : '';
+      const source = sourceMatch ? (sourceMatch[1] || sourceMatch[2] || '').trim() : '';
+      const date = dateMatch ? dateMatch[1].trim() : '';
 
-      if (!title || !link) continue;
-      results.push({ title, link });
+      if (title && link) {
+        items.push({ title, link, source, date });
+      }
     }
 
-    return res.status(200).json(results);
+    return res.status(200).json(items);
+
   } catch (error) {
-    return res.status(500).json({ error: 'Failed to fetch news' });
+    console.error('News API error:', error);
+    return res.status(200).json([]);
   }
 }
