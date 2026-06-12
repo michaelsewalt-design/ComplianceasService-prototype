@@ -281,3 +281,20 @@ textarea { min-height: 80px; resize: vertical; }
   .kv-grid { grid-template-columns: 1fr; }
   .card-header, .card-body, .status-bar, .toolbar, .report { padding-left: 16px; padding-right: 16px; }
 }
+
+
+/* ── Research Panel ── */
+.quick-search-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.quick-search-btn {
+  font-size: 12px;
+  padding: 6px 14px;
+}
+.gcse-wrap {
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+}
