@@ -59,6 +59,7 @@ const systemPrompt = [
 '  companyAnalysis   - string',
 '  amlRisks          - array of strings',
 '  shortSummary      - string',
+'  riskAnalysis      - string with a motivated explanation for the risk rating, covering key risk factors, mitigating factors, and an overall assessment (3-5 sentences)',
 '  riskRating        - "HIGH", "MEDIUM", or "LOW"',
 'Base your analysis on publicly known information. Be concise and professional.'
 ].join('\n');
