@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Login — Adverse Media Screening</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        :root {
+            --bg:       #07101e;
+            --surface:  #0d1a2e;
+            --surface2: #132035;
+            --border:   #1c2e47;
+            --gold:     #c9a84c;
+            --gold2:    #e8c97a;
+            --text:     #dce8f5;
+            --muted:    #4e6a88;
+            --success:  #4ade80;
+            --danger:   #f87171;
+        }
+        html, body {
+            height: 100%;
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+        body::before {
+            content: '';
+            position: fixed; inset: 0; pointer-events: none; z-index: 0;
+            background:
+                radial-gradient(ellipse 90% 50% at 0% 0%, rgba(58,123,213,0.07) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 40% at 100% 100%, rgba(201,168,76,0.06) 0%, transparent 60%);
+        }
+        .login-page {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            max-width: 420px;
+            margin: 0 auto;
+        }
+        .login-brand {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+        .login-badge {
+            display: inline-block;
+            border: 1px solid rgba(201,168,76,0.4);
+            color: var(--gold);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            letter-spacing: 0.2em;
+            padding: 5px 14px;
+            border-radius: 4px;
+            margin-bottom: 24px;
+            background: rgba(201,168,76,0.05);
+        }
+        .login-brand h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text);
+            line-height: 1.15;
+            margin-bottom: 12px;
+        }
+        .login-brand h1 span {
+            font-style: italic;
+            color: var(--gold);
+        }
+        .login-brand p {
+            font-size: 13px;
+            color: var(--muted);
+            line-height: 1.7;
+        }
+        .login-box {
+            width: 100%;
+            background-color: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 24px;
+            margin-bottom: 28px;
+        }
+        .login-box-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--gold);
+            margin-bottom: 16px;
+        }
+        .login-field {
+            margin-bottom: 16px;
+        }
+        .login-field label {
+            display: block;
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 6px;
+        }
+        .login-field input {
+            display: block;
+            width: 100%;
+            background-color: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            padding: 12px 14px;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+            transition: border-color 0.2s;
+        }
+        .login-field input:focus {
+            border-color: var(--gold);
+        }
+        .login-field input::placeholder {
+            color: var(--muted);
+        }
+        .login-error {
+            background-color: rgba(248,113,113,0.1);
+            border: 1px solid rgba(248,113,113,0.3);
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 12px;
+            color: var(--danger);
+            margin-bottom: 12px;
+            display: none;
+            line-height: 1.5;
+        }
+        .login-lockout {
+            background-color: rgba(248,113,113,0.08);
+            border: 1px solid rgba(248,113,113,0.25);
+            border-radius: 8px;
+            padding: 12px 14px;
+            font-size: 12px;
+            color: var(--danger);
+            text-align: center;
+            margin-bottom: 12px;
+            display: none;
+            line-height: 1.5;
+        }
+        .login-submit {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            background-color: var(--gold);
+            color: var(--bg);
+            border: none;
+            border-radius: 10px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            letter-spacing: 0.02em;
+            transition: opacity 0.2s;
+            margin-top: 4px;
+        }
+        .login-submit:hover {
+            opacity: 0.9;
+        }
+        .login-submit:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        .login-attempts {
+            font-size: 11px;
+            color: var(--muted);
+            text-align: center;
+            margin-top: 12px;
+        }
+        .login-footer {
+            font-size: 11px;
+            color: var(--muted);
+            text-align: center;
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: 0.05em;
+        }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .login-brand { animation: fadeUp 0.4s ease both; }
+        .login-box   { animation: fadeUp 0.4s 0.1s ease both; }
+    </style>
+</head>
+<body>
+    <div class="login-page">
+        <div class="login-brand">
+            <div class="login-badge">ADVERSE MEDIA SCREENING</div>
+            <h1>Secure <span>Login</span></h1>
+            <p>Enter your access password to continue to the screening module.</p>
+        </div>
+        <div class="login-box">
+            <div class="login-box-title">Authentication</div>
+            <div class="login-lockout" id="lockoutMsg">
+                Too many failed attempts. Please wait <strong id="lockoutTimer">15:00</strong> before trying again.
+            </div>
+            <form id="loginForm" action="javascript:void(0);" method="post">
+                <div class="login-field">
+                    <label for="passwordInput">Access Password</label>
+                    <input type="password" id="passwordInput" name="password" placeholder="Enter password..." autocomplete="current-password" required>
+                </div>
+                <div class="login-error" id="errorMsg">Invalid password.</div>
+                <button type="submit" class="login-submit" id="loginBtn">Login</button>
+            </form>
+            <div class="login-attempts" id="attemptsInfo"></div>
+        </div>
+        <div class="login-footer">&copy; Compliance as a Service &mdash; Screening Module</div>
+    </div>
+    <script>
+        (function() {
+            "use strict";
+            var MAX_ATTEMPTS = 10;
+            var LOCKOUT_MS = 900000;
+            var timerRef = null;
+
+            function readLockout() {
+                try {
+                    var s = localStorage.getItem("sc_lockout");
+                    if (!s) return { attempts: 0, lockedUntil: 0 };
+                    var d = JSON.parse(s);
+                    return { attempts: d.attempts || 0, lockedUntil: d.lockedUntil || 0 };
+                } catch(e) {
+                    return { attempts: 0, lockedUntil: 0 };
+                }
+            }
+
+            function writeLockout(att, until) {
+                localStorage.setItem("sc_lockout", JSON.stringify({ attempts: att, lockedUntil: until }));
+            }
+
+            function isLocked() {
+                var d = readLockout();
+                if (d.lockedUntil > Date.now()) return true;
+                if (d.lockedUntil > 0 && d.lockedUntil <= Date.now()) {
+                    writeLockout(0, 0);
+                }
+                return false;
+            }
+
+            function refreshUI() {
+                var d = readLockout();
+                var lockDiv = document.getElementById("lockoutMsg");
+                var btn = document.getElementById("loginBtn");
+                var pw = document.getElementById("passwordInput");
+                var info = document.getElementById("attemptsInfo");
+
+                if (d.lockedUntil > Date.now()) {
+                    lockDiv.style.display = "block";
+                    btn.disabled = true;
+                    pw.disabled = true;
+                    if (timerRef) clearInterval(timerRef);
+                    var doTick = function() {
+                        var left = d.lockedUntil - Date.now();
+                        if (left <= 0) {
+                            clearInterval(timerRef);
+                            timerRef = null;
+                            writeLockout(0, 0);
+                            lockDiv.style.display = "none";
+                            btn.disabled = false;
+                            pw.disabled = false;
+                            info.textContent = "";
+                            return;
+                        }
+                        var m = Math.floor(left / 60000);
+                        var s = Math.floor((left % 60000) / 1000);
+                        document.getElementById("lockoutTimer").textContent = m + ":" + (s < 10 ? "0" : "") + s;
+                    };
+                    doTick();
+                    timerRef = setInterval(doTick, 1000);
+                } else {
+                    lockDiv.style.display = "none";
+                    btn.disabled = false;
+                    pw.disabled = false;
+                    if (d.attempts > 0 && d.attempts < MAX_ATTEMPTS) {
+                        var r = MAX_ATTEMPTS - d.attempts;
+                        info.textContent = r + (r === 1 ? " attempt" : " attempts") + " remaining before lockout.";
+                    } else {
+                        info.textContent = "";
+                    }
+                }
+            }
+
+            function doLogin(evt) {
+                evt.preventDefault();
+                if (isLocked()) { refreshUI(); return false; }
+
+                var pwInput = document.getElementById("passwordInput");
+                var errDiv = document.getElementById("errorMsg");
+                var btn = document.getElementById("loginBtn");
+                var passVal = pwInput.value;
+                if (!passVal || passVal.length === 0) return false;
+
+                btn.disabled = true;
+                btn.textContent = "Verifying...";
+                errDiv.style.display = "none";
+
+                var xhr = new XMLHttpRequest();
+                xhr.open("POST", "/api/screening-auth", true);
+                xhr.setRequestHeader("Content-Type", "application/json");
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState !== 4) return;
+                    var result;
+                    try { result = JSON.parse(xhr.responseText); }
+                    catch(e) { result = { success: false, message: "Server error." }; }
+
+                    if (xhr.status === 200 && result.success === true) {
+                        writeLockout(0, 0);
+                        sessionStorage.setItem("sc_token", result.token);
+                        window.location.href = "/screening/index.html";
+                        return;
+                    }
+
+                    var ld = readLockout();
+                    var newAtt = ld.attempts + 1;
+                    if (newAtt >= MAX_ATTEMPTS) {
+                        writeLockout(newAtt, Date.now() + LOCKOUT_MS);
+                    } else {
+                        writeLockout(newAtt, 0);
+                    }
+                    errDiv.textContent = result.message || "Invalid password.";
+                    errDiv.style.display = "block";
+                    btn.disabled = false;
+                    btn.textContent = "Login";
+                    refreshUI();
+                };
+                xhr.onerror = function() {
+                    errDiv.textContent = "Connection error. Please try again.";
+                    errDiv.style.display = "block";
+                    btn.disabled = false;
+                    btn.textContent = "Login";
+                };
+                xhr.send(JSON.stringify({ password: passVal }));
+                return false;
+            }
+
+            function checkExistingToken() {
+                var tok = sessionStorage.getItem("sc_token");
+                if (!tok) return false;
+                var checkXhr = new XMLHttpRequest();
+                checkXhr.open("GET", "/api/screening-auth", true);
+                checkXhr.setRequestHeader("Authorization", "Bearer " + tok);
+                checkXhr.onreadystatechange = function() {
+                    if (checkXhr.readyState !== 4) return;
+                    if (checkXhr.status === 200) {
+                        window.location.href = "/screening/index.html";
+                    } else {
+                        sessionStorage.removeItem("sc_token");
+                        refreshUI();
+                    }
+                };
+                checkXhr.onerror = function() {};
+                checkXhr.send();
+                return true;
+            }
+
+            function init() {
+                if (checkExistingToken()) return;
+                refreshUI();
+                var form = document.getElementById("loginForm");
+                if (form) form.onsubmit = doLogin;
+                var pwField = document.getElementById("passwordInput");
+                if (pwField && !pwField.disabled) {
+                    setTimeout(function() { pwField.focus(); }, 100);
+                }
+            }
+
+            if (document.readyState === "loading") {
+                document.addEventListener("DOMContentLoaded", init);
+            } else {
+                init();
+            }
+        })();
+    </script>
+</body>
+</html>
