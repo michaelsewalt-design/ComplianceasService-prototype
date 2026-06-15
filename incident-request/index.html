@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Compliance Portal — Incident &amp; Request</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+  <div class="header-logo">
+    <div class="header-logo-icon">🛡️</div>
+    Compliance Portal
+  </div>
+  <span class="header-meta">Secure · Confidential · Auditable</span>
+
+    <nav class="header-nav no-print">
+      <a href="/" class="nav-link">← Portal</a>
+      <button id="logoutBtn" class="logout-btn">Logout</button>
+    </nav>
+  </header>
+
+<!-- ══════════════ LANDING ══════════════ -->
+<main>
+<div id="landing">
+  <p class="landing-eyebrow">Compliance Operations</p>
+  <h1 class="landing-title">What would you like to submit?</h1>
+  <p class="landing-subtitle">Select the appropriate module below. Your submission will be reviewed by the compliance team and you will receive a confirmation by email.</p>
+
+  <div class="module-grid">
+    <div class="module-card incident" onclick="openForm('incident')">
+      <span class="module-icon">🚨</span>
+      <div class="module-label" style="color:var(--red)">Incident</div>
+      <div class="module-title">Report an Incident</div>
+      <div class="module-desc">Report a compliance breach, suspicious transaction, control failure, or regulatory incident requiring immediate attention.</div>
+      <span class="module-arrow">→</span>
+    </div>
+
+    <div class="module-card approval" onclick="openForm('approval')">
+      <span class="module-icon">✅</span>
+      <div class="module-label" style="color:var(--accent)">Approval</div>
+      <div class="module-title">Request Compliance Approval</div>
+      <div class="module-desc">Request pre-clearance or sign-off on a business activity, new product, or transaction requiring compliance review.</div>
+      <span class="module-arrow">→</span>
+    </div>
+
+    <div class="module-card disclosure" onclick="openForm('disclosure')">
+      <span class="module-icon">📋</span>
+      <div class="module-label" style="color:var(--orange)">Disclosure</div>
+      <div class="module-title">Submit a Disclosure</div>
+      <div class="module-desc">Voluntarily disclose a conflict of interest, personal account transaction, gift, or external appointment.</div>
+      <span class="module-arrow">→</span>
+    </div>
+
+    <div class="module-card query" onclick="openForm('query')">
+      <span class="module-icon">💬</span>
+      <div class="module-label" style="color:var(--green)">Advisory</div>
+      <div class="module-title">Compliance Query / Advisory</div>
+      <div class="module-desc">Submit a question or request for written guidance on regulations, policies, or planned business activities.</div>
+      <span class="module-arrow">→</span>
+    </div>
+  </div>
+
+  <p style="font-size:12px;color:var(--muted);text-align:center;">
+    For urgent matters, contact the Compliance Hotline directly at <strong>+31 (0)800 0000</strong> or <strong>compliance@yourfirm.com</strong>
+  </p>
+</div>
+
+<!-- ══════════════ FORM VIEW ══════════════ -->
+<div id="form-view">
+  <button class="back-btn" onclick="goBack()">← Back to overview</button>
+
+  <div class="form-header">
+    <div class="form-header-icon" id="fh-icon">🚨</div>
+    <div class="form-header-text">
+      <h1 id="fh-title">Report an Incident</h1>
+      <p id="fh-desc">Complete all required fields. A compliance officer will follow up within one business day.</p>
+    </div>
+    <div class="ref-badge" id="ref-badge">REF-—</div>
+  </div>
+
+  <!-- ── Requester info (shared) ── -->
+  <div class="form-card">
+    <div class="section-title">Requester Information</div>
+    <div class="form-row">
+      <div class="field">
+        <label>Full Name <span class="req">*</span></label>
+        <input type="text" id="f-name" placeholder="Jane de Vries" autocomplete="name">
+      </div>
+      <div class="field">
+        <label>Email Address <span class="req">*</span></label>
+        <input type="email" id="f-email" placeholder="j.devries@yourfirm.com" autocomplete="email">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="field">
+        <label>Department</label>
+        <input type="text" id="f-dept" placeholder="e.g. Trading, Wealth Management, Operations">
+      </div>
+      <div class="field">
+        <label>Direct Manager / Supervisor</label>
+        <input type="text" id="f-manager" placeholder="Name of your line manager">
+      </div>
+    </div>
+    <div class="form-row full">
+      <div class="field">
+        <label>Date of Submission <span class="req">*</span></label>
+        <input type="date" id="f-date">
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ INCIDENT form ══ -->
+  <div id="form-incident" class="cond-block">
+    <div class="form-card">
+      <div class="section-title">Incident Details</div>
+      <div class="form-row full">
+        <div class="field">
+          <label>Incident Type <span class="req">*</span></label>
+          <select id="inc-type" onchange="updateSubtype()">
+            <option value="" disabled selected>— Select incident type —</option>
+            <option value="aml">AML / Suspicious Transaction (STR)</option>
+            <option value="mar">Market Abuse (MAR) / Insider Trading</option>
+            <option value="data">Data Breach / Privacy Incident (GDPR)</option>
+            <option value="control">Internal Control Failure</option>
+            <option value="conduct">Employee Conduct / Policy Violation</option>
+            <option value="operational">Operational Risk Event</option>
+            <option value="regulatory">Regulatory Breach / Fine</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label>Date Incident Occurred <span class="req">*</span></label>
+          <input type="date" id="inc-date">
+        </div>
+        <div class="field">
+          <label>Date Incident Discovered</label>
+          <input type="date" id="inc-discovered">
+        </div>
+      </div>
+      <div class="form-row full">
+        <div class="field">
+          <label>Affected Parties / Systems</label>
+          <input type="text" id="inc-parties" placeholder="e.g. Client name(s), account numbers, systems involved">
+        </div>
+      </div>
+      <div class="form-row full">
+        <div class="field">
+          <label>Incident Description <span class="req">*</span></label>
+          <textarea id="inc-desc" placeholder="Describe what happened, when, where, and how it was discovered. Include all relevant facts." style="min-height:130px;"></textarea>
+        </div>
+      </div>
+      <div class="form-row full">
+        <div class="field">
+          <label>Immediate Actions Already Taken</label>
+          <textarea id="inc-actions" placeholder="List any steps already taken to contain or mitigate the incident."></textarea>
+        </div>
+      </div>
+      <div class="form-row full">
+        <div class="field">
+          <label>Estimated Financial Impact (€)</label>
+          <input type="number" id="inc-impact" placeholder="0 if unknown or not applicable">
+          <span class="field-hint">Leave blank if not applicable</span>
+        </div>
+      </div>
+    </div>
+    <div class="form-card">
+      <div class="section-title">Severity Assessment</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Select the severity level that best describes this incident:</p>
+      <div class="pill-row" id="severity-pills">
+        <span class="pill low"      onclick="selectPill(this,'severity')">🟢 Low</span>
+        <span class="pill medium"   onclick="selectPill(this,'severity')">🟡 Medium</span>
+        <span class="pill high"     onclick="selectPill(this,'severity')">🔴 High</span>
+        <span class="pill critical" onclick="selectPill(this,'severity')">🟣 Critical</span>
+      </div>
+      <div class="form-row full">
+        <div class="field">
+          <label>Regulatory Reporting Obligation</label>
+          <select id="inc-reporting">
+            <option value="">Unknown / To be determined</option>
+            <option value="eba">EBA / Competent Authority notification required</option>
+            <option value="afm">AFM notification required</option>
+            <option value="dnb">DNB notification required</option>
+            <option value="fiu">FIU-NL STR filing required</option>
+            <option value="none">No external reporting required</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ APPROVAL form ══ -->
+  <div id="form-approval" class="cond-block">
+    <div class="form-card">
+      <div class="section-title">Approval Request Details</div>
+      <div class="form-row full">
+        <div class="field">
+          <label>Approval Type <span class="req">*</span></label>
+          <select id="apr-type">
+            <option value="" disabled selected>— Select approval type —</option>
+            <option value="new-product">New Product / Service Launch</option>
+            <option value="new-client">New Client Onboarding (High-Risk)</option>
+            <option value="transaction">Large / Unusual Transaction Pre-Clearance</option>
+            <option value="personal-account">Personal Account Dealing Pre-Clearance</option>
+            <option value="marketing">Marketing Material / Communication Review</option>
+            <option value="outsourcing">Outsourcing / Third-Party Engagement</option>
+            <option value="policy-exception">Policy Exception / Waiver</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label>Business Unit / Entity <span class="req">*</span></label>
+          <input type="text" id="apr-bu" placeholder="e.g. Retail Banking, Private Equity Desk">
+        </div>
+        <div class="field">
+          <label>Requested Decision Deadline</label>
+          <input type="date" id="apr-deadline">
+          <span class="field-hint">Leave blank if no deadline</span>
+        </div>
+      </div>
+      <div class="form-row full">
+        <div class="field">
+          <label>Description of Activity / Request <span class="req">*</span></label>
+          <textarea id="apr-desc" style="min-height:130px;" placeholder="Describe the activity, transaction, or action for which you are seeking compliance approval. Be specific and include all relevant parameters."></textarea>
+        </div>
+      </div>
+      <div class="form-row full">
+        <div class="field">
+          <label>Applicable Regulations / Policies</label>
+          <input type="text" id="apr-regs" placeholder="e.g. MiFID II Art. 24, MAR, AMLR, Wwft, DORA, internal policy ref.">
+        </div>
+      </div>
+      <div class="form-row full">
+        <div class="field">
+          <label>Risk Assessment / Justification <span class="req">*</span></label>
+          <textarea id="apr-risk" placeholder="Explain why this activity should be approved and how any risks have been identified and mitigated."></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="form-card">
+      <div class="section-title">Priority</div>
+      <div class="pill-row" id="priority-pills">
+        <span class="pill low"    onclick="selectPill(this,'priority')">🟢 Routine</span>
+        <span class="pill medium" onclick="selectPill(this,'priority')">🟡 Elevated</span>
+        <span class="pill high"   onclick="selectPill(this,'priority')">🔴 Urgent</span>
+      </div>
+      <div class="form-row full" style="margin-top:4px;">
+        <div class="checkbox-row">
+          <input type="checkbox" id="apr-legal">
+          <label for="apr-legal" style="font-size:13px;color:var(--muted);">Legal counsel has already been consulted on this matter</label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ DISCLOSURE form ══ -->
+  <div id="form-disclosure" class="cond-block">
+    <div class="form-card">
+      <div class="section-title">Disclosure Details</div>
+      <div class="form-row full">
+        <div class="field">
+          <label>Disclosure Type <span class="req">*</span></label>
+          <select id="disc-type">
+            <option value="" disabled selected>— Select disclosure type —</option>
+            <option value="conflict">Conflict of Interest</option>
+            <option value="personal-account">Personal Account Transaction</option>
+            <option value="gift">Gift or Hospitality (received or given)</option>
+            <option value="external">External Appointment / Directorship</option>
+            <option value="related-party">Related Party Transaction</option>
+            <option value="whistleblow">Whistleblower / Internal Report</option>
+            <option value="other">Other Disclosure</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label>Date of Event / Transaction <span class="req">*</span></label>
+          <input type="date" id="disc-date">
+        </div>
+        <div class="field">
+          <label>Counterparty / Third Party Involved</label>
+          <input type="text" id="disc-party" placeholder="Name of client, company, or individual">
+        </div>
+      </div>
+      <div class="form-row full">
+        <div class="field">
+          <label>Full Description <span class="req">*</span></label>
+          <textarea id="disc-desc" style="min-height:130px;" placeholder="Provide full details of the event, including the nature of the relationship, financial interest, or activity being disclosed."></textarea>
+        </div>
+      </div>
+      <div class="form-row full">
+        <div class="field">
+          <label>Financial Value (€) (if applicable)</label>
+          <input type="number" id="disc-value" placeholder="0">
+        </div>
+      </div>
+      <div class="form-row full">
+        <div class="checkbox-row">
+          <input type="checkbox" id="disc-recur">
+          <label for="disc-recur" style="font-size:13px;color:var(--muted);">This is an ongoing / recurring situation (not a one-off event)</label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ QUERY form ══ -->
+  <div id="form-query" class="cond-block">
+    <div class="form-card">
+      <div class="section-title">Advisory Request</div>
+      <div class="form-row full">
+        <div class="field">
+          <label>Topic Area <span class="req">*</span></label>
+          <select id="qry-topic">
+            <option value="" disabled selected>— Select topic —</option>
+            <option value="aml">AML / CFT / Sanctions</option>
+            <option value="mar">Market Abuse / MAR</option>
+            <option value="mifid">MiFID II / Client Suitability</option>
+            <option value="gdpr">GDPR / Data Privacy</option>
+            <option value="dora">DORA / Operational Resilience</option>
+            <option value="outsourcing">Outsourcing / Third-Party Risk</option>
+            <option value="conduct">Employee Conduct / Remuneration</option>
+            <option value="regulatory">General Regulatory Guidance</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row full">
+        <div class="field">
+          <label>Subject / Title <span class="req">*</span></label>
+          <input type="text" id="qry-subject" placeholder="Brief title summarising your query">
+        </div>
+      </div>
+      <div class="form-row full">
+        <div class="field">
+          <label>Query Description <span class="req">*</span></label>
+          <textarea id="qry-desc" style="min-height:130px;" placeholder="Describe your question or situation in full. The more context you provide, the more useful the guidance you will receive."></textarea>
+        </div>
+      </div>
+      <div class="form-row full">
+        <div class="field">
+          <label>Background / Business Context</label>
+          <textarea id="qry-context" placeholder="Optional: describe the business activity or product this relates to."></textarea>
+        </div>
+      </div>
+      <div class="form-row full">
+        <div class="field">
+          <label>Response Needed By</label>
+          <input type="date" id="qry-deadline">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ Attachments (shared) ══ -->
+  <div class="form-card">
+    <div class="section-title">Supporting Documents</div>
+    <div class="file-zone" id="drop-zone">
+      <input type="file" id="file-input" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.msg,.eml" onchange="handleFiles(this.files)">
+      <div class="file-icon">📎</div>
+      <div class="file-label">Drag files here or click to browse</div>
+      <div class="file-sublabel">PDF, Word, Excel, images, .msg, .eml — max 10 MB each</div>
+    </div>
+    <div class="file-list" id="file-list"></div>
+  </div>
+
+  <!-- ══ Additional notes (shared) ══ -->
+  <div class="form-card">
+    <div class="section-title">Additional Notes</div>
+    <div class="field">
+      <textarea id="f-notes" placeholder="Any additional context, urgency factors, or instructions for the compliance team."></textarea>
+    </div>
+    <div style="margin-top:16px;" class="checkbox-row">
+      <input type="checkbox" id="f-confirm" required>
+      <label for="f-confirm" style="font-size:13px;color:var(--muted);">I confirm that the information provided is accurate and complete to the best of my knowledge, and I understand this submission is logged and auditable.</label>
+    </div>
+  </div>
+
+  <!-- ══ AI review panel ══ -->
+  <div class="ai-panel" id="ai-panel">
+    <div class="ai-panel-header">
+      <div class="ai-spinner" id="ai-spinner"></div>
+      <span class="ai-panel-title" id="ai-panel-title">Compliance AI is reviewing your submission…</span>
+    </div>
+    <div id="ai-result-area"></div>
+  </div>
+
+  <!-- ══ Submit ══ -->
+  <div class="form-card">
+    <div class="submit-area">
+      <p class="submit-note">
+        By submitting, this form will be reviewed by an AI assistant and forwarded to the compliance inbox. You will receive an automated confirmation.
+      </p>
+      <button class="btn-primary" id="submit-btn" onclick="submitForm()">
+        🔒 Submit to Compliance
+      </button>
+    </div>
+  </div>
+</div>
+</main>
+
+<div class="toast" id="toast"></div>
+  <script src="script.js"></script>
+</body>
+</html>
