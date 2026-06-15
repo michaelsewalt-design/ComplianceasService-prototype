@@ -298,3 +298,12 @@ textarea { min-height: 80px; resize: vertical; }
   border-top: 1px solid var(--line);
   padding-top: 16px;
 }
+
+/* Forceer CSE links om niet in nieuwe tab te openen */
+.gsc-results a {
+  target: _self !important;
+}
+.gsc-results .gsc-url-top,
+.gsc-results .gs-visibleUrl {
+  pointer-events: none;
+}

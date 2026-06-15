@@ -374,7 +374,17 @@ document.querySelectorAll('.quick-search-btn').forEach(function(btn) {
     if (!companyName) { alert('Enter a company name first.'); return; }
     var suffix = btn.getAttribute('data-suffix');
     var query = companyName + ' ' + suffix;
-    window.open('https://www.google.com/search?q=' + encodeURIComponent(query), '_blank');
+
+    /* Trigger de embedded Google CSE search */
+    var cseInput = document.querySelector('.gsc-input-box input.gsc-input');
+    if (cseInput) {
+      cseInput.value = query;
+      var searchBtn = document.querySelector('button.gsc-search-button');
+      if (searchBtn) searchBtn.click();
+    } else {
+      /* Fallback: als CSE nog niet geladen is */
+      window.open('https://www.google.com/search?q=' + encodeURIComponent(query), '_blank');
+    }
   });
 });
 
@@ -413,12 +423,17 @@ document.addEventListener('keydown', function(e) {
   }
 });
 
-/* Intercept Google CSE result clicks */
-document.addEventListener('click', function(e) {
-  var link = e.target.closest('.gsc-results a[href], .gs-title a[href]');
-  if (link && link.href && !link.href.startsWith('javascript')) {
-    e.preventDefault();
-    e.stopPropagation();
-    openResultViewer(link.href, link.textContent);
-  }
-}, true);
+/* ── Intercept Google CSE result clicks → open in side panel ── */
+function attachCseClickHandler() {
+  document.addEventListener('click', function(e) {
+    /* Zoek naar links binnen Google CSE resultaten */
+    var link = e.target.closest('.gsc-results a[href], .gs-title a[href], .gsc-url-top a[href], a.gs-title');
+    if (link && link.href && link.href.startsWith('http')) {
+      e.preventDefault();
+      e.stopPropagation();
+      openResultViewer(link.href, link.textContent || link.href);
+      return false;
+    }
+  }, true);
+}
+attachCseClickHandler();
