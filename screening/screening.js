@@ -102,6 +102,34 @@ function makeBulletList(items,fallback){
   return'<ul class="list">'+items.map(function(i){return'<li>'+escapeHtml(i)+'</li>';}).join('')+'</ul>';
 }
 
+
+/* ── Database Screening Rendering ── */
+function renderHitBadge(sourceType) {
+  var cls = 'hit-badge';
+  if (sourceType === 'SANCTION') cls += ' hit-sanction';
+  else if (sourceType === 'PEP') cls += ' hit-pep';
+  else if (sourceType === 'CRIMINAL') cls += ' hit-criminal';
+  return '<span class="' + cls + '">' + escapeHtml(sourceType || 'UNKNOWN') + '</span>';
+}
+
+function renderHitsTable(hits) {
+  if (!hits || !hits.length) {
+    return '<p class="no-hits">✅ No hits found in sanctions, PEP, or criminal databases.</p>';
+  }
+  var html = '<div class="hits-list">';
+  hits.forEach(function(hit) {
+    html += '<div class="hit-card">';
+    html += '<div class="hit-card-header">' + renderHitBadge(hit.sourceType) + ' <strong>' + escapeHtml(hit.name || 'Unknown') + '</strong></div>';
+    if (hit.pepType) html += '<div class="hit-detail"><span class="hit-label">PEP Type:</span> ' + escapeHtml(hit.pepType) + (hit.pepLevel ? ' (Level ' + escapeHtml(hit.pepLevel) + ')' : '') + '</div>';
+    if (hit.details) html += '<div class="hit-detail"><span class="hit-label">Details:</span> ' + escapeHtml(hit.details) + '</div>';
+    if (hit.source) html += '<div class="hit-detail"><span class="hit-label">Source:</span> ' + escapeHtml(hit.source) + '</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+  return html;
+}
+
+
 function renderReport(report) {
   var risk = report.riskRating || computeRisk(report);
   latestReport = Object.assign({}, report, { riskRating: risk });
@@ -112,38 +140,82 @@ function renderReport(report) {
     : 'Not provided';
 
   var bi = report.basicCompanyInfo || {};
-  reportContent.innerHTML =
-    '<div class="report-header"><div class="report-title"><h1>Adverse Media Screening Report</h1>' +
-    '<p>Corporate adverse media and open-source sanctions screening output</p></div>' +
-    '<div><div class="risk-pill '+getRiskClass(risk)+'">Overall Risk: '+escapeHtml(risk)+'</div></div></div>' +
-    '<section class="section"><h2><span>Basic Company Info</span><span class="badge">Standard Section</span></h2>' +
-    '<div class="kv-grid">' +
-    '<div class="kv"><div class="kv-title">Corporation Name</div><div class="kv-value">'+escapeHtml(bi.companyName||'N/A')+'</div></div>' +
-    '<div class="kv"><div class="kv-title">Registration Number</div><div class="kv-value">'+escapeHtml(bi.registrationNumber||'N/A')+'</div></div>' +
-    '<div class="kv"><div class="kv-title">Country / Jurisdiction</div><div class="kv-value">'+escapeHtml(bi.country||'N/A')+'</div></div>' +
-    '<div class="kv"><div class="kv-title">Website</div><div class="kv-value">'+escapeHtml(bi.website||'N/A')+'</div></div>' +
-    '<div class="kv"><div class="kv-title">Industry</div><div class="kv-value">'+escapeHtml(bi.industry||'N/A')+'</div></div>' +
-    '<div class="kv"><div class="kv-title">UBO Information</div><div class="kv-value">'+escapeHtml(uboValue)+'</div></div></div>' +
-    '<p>'+escapeHtml(bi.overview||'No company overview available.')+'</p></section>' +
-    '<section class="section"><h2>Adverse Media Found</h2>'+makeBulletList(report.adverseMediaFound,'No adverse media findings were returned.')+'</section>' +
-    '<section class="section"><h2>Analyses of the Company</h2><p>'+escapeHtml(report.companyAnalysis||'No company analysis available.')+'</p></section>' +
-  
+  var ds = report.databaseScreening || {};
+  var us = report.uboScreening || [];
 
-  '<section class="section"><h2>Risks of AML</h2>'+makeBulletList(report.amlRisks,'No explicit AML risks were returned.')+'</section>'
-   
-+ '<section class="section"><h2>Risk Analysis</h2>'
-+ '<div class="summary-box risk-analysis-box"><p>'
-+ escapeHtml(report.riskAnalysis || 'No risk analysis available.')
-+ '</p></div></section>'+
+  var html = '';
 
-'<section class="section"><h2>Short Summary / Conclusion</h2><div class="summary-box"><p>'+escapeHtml(report.shortSummary||'No summary available.')+'</p></div></section>'
+  /* ── Report Header ── */
+  html += '<div class="report-header"><div class="report-title"><h1>KYC Screening Report</h1>'
+    + '<p>Corporate adverse media and open-source sanctions screening output</p></div>'
+    + '<div><div class="risk-pill ' + getRiskClass(risk) + '">Overall Risk: ' + escapeHtml(risk) + '</div></div></div>';
 
-+ '<section class="section disclaimer"><h2>Disclaimer</h2>'
-+ '<p class="disclaimer-text">This report has been generated using artificial intelligence (AI) and open-source data. '
-+ 'It is intended for informational and preliminary screening purposes only and does not constitute legal, financial, or compliance advice. '
-+ 'The information contained herein may be incomplete, inaccurate, or outdated. No representation or warranty, express or implied, is made as to the accuracy or completeness of the content. '
-+ 'Any decisions made on the basis of this report are taken entirely at the user\'s own risk. '
-+ 'This report should be reviewed and validated by a qualified compliance professional before being relied upon for any regulatory, business, or legal purpose.</p></section>';
+  /* ── 1. Basic Company Info ── */
+  html += '<section class="section"><h2><span>Basic Company Info</span><span class="badge">Standard Section</span></h2>'
+    + '<div class="kv-grid">'
+    + '<div class="kv"><div class="kv-title">Corporation Name</div><div class="kv-value">' + escapeHtml(bi.companyName || 'N/A') + '</div></div>'
+    + '<div class="kv"><div class="kv-title">Registration Number</div><div class="kv-value">' + escapeHtml(bi.registrationNumber || 'N/A') + '</div></div>'
+    + '<div class="kv"><div class="kv-title">Country / Jurisdiction</div><div class="kv-value">' + escapeHtml(bi.country || 'N/A') + '</div></div>'
+    + '<div class="kv"><div class="kv-title">Website</div><div class="kv-value">' + escapeHtml(bi.website || 'N/A') + '</div></div>'
+    + '<div class="kv"><div class="kv-title">Industry</div><div class="kv-value">' + escapeHtml(bi.industry || 'N/A') + '</div></div>'
+    + '<div class="kv"><div class="kv-title">UBO Information</div><div class="kv-value">' + escapeHtml(uboValue) + '</div></div></div>'
+    + '<p>' + escapeHtml(bi.overview || 'No company overview available.') + '</p></section>';
+
+  /* ── 2. Database Screening: Entity ── */
+  html += '<section class="section"><h2><span>Database Screening: Entity</span><span class="badge">Dilisense</span></h2>'
+    + renderHitsTable(ds.entityHits)
+    + '<div class="screening-summary"><p>' + escapeHtml(ds.summary || 'No database screening was performed.') + '</p></div></section>';
+
+  /* ── 3. Database Screening: UBOs ── */
+  html += '<section class="section"><h2><span>Database Screening: UBOs</span><span class="badge">Dilisense</span></h2>';
+  if (us.length === 0) {
+    html += '<p class="no-hits">No UBOs were provided for screening.</p>';
+  } else {
+    us.forEach(function(ubo) {
+      html += '<div class="ubo-screening-block">';
+      html += '<h3 class="ubo-screening-name">' + escapeHtml(ubo.uboName || 'Unknown UBO') + '</h3>';
+      html += renderHitsTable(ubo.hits);
+      html += '<div class="screening-summary"><p>' + escapeHtml(ubo.summary || 'No screening summary available.') + '</p></div>';
+      html += '</div>';
+    });
+  }
+  html += '</section>';
+
+  /* ── 4. Adverse Media Found ── */
+  html += '<section class="section"><h2>Adverse Media Found</h2>'
+    + makeBulletList(report.adverseMediaFound, 'No adverse media findings were returned.')
+    + '</section>';
+
+  /* ── 5. Analyses of the Company ── */
+  html += '<section class="section"><h2>Analyses of the Company</h2>'
+    + '<p>' + escapeHtml(report.companyAnalysis || 'No company analysis available.') + '</p></section>';
+
+  /* ── 6. Risks of AML ── */
+  html += '<section class="section"><h2>Risks of AML</h2>'
+    + makeBulletList(report.amlRisks, 'No explicit AML risks were returned.')
+    + '</section>';
+
+  /* ── 7. Risk Analysis ── */
+  html += '<section class="section"><h2>Risk Analysis</h2>'
+    + '<div class="summary-box risk-analysis-box"><p>'
+    + escapeHtml(report.riskAnalysis || 'No risk analysis available.')
+    + '</p></div></section>';
+
+  /* ── 8. Short Summary / Conclusion ── */
+  html += '<section class="section"><h2>Short Summary / Conclusion</h2>'
+    + '<div class="summary-box"><p>'
+    + escapeHtml(report.shortSummary || 'No summary available.')
+    + '</p></div></section>';
+
+  /* ── 9. Disclaimer ── */
+  html += '<section class="section disclaimer"><h2>Disclaimer</h2>'
+    + '<p class="disclaimer-text">This report has been generated using artificial intelligence (AI) and open-source data. '
+    + 'It is intended for informational and preliminary screening purposes only and does not constitute legal, financial, or compliance advice. '
+    + 'The information contained herein may be incomplete, inaccurate, or outdated. No representation or warranty, express or implied, is made as to the accuracy or completeness of the content. '
+    + 'Any decisions made on the basis of this report are taken entirely at the user\'s own risk. '
+    + 'This report should be reviewed and validated by a qualified compliance professional before being relied upon for any regulatory, business, or legal purpose.</p></section>';
+
+  reportContent.innerHTML = html;
 
   emptyState.style.display = 'none';
   reportContent.style.display = 'block';
@@ -159,6 +231,9 @@ function renderReport(report) {
   chatMessages.innerHTML = '';
   appendChatBtn.disabled = true;
 }
+
+
+
 
 /* ── API Call ── */
 async function callScreeningApi(payload) {

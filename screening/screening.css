@@ -259,6 +259,89 @@ textarea { min-height: 80px; resize: vertical; }
   border-left-color: var(--warn);
 }
 
+/* ── Database Screening ── */
+.no-hits {
+  color: var(--success);
+  font-weight: 600;
+  font-size: 14px;
+  padding: 12px 0;
+}
+.hits-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.hit-card {
+  padding: 14px 18px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel-2);
+}
+.hit-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+.hit-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.hit-sanction { background: var(--high-bg); color: var(--high-tx); }
+.hit-pep { background: var(--med-bg); color: var(--med-tx); }
+.hit-criminal { background: #f3e8ff; color: #6b21a8; }
+.hit-detail {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text);
+  padding-left: 4px;
+}
+.hit-label {
+  font-weight: 600;
+  color: var(--muted);
+}
+.screening-summary {
+  margin-top: 10px;
+  padding: 12px 16px;
+  background: var(--panel-2);
+  border-radius: 8px;
+  border-left: 3px solid var(--primary);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.ubo-screening-block {
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--line);
+}
+.ubo-screening-block:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+.ubo-screening-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 10px;
+}
+.risk-analysis-box { border-left-color: var(--warn); }
+.disclaimer-text {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.7;
+  font-style: italic;
+}
+
+
+
 /* ── Print ── */
 @media print {
   .hero, .left-column, .toolbar, .status-bar, .fine-print, .back-bar, #chatSection { display: none !important; }
