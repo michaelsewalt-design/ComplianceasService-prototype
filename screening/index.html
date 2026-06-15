@@ -148,7 +148,28 @@
       </div>
     </div>
   </div>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  
+...
+          </div>  <!-- einde .report / #reportArea -->
+        </div>  <!-- einde .card.report-wrap -->
+
+      </div>  <!-- einde .grid -->
+    </div>  <!-- einde .container -->
+
+  <!-- ★ RESULT VIEWER HIER — vlak vóór de scripts ★ -->
+  <div id="resultViewer" class="result-viewer" style="display:none;">
+    <div class="result-viewer-header">
+      <span id="resultViewerTitle">Loading...</span>
+      <div class="result-viewer-actions">
+        <a id="resultViewerExternal" href="#" target="_blank" rel="noopener" class="btn-light">Open in new tab ↗</a>
+        <button type="button" class="btn-danger" id="resultViewerClose">Close</button>
+      </div>
+    </div>
+    <iframe id="resultViewerFrame" src="about:blank" sandbox="allow-same-origin allow-scripts allow-popups allow-forms"></iframe>
+  </div>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script src="/screening/screening.js" defer></script>
 </body>
 </html>

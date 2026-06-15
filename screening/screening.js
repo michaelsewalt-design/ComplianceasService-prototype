@@ -377,3 +377,48 @@ document.querySelectorAll('.quick-search-btn').forEach(function(btn) {
     window.open('https://www.google.com/search?q=' + encodeURIComponent(query), '_blank');
   });
 });
+
+/* ── Result Viewer (side panel) ── */
+var resultViewer    = document.getElementById('resultViewer');
+var resultFrame     = document.getElementById('resultViewerFrame');
+var resultTitle     = document.getElementById('resultViewerTitle');
+var resultExternal  = document.getElementById('resultViewerExternal');
+var resultCloseBtn  = document.getElementById('resultViewerClose');
+
+function openResultViewer(url, title) {
+  resultTitle.textContent = title || url;
+  resultExternal.href = url;
+  resultFrame.src = url;
+  resultViewer.style.display = 'flex';
+
+  /* Fallback: if iframe fails to load (X-Frame-Options), show message */
+  resultFrame.onerror = function() {
+    resultFrame.srcdoc = '<div style="display:grid;place-items:center;height:100%;font-family:Inter,sans-serif;color:#5b6475;">'
+      + '<div style="text-align:center;"><h3>This site cannot be embedded</h3>'
+      + '<p>Click "Open in new tab" above to view the page.</p></div></div>';
+  };
+}
+
+function closeResultViewer() {
+  resultViewer.style.display = 'none';
+  resultFrame.src = 'about:blank';
+}
+
+resultCloseBtn.addEventListener('click', closeResultViewer);
+
+/* Escape key to close */
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape' && resultViewer.style.display !== 'none') {
+    closeResultViewer();
+  }
+});
+
+/* Intercept Google CSE result clicks */
+document.addEventListener('click', function(e) {
+  var link = e.target.closest('.gsc-results a[href], .gs-title a[href]');
+  if (link && link.href && !link.href.startsWith('javascript')) {
+    e.preventDefault();
+    e.stopPropagation();
+    openResultViewer(link.href, link.textContent);
+  }
+}, true);
