@@ -1682,11 +1682,11 @@ function handleDragOver(e) { e.preventDefault(); e.currentTarget.classList.add('
 function handleDrop(e, type) { e.preventDefault(); e.currentTarget.classList.remove('dragover'); addFiles(Array.from(e.dataTransfer.files), type); }
 function handleFileSelect(e, type) { addFiles(Array.from(e.target.files), type); }
 function addFiles(files, type) {
+  var MAX_CONTRACT_CHARS = 60000;
   for (var i = 0; i < files.length; i++) {
     state.uploadedFiles[type].push(files[i]);
   }
   renderFileList(type);
-  // Auto-extract text from contract PDFs
   if (type === 'contract') {
     state.extractedContractText = '';
     var statusEl = document.getElementById('pdfExtractionStatus');
@@ -1696,14 +1696,22 @@ function addFiles(files, type) {
       statusEl.style.background = 'var(--accent-light)';
       statusEl.style.border = '1px solid var(--accent-border)';
       statusEl.style.color = 'var(--accent)';
-      statusEl.innerHTML = '<span class="mini-loader" style="display:inline-block;vertical-align:middle;margin-right:8px;"></span> Extracting text from PDF\u2026';
+      statusEl.innerHTML = '<span class="mini-loader" style="display:inline-block;vertical-align:middle;margin-right:8px;"><\/span> Extracting text from PDF\u2026';
       extractPdfText(contractFile).then(function(text) {
         state.extractedContractText = text;
         if (text.length > 0) {
-          statusEl.style.background = 'var(--green-bg)';
-          statusEl.style.border = '1px solid var(--green-border)';
-          statusEl.style.color = 'var(--green)';
-          statusEl.innerHTML = '\u2713 PDF text extracted \u2014 <strong>' + text.length.toLocaleString() + ' characters</strong> (' + Math.ceil(text.length / 4).toLocaleString() + ' est. tokens) from <strong>' + contractFile.name + '</strong>';
+          var truncated = text.length > MAX_CONTRACT_CHARS;
+          if (truncated) {
+            statusEl.style.background = 'var(--amber-bg)';
+            statusEl.style.border = '1px solid var(--amber-border)';
+            statusEl.style.color = 'var(--amber)';
+            statusEl.innerHTML = '\u2713 PDF text extracted \u2014 <strong>' + text.length.toLocaleString() + ' characters<\/strong> from <strong>' + contractFile.name + '<\/strong><br>\u26a0 Truncated to ' + MAX_CONTRACT_CHARS.toLocaleString() + ' characters (~' + Math.ceil(MAX_CONTRACT_CHARS / 4).toLocaleString() + ' tokens) for AI analysis. The remaining ' + (text.length - MAX_CONTRACT_CHARS).toLocaleString() + ' characters will not be included.';
+          } else {
+            statusEl.style.background = 'var(--green-bg)';
+            statusEl.style.border = '1px solid var(--green-border)';
+            statusEl.style.color = 'var(--green)';
+            statusEl.innerHTML = '\u2713 PDF text extracted \u2014 <strong>' + text.length.toLocaleString() + ' characters<\/strong> (~' + Math.ceil(text.length / 4).toLocaleString() + ' tokens) from <strong>' + contractFile.name + '<\/strong>';
+          }
         } else {
           statusEl.style.background = 'var(--amber-bg)';
           statusEl.style.border = '1px solid var(--amber-border)';
@@ -1723,14 +1731,22 @@ function addFiles(files, type) {
       statusEl.style.background = 'var(--accent-light)';
       statusEl.style.border = '1px solid var(--accent-border)';
       statusEl.style.color = 'var(--accent)';
-      statusEl.innerHTML = '<span class="mini-loader" style="display:inline-block;vertical-align:middle;margin-right:8px;"></span> Reading text file\u2026';
+      statusEl.innerHTML = '<span class="mini-loader" style="display:inline-block;vertical-align:middle;margin-right:8px;"><\/span> Reading text file\u2026';
       var reader = new FileReader();
       reader.onload = function(e) {
         state.extractedContractText = e.target.result;
-        statusEl.style.background = 'var(--green-bg)';
-        statusEl.style.border = '1px solid var(--green-border)';
-        statusEl.style.color = 'var(--green)';
-        statusEl.innerHTML = '\u2713 Text extracted \u2014 <strong>' + state.extractedContractText.length.toLocaleString() + ' characters</strong> from <strong>' + contractFile.name + '</strong>';
+        var truncated = state.extractedContractText.length > MAX_CONTRACT_CHARS;
+        if (truncated) {
+          statusEl.style.background = 'var(--amber-bg)';
+          statusEl.style.border = '1px solid var(--amber-border)';
+          statusEl.style.color = 'var(--amber)';
+          statusEl.innerHTML = '\u2713 Text extracted \u2014 <strong>' + state.extractedContractText.length.toLocaleString() + ' characters<\/strong> from <strong>' + contractFile.name + '<\/strong><br>\u26a0 Truncated to ' + MAX_CONTRACT_CHARS.toLocaleString() + ' characters for AI analysis.';
+        } else {
+          statusEl.style.background = 'var(--green-bg)';
+          statusEl.style.border = '1px solid var(--green-border)';
+          statusEl.style.color = 'var(--green)';
+          statusEl.innerHTML = '\u2713 Text extracted \u2014 <strong>' + state.extractedContractText.length.toLocaleString() + ' characters<\/strong> from <strong>' + contractFile.name + '<\/strong>';
+        }
       };
       reader.readAsText(contractFile);
     } else {
