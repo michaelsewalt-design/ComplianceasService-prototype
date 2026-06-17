@@ -1,0 +1,2028 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Third-Party Vendor Assessment — DORA & EBA</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  :root {
+    --ink: #0f1923;
+    --ink-mid: #3d4f5e;
+    --ink-light: #6b7f8e;
+    --border: #d4dde4;
+    --border-light: #edf1f4;
+    --surface: #f7f9fb;
+    --white: #ffffff;
+    --accent: #1a56db;
+    --accent-hover: #1344b4;
+    --accent-light: #eef3ff;
+    --accent-border: #b8ccf8;
+    --amber: #b45309;
+    --amber-bg: #fffbeb;
+    --amber-border: #fcd34d;
+    --red: #b91c1c;
+    --red-bg: #fef2f2;
+    --red-border: #fca5a5;
+    --green: #166534;
+    --green-bg: #f0fdf4;
+    --green-border: #86efac;
+    --purple: #5b21b6;
+    --purple-bg: #f5f3ff;
+    --purple-border: #c4b5fd;
+    --radius: 6px;
+    --radius-lg: 10px;
+    --shadow: 0 1px 3px rgba(15,25,35,0.08), 0 1px 2px rgba(15,25,35,0.04);
+    --shadow-md: 0 4px 12px rgba(15,25,35,0.10), 0 2px 4px rgba(15,25,35,0.06);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--surface);
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 60px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-brand { display: flex; align-items: center; gap: 12px; }
+  .header-logo {
+    width: 32px; height: 32px; background: var(--accent);
+    border-radius: 6px; display: flex; align-items: center; justify-content: center;
+  }
+  .header-logo svg { width: 18px; height: 18px; fill: white; }
+  .header-title { font-size: 15px; font-weight: 600; color: var(--ink); }
+  .header-sub { font-size: 11px; color: var(--ink-light); font-weight: 400; margin-top: 1px; }
+  .header-badge {
+    font-size: 11px; font-weight: 500; color: var(--accent);
+    background: var(--accent-light); border: 1px solid var(--accent-border);
+    padding: 3px 8px; border-radius: 20px; font-family: 'IBM Plex Mono', monospace;
+  }
+
+  /* ── LAYOUT ── */
+  .app-shell { display: flex; min-height: calc(100vh - 60px); }
+
+  /* ── SIDEBAR / STEPS ── */
+  .sidebar {
+    width: 240px; flex-shrink: 0;
+    background: var(--white);
+    border-right: 1px solid var(--border);
+    padding: 24px 0;
+    position: sticky; top: 60px; height: calc(100vh - 60px);
+    overflow-y: auto;
+  }
+  .sidebar-section { padding: 0 16px; margin-bottom: 24px; }
+  .sidebar-label {
+    font-size: 10px; font-weight: 600; color: var(--ink-light);
+    text-transform: uppercase; letter-spacing: 0.08em;
+    margin-bottom: 8px; padding: 0 4px;
+  }
+  .step-btn {
+    display: flex; align-items: center; gap: 10px;
+    width: 100%; text-align: left; padding: 8px 10px;
+    border-radius: var(--radius); border: none; background: none;
+    cursor: pointer; transition: background 0.15s; color: var(--ink-mid);
+    font-size: 13px; font-family: 'Inter', sans-serif;
+  }
+  .step-btn:hover { background: var(--surface); }
+  .step-btn.active { background: var(--accent-light); color: var(--accent); font-weight: 500; }
+  .step-btn.completed { color: var(--green); }
+  .step-num {
+    width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 600; font-family: 'IBM Plex Mono', monospace;
+    background: var(--border-light); color: var(--ink-light);
+  }
+  .step-btn.active .step-num { background: var(--accent); color: white; }
+  .step-btn.completed .step-num { background: var(--green-bg); color: var(--green); }
+
+  /* ── MAIN CONTENT ── */
+  .main { flex: 1; padding: 32px; max-width: 860px; }
+
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── PAGE HEADER ── */
+  .page-header { margin-bottom: 28px; }
+  .page-eyebrow {
+    font-size: 11px; font-weight: 600; color: var(--accent);
+    text-transform: uppercase; letter-spacing: 0.08em;
+    font-family: 'IBM Plex Mono', monospace; margin-bottom: 6px;
+  }
+  .page-title { font-size: 22px; font-weight: 700; color: var(--ink); margin-bottom: 6px; }
+  .page-desc { font-size: 14px; color: var(--ink-mid); line-height: 1.6; }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 24px;
+    margin-bottom: 20px; box-shadow: var(--shadow);
+  }
+  .card-title {
+    font-size: 14px; font-weight: 600; color: var(--ink);
+    margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+  }
+  .card-title-icon {
+    width: 28px; height: 28px; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; flex-shrink: 0;
+  }
+  .icon-blue { background: var(--accent-light); }
+  .icon-amber { background: var(--amber-bg); }
+  .icon-purple { background: var(--purple-bg); }
+  .icon-green { background: var(--green-bg); }
+
+  /* ── FORM ELEMENTS ── */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .form-full { grid-column: 1 / -1; }
+
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field label {
+    font-size: 12px; font-weight: 500; color: var(--ink-mid);
+  }
+  .field label span.req { color: var(--red); margin-left: 2px; }
+
+  input[type="text"], input[type="date"], input[type="number"], input[type="password"],
+  select, textarea {
+    font-family: 'Inter', sans-serif; font-size: 13px;
+    border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 8px 11px; background: var(--white); color: var(--ink);
+    transition: border-color 0.15s, box-shadow 0.15s; outline: none;
+    width: 100%;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--accent); box-shadow: 0 0 0 3px rgba(26,86,219,0.1);
+  }
+  textarea { resize: vertical; min-height: 80px; }
+
+  /* ── RADIO / CHECKBOX GROUPS ── */
+  .radio-group, .check-group { display: flex; flex-direction: column; gap: 8px; }
+  .radio-row, .check-row {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 12px; border: 1px solid var(--border);
+    border-radius: var(--radius); cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    background: var(--white);
+  }
+  .radio-row:hover, .check-row:hover { border-color: var(--accent-border); background: var(--accent-light); }
+  .radio-row.selected, .check-row.selected {
+    border-color: var(--accent); background: var(--accent-light);
+  }
+  .radio-row input, .check-row input { margin-top: 2px; accent-color: var(--accent); flex-shrink: 0; }
+  .radio-label { font-size: 13px; color: var(--ink); }
+  .radio-hint { font-size: 11px; color: var(--ink-light); margin-top: 2px; }
+
+  /* ── INLINE TOGGLE ── */
+  .toggle-group { display: flex; gap: 8px; flex-wrap: wrap; }
+  .toggle-btn {
+    padding: 6px 14px; border: 1px solid var(--border); border-radius: 20px;
+    background: var(--white); color: var(--ink-mid); cursor: pointer;
+    font-size: 12px; font-family: 'Inter', sans-serif; font-weight: 500;
+    transition: all 0.15s;
+  }
+  .toggle-btn:hover { border-color: var(--accent-border); color: var(--accent); }
+  .toggle-btn.on { background: var(--accent); border-color: var(--accent); color: white; }
+
+  /* ── FILE UPLOAD ── */
+  .upload-zone {
+    border: 2px dashed var(--border); border-radius: var(--radius-lg);
+    padding: 36px 24px; text-align: center; cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    background: var(--surface);
+  }
+  .upload-zone:hover, .upload-zone.dragover {
+    border-color: var(--accent); background: var(--accent-light);
+  }
+  .upload-icon { font-size: 32px; margin-bottom: 12px; }
+  .upload-title { font-size: 14px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+  .upload-hint { font-size: 12px; color: var(--ink-light); }
+  .upload-file-list { margin-top: 16px; display: flex; flex-direction: column; gap: 6px; }
+  .upload-file-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 12px; background: var(--white); border: 1px solid var(--border);
+    border-radius: var(--radius); font-size: 12px;
+  }
+  .upload-file-item .file-icon { font-size: 16px; }
+  .upload-file-item .file-name { flex: 1; color: var(--ink); font-weight: 500; }
+  .upload-file-item .file-size { color: var(--ink-light); }
+  .upload-file-item .file-remove {
+    color: var(--ink-light); cursor: pointer; font-size: 14px;
+    padding: 2px 4px; border-radius: 3px;
+  }
+  .upload-file-item .file-remove:hover { background: var(--red-bg); color: var(--red); }
+
+  /* ── CLASSIFICATION PILLS ── */
+  .classification-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 4px; }
+  .class-card {
+    border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 14px;
+    cursor: pointer; transition: all 0.15s; background: var(--white);
+  }
+  .class-card:hover { border-color: var(--accent-border); }
+  .class-card.selected { border-color: var(--accent); background: var(--accent-light); }
+  .class-card input[type="radio"] { display: none; }
+  .class-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+  .class-card-title { font-size: 13px; font-weight: 600; color: var(--ink); }
+  .class-card-check {
+    width: 18px; height: 18px; border: 2px solid var(--border); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .class-card.selected .class-card-check {
+    background: var(--accent); border-color: var(--accent); color: white; font-size: 10px;
+  }
+  .class-card-desc { font-size: 11px; color: var(--ink-light); line-height: 1.4; }
+
+  /* ── RISK MATRIX PREVIEW ── */
+  .risk-matrix { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin-top: 8px; }
+  .risk-cell {
+    aspect-ratio: 1; border-radius: 4px; display: flex; align-items: center;
+    justify-content: center; font-size: 10px; font-weight: 700; color: white;
+    cursor: default;
+  }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 9px 18px; border-radius: var(--radius); font-size: 13px;
+    font-weight: 500; font-family: 'Inter', sans-serif; cursor: pointer;
+    transition: all 0.15s; border: none; text-decoration: none;
+  }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-primary:disabled { background: var(--border); color: var(--ink-light); cursor: not-allowed; }
+  .btn-outline {
+    background: var(--white); color: var(--ink-mid);
+    border: 1px solid var(--border);
+  }
+  .btn-outline:hover { border-color: var(--accent-border); color: var(--accent); }
+  .btn-danger { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
+  .btn-success { background: var(--green); color: white; }
+  .btn-success:hover { opacity: 0.9; }
+  .btn-lg { padding: 11px 22px; font-size: 14px; }
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+  .btn-group { display: flex; gap: 10px; align-items: center; margin-top: 24px; }
+
+  /* ── NOTICE BOXES ── */
+  .notice {
+    padding: 12px 16px; border-radius: var(--radius); font-size: 13px;
+    border-left: 3px solid; margin-bottom: 16px; line-height: 1.5;
+  }
+  .notice-blue { background: var(--accent-light); border-color: var(--accent); color: var(--accent); }
+  .notice-amber { background: var(--amber-bg); border-color: var(--amber); color: var(--amber); }
+  .notice-red { background: var(--red-bg); border-color: var(--red); color: var(--red); }
+  .notice-green { background: var(--green-bg); border-color: var(--green); color: var(--green); }
+
+  /* ── API KEY BAR ── */
+  .api-bar {
+    background: #1e293b; color: #94a3b8;
+    padding: 10px 32px; font-size: 12px; font-family: 'IBM Plex Mono', monospace;
+    display: flex; align-items: center; gap: 16px;
+  }
+  .api-bar span { color: #e2e8f0; }
+  .api-key-input {
+    flex: 1; max-width: 380px; background: #0f172a; border: 1px solid #334155;
+    color: #e2e8f0; padding: 6px 10px; border-radius: 4px; font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px; outline: none;
+  }
+  .api-key-input:focus { border-color: #60a5fa; }
+  .api-status { display: flex; align-items: center; gap: 6px; }
+  .api-dot { width: 7px; height: 7px; border-radius: 50%; background: #ef4444; }
+  .api-dot.ok { background: #22c55e; }
+
+  /* ── ANALYSIS / REPORT ── */
+  .analysis-loading {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; padding: 60px; text-align: center;
+  }
+  .loader {
+    width: 40px; height: 40px; border: 3px solid var(--border);
+    border-top-color: var(--accent); border-radius: 50%;
+    animation: spin 0.8s linear infinite; margin-bottom: 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .report-wrapper {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 0; overflow: hidden;
+    box-shadow: var(--shadow-md);
+  }
+  .report-topbar {
+    background: var(--ink); color: white; padding: 20px 32px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .report-topbar-left { }
+  .report-institution { font-size: 12px; color: #94a3b8; font-family: 'IBM Plex Mono', monospace; }
+  .report-main-title { font-size: 18px; font-weight: 700; margin-top: 2px; }
+  .report-date { font-size: 11px; color: #64748b; margin-top: 4px; font-family: 'IBM Plex Mono', monospace; }
+  .report-badges { display: flex; gap: 8px; flex-wrap: wrap; }
+  .badge {
+    padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .badge-red { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
+  .badge-amber { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
+  .badge-green { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+  .badge-blue { background: var(--accent-light); color: var(--accent); border: 1px solid var(--accent-border); }
+  .badge-purple { background: var(--purple-bg); color: var(--purple); border: 1px solid var(--purple-border); }
+
+  .report-body { padding: 32px; }
+  .report-section { margin-bottom: 28px; }
+  .report-section-title {
+    font-size: 12px; font-weight: 700; color: var(--ink-light);
+    text-transform: uppercase; letter-spacing: 0.08em;
+    font-family: 'IBM Plex Mono', monospace;
+    border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 14px;
+  }
+
+  .findings-list { display: flex; flex-direction: column; gap: 10px; }
+  .finding-item {
+    display: flex; gap: 12px; padding: 12px 14px;
+    border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface);
+  }
+  .finding-icon { font-size: 16px; flex-shrink: 0; }
+  .finding-content { flex: 1; }
+  .finding-title { font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 3px; }
+  .finding-text { font-size: 12px; color: var(--ink-mid); line-height: 1.5; }
+  .finding-ref { font-size: 10px; color: var(--ink-light); font-family: 'IBM Plex Mono', monospace; margin-top: 4px; }
+
+  .reg-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .reg-table th {
+    text-align: left; padding: 8px 12px; background: var(--surface);
+    border: 1px solid var(--border); font-weight: 600; color: var(--ink-mid);
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .reg-table td { padding: 10px 12px; border: 1px solid var(--border); color: var(--ink); }
+  .reg-table tr:hover td { background: var(--surface); }
+
+.risk-summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+
+
+
+  .risk-stat {
+    text-align: center; padding: 14px 10px; border: 1px solid var(--border);
+    border-radius: var(--radius); background: var(--surface);
+  }
+  .risk-stat-val { font-size: 24px; font-weight: 700; font-family: 'IBM Plex Mono', monospace; }
+  .risk-stat-label { font-size: 11px; color: var(--ink-light); margin-top: 3px; }
+
+  /* ── DISCLAIMER ── */
+  .disclaimer {
+    margin: 0 32px 32px; padding: 16px; background: #f8fafc;
+    border: 1px solid var(--border); border-radius: var(--radius);
+    font-size: 10.5px; color: var(--ink-light); line-height: 1.6;
+  }
+  .disclaimer-title { font-weight: 700; color: var(--ink-mid); margin-bottom: 6px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+  /* ── DOWNLOAD BAR ── */
+  .download-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 24px; background: var(--surface);
+    border-top: 1px solid var(--border);
+  }
+  .download-bar-left { font-size: 13px; color: var(--ink-mid); }
+
+  /* ── PROGRESS BAR ── */
+  .progress-bar-wrap { margin-bottom: 28px; }
+  .progress-bar-track { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .progress-bar-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.4s ease; }
+  .progress-label { font-size: 11px; color: var(--ink-light); margin-top: 6px; font-family: 'IBM Plex Mono', monospace; }
+
+  /* ── SECTION DIVIDER ── */
+  .divider { height: 1px; background: var(--border-light); margin: 20px 0; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    .sidebar { display: none; }
+    .main { padding: 20px 16px; }
+    .form-grid { grid-template-columns: 1fr; }
+    .classification-grid { grid-template-columns: 1fr; }
+    .risk-summary-grid { grid-template-columns: 1fr 1fr; }
+    .report-topbar { flex-direction: column; gap: 12px; align-items: flex-start; }
+    .api-bar { flex-direction: column; align-items: flex-start; }
+  }
+
+  /* ── ERROR ── */
+  .error-box {
+    padding: 14px 16px; background: var(--red-bg); border: 1px solid var(--red-border);
+    border-radius: var(--radius); color: var(--red); font-size: 13px;
+    margin-top: 12px;
+  }
+
+  /* ── DOMAIN ACCORDION ── */
+  .domain-accordion { background:var(--white); border:1px solid var(--border); border-radius:var(--radius-lg); margin-bottom:12px; box-shadow:var(--shadow); overflow:hidden; }
+  .domain-header { padding:14px 20px; cursor:pointer; display:flex; align-items:center; gap:12px; transition:background 0.15s; user-select:none; }
+  .domain-header:hover { background:var(--surface); }
+  .domain-icon { width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
+  .domain-meta { flex:1; min-width:0; }
+  .domain-name { font-size:13px; font-weight:600; color:var(--ink); }
+  .domain-ref { font-size:10px; color:var(--ink-light); font-family:'IBM Plex Mono',monospace; margin-top:1px; }
+  .domain-right { display:flex; align-items:center; gap:10px; flex-shrink:0; }
+  .domain-rating { display:flex; gap:3px; }
+  .domain-rating .toggle-group { gap:3px; }
+  .domain-rating .toggle-btn { padding:3px 9px; font-size:11px; min-width:28px; text-align:center; }
+  .completion-badge { font-size:10px; font-family:'IBM Plex Mono',monospace; padding:2px 8px; border-radius:10px; background:var(--surface); color:var(--ink-light); border:1px solid var(--border); white-space:nowrap; }
+  .completion-badge.partial { background:var(--amber-bg); color:var(--amber); border-color:var(--amber-border); }
+  .completion-badge.complete { background:var(--green-bg); color:var(--green); border-color:var(--green-border); }
+  .domain-chevron { transition:transform 0.3s; font-size:11px; color:var(--ink-light); flex-shrink:0; }
+  .domain-accordion.expanded .domain-chevron { transform:rotate(180deg); }
+  .domain-body { max-height:0; overflow:hidden; transition:max-height 0.4s ease; }
+  .domain-accordion.expanded .domain-body { max-height:3000px; }
+  .domain-body-inner { padding:0 20px 20px; border-top:1px solid var(--border-light); }
+  .questions-container { display:flex; flex-direction:column; gap:8px; margin-top:14px; }
+  .question-row { display:flex; align-items:flex-start; gap:10px; padding:10px 14px; background:var(--surface); border-radius:var(--radius); border:1px solid var(--border-light); }
+  .question-num { width:22px; height:22px; border-radius:50%; background:var(--accent-light); color:var(--accent); display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; flex-shrink:0; font-family:'IBM Plex Mono',monospace; margin-top:1px; }
+  .question-text { flex:1; font-size:12px; color:var(--ink); line-height:1.5; }
+  .question-answers { display:flex; gap:4px; flex-shrink:0; margin-top:1px; }
+  .q-toggle { padding:3px 10px; border:1px solid var(--border); border-radius:12px; background:var(--white); color:var(--ink-light); cursor:pointer; font-size:10px; font-family:'Inter',sans-serif; font-weight:600; transition:all 0.15s; }
+  .q-toggle:hover { border-color:var(--accent-border); }
+  .q-toggle.yes { background:var(--green-bg); border-color:var(--green-border); color:var(--green); }
+  .q-toggle.no { background:var(--red-bg); border-color:var(--red-border); color:var(--red); }
+  .q-toggle.unknown { background:var(--amber-bg); border-color:var(--amber-border); color:var(--amber); }
+  .gen-btn-wrap { text-align:center; padding:16px; margin-bottom:12px; }
+  .gen-btn { display:inline-flex; align-items:center; gap:8px; padding:12px 28px; background:linear-gradient(135deg,var(--accent),#2563eb); color:white; border:none; border-radius:var(--radius-lg); font-size:14px; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif; box-shadow:var(--shadow-md); transition:all 0.2s; }
+  .gen-btn:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(26,86,219,0.25); }
+  .gen-btn:disabled { opacity:0.6; cursor:not-allowed; transform:none; }
+  .domain-placeholder { text-align:center; padding:20px; color:var(--ink-light); font-size:12px; font-style:italic; }
+  .domain-loading { display:flex; align-items:center; justify-content:center; gap:10px; padding:20px; color:var(--ink-light); font-size:12px; }
+  .mini-loader { width:16px; height:16px; border:2px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin 0.8s linear infinite; display:inline-block; }
+  .dd-question-list { display:flex; flex-direction:column; gap:6px; margin-bottom:20px; }
+  .dd-question-item { display:flex; gap:10px; padding:8px 12px; background:var(--surface); border-radius:var(--radius); font-size:12px; color:var(--ink); line-height:1.5; }
+  .dd-question-num { color:var(--accent); font-weight:700; font-family:'IBM Plex Mono',monospace; flex-shrink:0; min-width:24px; }
+  .priority-badge { font-size:10px; padding:2px 8px; border-radius:10px; font-weight:600; font-family:'IBM Plex Mono',monospace; display:inline-block; }
+  .priority-required { background:var(--red-bg); color:var(--red); }
+  .priority-recommended { background:var(--amber-bg); color:var(--amber); }
+  .priority-optional { background:var(--accent-light); color:var(--accent); }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+
+
+
+<!-- Header -->
+<header>
+  <div class="header-brand">
+    <div class="header-logo">
+      <svg viewBox="0 0 24 24"><path d="M12 2L2 7v10l10 5 10-5V7L12 2zm0 2.18l8 4v.82l-8 4-8-4v-.82l8-4zM4 9.09l8 4 8-4v8.82l-8 4-8-4V9.09z"/></svg>
+    </div>
+    <div>
+      <div class="header-title">Third-Party Vendor Assessment</div>
+      <div class="header-sub">DORA · EBA Guidelines on Outsourcing</div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px;">
+    <a href="/" style="font-size:12px;color:var(--ink-light);text-decoration:none;font-family:'IBM Plex Mono',monospace;">← Portal</a>
+    <div class="header-badge">v2.0 — Prototype</div>
+    <button onclick="doLogout()" style="background:none;border:1px solid var(--border);color:var(--ink-light);font-size:11px;padding:4px 10px;border-radius:4px;cursor:pointer;font-family:'IBM Plex Mono',monospace;">Logout</button>
+  </div>
+</header>
+
+<div class="app-shell">
+
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Assessment Steps</div>
+      <button class="step-btn active" onclick="goTo(0)" id="step-btn-0">
+        <span class="step-num" id="step-num-0">1</span> General Information
+      </button>
+      <button class="step-btn" onclick="goTo(1)" id="step-btn-1">
+        <span class="step-num" id="step-num-1">2</span> Contract Upload
+      </button>
+      <button class="step-btn" onclick="goTo(2)" id="step-btn-2">
+        <span class="step-num" id="step-num-2">3</span> Service Classification
+      </button>
+      <button class="step-btn" onclick="goTo(3)" id="step-btn-3">
+        <span class="step-num" id="step-num-3">4</span> Critical Functions
+      </button>
+      <button class="step-btn" onclick="goTo(4)" id="step-btn-4">
+        <span class="step-num" id="step-num-4">5</span> Risk Assessment
+      </button>
+      <button class="step-btn" onclick="goTo(5)" id="step-btn-5">
+        <span class="step-num" id="step-num-5">6</span> Regulatory Scope
+      </button>
+      <button class="step-btn" onclick="goTo(6)" id="step-btn-6">
+        <span class="step-num" id="step-num-6">7</span> AI Analysis & Report
+      </button>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Regulation</div>
+      <div style="font-size:11px;color:var(--ink-light);padding:4px;line-height:1.6;">
+        DORA (EU 2022/2554)<br>
+        EBA GL/2019/02<br>
+        Wwft · Wft · CRD IV
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main -->
+  <main class="main">
+
+    <!-- Progress -->
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-track">
+        <div class="progress-bar-fill" id="progressFill" style="width:14%"></div>
+      </div>
+      <div class="progress-label" id="progressLabel">Step 1 of 7 — General Information</div>
+    </div>
+
+    <!-- ════ STEP 1: General Information ════ -->
+    <div class="page active" id="page-0">
+      <div class="page-header">
+        <div class="page-eyebrow">Step 1</div>
+        <div class="page-title">General Information</div>
+        <div class="page-desc">Provide basic details about your institution and the third-party vendor being assessed.</div>
+      </div>
+
+      <div class="notice notice-blue">
+        This assessment module is designed for use by compliance officers and risk managers at regulated financial institutions. All fields marked <span style="color:var(--red)">*</span> are required to generate a complete report.
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <div class="card-title-icon icon-blue">🏦</div>
+          Contracting Institution
+        </div>
+        <div class="form-grid">
+          <div class="field">
+            <label>Institution Name <span class="req">*</span></label>
+            <input type="text" id="instName" placeholder="e.g. Example Bank N.V.">
+          </div>
+          <div class="field">
+            <label>Legal Entity Identifier (LEI)</label>
+            <input type="text" id="instLEI" placeholder="20-character LEI code">
+          </div>
+          <div class="field">
+            <label>Country of Establishment <span class="req">*</span></label>
+            <select id="instCountry">
+              <option value="">Select country…</option>
+              <option value="NL" selected>Netherlands</option>
+              <option value="DE">Germany</option>
+              <option value="BE">Belgium</option>
+              <option value="FR">France</option>
+              <option value="LU">Luxembourg</option>
+              <option value="IE">Ireland</option>
+              <option value="OTHER">Other EU/EEA</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Competent Authority <span class="req">*</span></label>
+            <select id="instCA">
+              <option value="">Select…</option>
+              <option value="DNB" selected>De Nederlandsche Bank (DNB)</option>
+              <option value="AFM">Autoriteit Financiële Markten (AFM)</option>
+              <option value="ECB">European Central Bank (ECB)</option>
+              <option value="BaFin">BaFin (Germany)</option>
+              <option value="NBB">NBB (Belgium)</option>
+              <option value="OTHER">Other</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Assessor Name <span class="req">*</span></label>
+            <input type="text" id="assessorName" placeholder="Full name">
+          </div>
+          <div class="field">
+            <label>Assessment Date <span class="req">*</span></label>
+            <input type="date" id="assessmentDate">
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <div class="card-title-icon icon-amber">🏢</div>
+          Third-Party Vendor Details
+        </div>
+        <div class="form-grid">
+          <div class="field">
+            <label>Vendor / Service Provider Name <span class="req">*</span></label>
+            <input type="text" id="vendorName" placeholder="e.g. CloudSystems B.V.">
+          </div>
+          <div class="field">
+            <label>Vendor Country of Establishment <span class="req">*</span></label>
+            <select id="vendorCountry">
+              <option value="">Select country…</option>
+              <option value="NL">Netherlands</option>
+              <option value="DE">Germany</option>
+              <option value="BE">Belgium</option>
+              <option value="FR">France</option>
+              <option value="US">United States</option>
+              <option value="UK">United Kingdom</option>
+              <option value="IN">India</option>
+              <option value="OTHER_EU">Other EU/EEA</option>
+              <option value="OTHER_THIRD">Other Third Country</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Service / Contract Description <span class="req">*</span></label>
+            <input type="text" id="vendorService" placeholder="e.g. Core Banking Platform SaaS">
+          </div>
+          <div class="field">
+            <label>Contract Reference Number</label>
+            <input type="text" id="contractRef" placeholder="Internal contract ID">
+          </div>
+          <div class="field">
+            <label>Contract Start Date</label>
+            <input type="date" id="contractStart">
+          </div>
+          <div class="field">
+            <label>Contract End / Review Date</label>
+            <input type="date" id="contractEnd">
+          </div>
+          <div class="field form-full">
+            <label>Brief Description of Services Provided <span class="req">*</span></label>
+            <textarea id="serviceDesc" placeholder="Describe in plain language what the vendor provides, including data processed, systems accessed, and operational scope…" rows="3"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn btn-primary btn-lg" onclick="goTo(1)">Continue →</button>
+      </div>
+    </div>
+
+    <!-- ════ STEP 2: Contract Upload ════ -->
+    <div class="page" id="page-1">
+      <div class="page-header">
+        <div class="page-eyebrow">Step 2</div>
+        <div class="page-title">Contract Upload</div>
+        <div class="page-desc">Upload the (draft) contract or service agreement for AI-assisted review. The AI will extract key clauses relevant to DORA and EBA requirements.</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <div class="card-title-icon icon-blue">📄</div>
+          Primary Contract Document
+        </div>
+        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('contractFile').click()" ondragover="handleDragOver(event)" ondrop="handleDrop(event, 'contract')">
+          <input type="file" id="contractFile" style="display:none" accept=".pdf,.doc,.docx,.txt" onchange="handleFileSelect(event, 'contract')">
+          <div class="upload-icon">📋</div>
+          <div class="upload-title">Drop contract here or click to browse</div>
+          <div class="upload-hint">PDF, Word (.docx), or plain text — max 25 MB</div>
+        </div>
+        <div class="upload-file-list" id="contractFileList"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <div class="card-title-icon icon-amber">📎</div>
+          Supporting Documentation <span style="font-size:11px;font-weight:400;color:var(--ink-light);margin-left:4px">(optional)</span>
+        </div>
+        <div class="upload-zone" onclick="document.getElementById('supportFiles').click()" ondragover="handleDragOver(event)" ondrop="handleDrop(event, 'support')">
+          <input type="file" id="supportFiles" style="display:none" accept=".pdf,.doc,.docx,.txt,.xlsx" multiple onchange="handleFileSelect(event, 'support')">
+          <div class="upload-icon">📂</div>
+          <div class="upload-title">Drop supporting documents here</div>
+          <div class="upload-hint">SLA, DPA, Security policy, BCP/DR documentation — multiple files accepted</div>
+        </div>
+        <div class="upload-file-list" id="supportFileList"></div>
+
+        <div class="divider"></div>
+        <div style="font-size:12px;color:var(--ink-mid);">
+          <strong>EBA GL/2019/02 Art. 13 & DORA Art. 30</strong> — The following contractual elements will be checked automatically:
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px;">
+          <div style="font-size:11px;color:var(--ink-light);display:flex;gap:6px;align-items:center;">✓ Right of access and audit</div>
+          <div style="font-size:11px;color:var(--ink-light);display:flex;gap:6px;align-items:center;">✓ Sub-outsourcing provisions</div>
+          <div style="font-size:11px;color:var(--ink-light);display:flex;gap:6px;align-items:center;">✓ Business continuity & exit strategy</div>
+          <div style="font-size:11px;color:var(--ink-light);display:flex;gap:6px;align-items:center;">✓ Data security & confidentiality</div>
+          <div style="font-size:11px;color:var(--ink-light);display:flex;gap:6px;align-items:center;">✓ Performance monitoring / KPIs</div>
+          <div style="font-size:11px;color:var(--ink-light);display:flex;gap:6px;align-items:center;">✓ Governing law & jurisdiction</div>
+          <div style="font-size:11px;color:var(--ink-light);display:flex;gap:6px;align-items:center;">✓ Termination rights & triggers</div>
+          <div style="font-size:11px;color:var(--ink-light);display:flex;gap:6px;align-items:center;">✓ ICT incident notification obligations</div>
+        </div>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn btn-outline" onclick="goTo(0)">← Back</button>
+        <button class="btn btn-primary btn-lg" onclick="goTo(2)">Continue →</button>
+      </div>
+    </div>
+
+    <!-- ════ STEP 3: Service Classification ════ -->
+    <div class="page" id="page-2">
+      <div class="page-header">
+        <div class="page-eyebrow">Step 3</div>
+        <div class="page-title">Service Classification</div>
+        <div class="page-desc">Classify the nature of the arrangement. This determines which mandatory provisions apply under DORA and EBA Guidelines.</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <div class="card-title-icon icon-purple">⚖️</div>
+          Arrangement Type <span class="req" style="color:var(--red);font-weight:400;font-size:12px;margin-left:2px">*</span>
+        </div>
+        <div class="radio-group" id="arrangementType">
+          <label class="radio-row" onclick="selectRadio(this)">
+            <input type="radio" name="arrType" value="outsourcing_critical">
+            <div>
+              <div class="radio-label">Outsourcing — Critical or Important Function (CIF)</div>
+              <div class="radio-hint">The arrangement involves delegation of a function that is essential to the continuity of authorised activities. Triggers full DORA + EBA outsourcing regime.</div>
+            </div>
+          </label>
+          <label class="radio-row" onclick="selectRadio(this)">
+            <input type="radio" name="arrType" value="outsourcing_non_critical">
+            <div>
+              <div class="radio-label">Outsourcing — Non-Critical Function</div>
+              <div class="radio-hint">Delegation of a support or ancillary function. Basic EBA outsourcing provisions apply; lighter DORA requirements.</div>
+            </div>
+          </label>
+          <label class="radio-row" onclick="selectRadio(this)">
+            <input type="radio" name="arrType" value="ict_third_party">
+            <div>
+              <div class="radio-label">ICT Third-Party Service (non-outsourcing)</div>
+              <div class="radio-hint">A digital or data service that supports business operations but does not constitute outsourcing. DORA Chapter V & Art. 28–44 apply.</div>
+            </div>
+          </label>
+          <label class="radio-row" onclick="selectRadio(this)">
+            <input type="radio" name="arrType" value="intragroup">
+            <div>
+              <div class="radio-label">Intra-Group Arrangement</div>
+              <div class="radio-hint">Service provided by another entity within the same group. Modified requirements under EBA GL; DORA Art. 28(8) may apply.</div>
+            </div>
+          </label>
+          <label class="radio-row" onclick="selectRadio(this)">
+            <input type="radio" name="arrType" value="procurement">
+            <div>
+              <div class="radio-label">Standard Procurement / Vendor Contract (no outsourcing)</div>
+              <div class="radio-hint">Pure purchase of goods or non-financial services. General vendor risk management applies; no outsourcing regime triggered.</div>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <div class="card-title-icon icon-blue">🖥️</div>
+          ICT Service Characteristics
+        </div>
+        <div style="font-size:12px;color:var(--ink-mid);margin-bottom:12px;">Select all that apply to this vendor's service:</div>
+        <div id="ictCharacteristics" class="check-group">
+          <label class="check-row" onclick="toggleCheck(this)">
+            <input type="checkbox" name="ictChar" value="cloud">
+            <div>
+              <div class="radio-label">Cloud-based / SaaS delivery</div>
+              <div class="radio-hint">Services delivered via public, private, or hybrid cloud infrastructure.</div>
+            </div>
+          </label>
+          <label class="check-row" onclick="toggleCheck(this)">
+            <input type="checkbox" name="ictChar" value="data_processing">
+            <div>
+              <div class="radio-label">Processes or stores personal / financial data</div>
+              <div class="radio-hint">Data controller / processor relationship; GDPR and financial data protection implications.</div>
+            </div>
+          </label>
+          <label class="check-row" onclick="toggleCheck(this)">
+            <input type="checkbox" name="ictChar" value="realtime">
+            <div>
+              <div class="radio-label">Real-time or near-real-time operational dependency</div>
+              <div class="radio-hint">Outage would immediately impact client-facing services or settlement processes.</div>
+            </div>
+          </label>
+          <label class="check-row" onclick="toggleCheck(this)">
+            <input type="checkbox" name="ictChar" value="critical_infra">
+            <div>
+              <div class="radio-label">Part of critical infrastructure / DORA critical TPSP</div>
+              <div class="radio-hint">Vendor may be designated as Critical ICT Third-Party Service Provider by ESA oversight.</div>
+            </div>
+          </label>
+          <label class="check-row" onclick="toggleCheck(this)">
+            <input type="checkbox" name="ictChar" value="third_country">
+            <div>
+              <div class="radio-label">Third-country / non-EU vendor or data residency</div>
+              <div class="radio-hint">Vendor established outside EU or data stored/processed outside EEA.</div>
+            </div>
+          </label>
+          <label class="check-row" onclick="toggleCheck(this)">
+            <input type="checkbox" name="ictChar" value="subcontracting">
+            <div>
+              <div class="radio-label">Material sub-contracting / sub-outsourcing expected</div>
+              <div class="radio-hint">Vendor relies on sub-processors or sub-outsources material parts of the service.</div>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn btn-outline" onclick="goTo(1)">← Back</button>
+        <button class="btn btn-primary btn-lg" onclick="goTo(3)">Continue →</button>
+      </div>
+    </div>
+
+    <!-- ════ STEP 4: Critical Functions Assessment ════ -->
+    <div class="page" id="page-3">
+      <div class="page-header">
+        <div class="page-eyebrow">Step 4</div>
+        <div class="page-title">Critical & Important Functions</div>
+        <div class="page-desc">Answer the following questions to determine whether this arrangement involves a Critical or Important Function (CIF) as defined under EBA GL/2019/02 Art. 8 and DORA Art. 3(22).</div>
+      </div>
+
+      <div class="notice notice-amber">
+        <strong>Important:</strong> A function is Critical or Important if its disruption would materially impair the financial performance of the institution, or the soundness or continuity of its regulated activities and services. Even partial outsourcing of such functions triggers enhanced requirements.
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <div class="card-title-icon icon-amber">🔍</div>
+          CIF Determination Questions
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:18px;">
+
+          <div class="field">
+            <label style="font-size:13px;font-weight:600;color:var(--ink);margin-bottom:8px;">Q1 — Operational Impact</label>
+            <div style="font-size:12px;color:var(--ink-mid);margin-bottom:8px;">Would failure or disruption of this service materially impair the institution's ability to provide regulated financial services to clients?</div>
+            <div class="toggle-group" id="q1">
+              <button class="toggle-btn" onclick="setToggle('q1','yes',this)">Yes</button>
+              <button class="toggle-btn" onclick="setToggle('q1','no',this)">No</button>
+              <button class="toggle-btn" onclick="setToggle('q1','partial',this)">Partially / Uncertain</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label style="font-size:13px;font-weight:600;color:var(--ink);margin-bottom:8px;">Q2 — Financial Significance</label>
+            <div style="font-size:12px;color:var(--ink-mid);margin-bottom:8px;">Does the service account for a significant share of the institution's operational costs, revenues, or total assets managed?</div>
+            <div class="toggle-group" id="q2">
+              <button class="toggle-btn" onclick="setToggle('q2','yes',this)">Yes (>10%)</button>
+              <button class="toggle-btn" onclick="setToggle('q2','moderate',this)">Moderate (1–10%)</button>
+              <button class="toggle-btn" onclick="setToggle('q2','no',this)">No (&lt;1%)</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label style="font-size:13px;font-weight:600;color:var(--ink);margin-bottom:8px;">Q3 — Replication Difficulty</label>
+            <div style="font-size:12px;color:var(--ink-mid);margin-bottom:8px;">Can this service be quickly replaced or performed in-house if the vendor relationship is terminated without notice?</div>
+            <div class="toggle-group" id="q3">
+              <button class="toggle-btn" onclick="setToggle('q3','no',this)">No — difficult / impossible</button>
+              <button class="toggle-btn" onclick="setToggle('q3','partial',this)">Partially / complex</button>
+              <button class="toggle-btn" onclick="setToggle('q3','yes',this)">Yes — readily replaceable</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label style="font-size:13px;font-weight:600;color:var(--ink);margin-bottom:8px;">Q4 — Supervisory / Regulatory Impact</label>
+            <div style="font-size:12px;color:var(--ink-mid);margin-bottom:8px;">Would disruption of this service result in regulatory breaches, reporting failures, or inability to meet prudential requirements?</div>
+            <div class="toggle-group" id="q4">
+              <button class="toggle-btn" onclick="setToggle('q4','yes',this)">Yes</button>
+              <button class="toggle-btn" onclick="setToggle('q4','no',this)">No</button>
+              <button class="toggle-btn" onclick="setToggle('q4','uncertain',this)">Uncertain</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label style="font-size:13px;font-weight:600;color:var(--ink);margin-bottom:8px;">Q5 — Reputational Risk</label>
+            <div style="font-size:12px;color:var(--ink-mid);margin-bottom:8px;">Would a failure of this service cause significant reputational damage or loss of client trust?</div>
+            <div class="toggle-group" id="q5">
+              <button class="toggle-btn" onclick="setToggle('q5','high',this)">High risk</button>
+              <button class="toggle-btn" onclick="setToggle('q5','medium',this)">Medium risk</button>
+              <button class="toggle-btn" onclick="setToggle('q5','low',this)">Low risk</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label style="font-size:13px;font-weight:600;color:var(--ink);margin-bottom:8px;">Q6 — Data Criticality</label>
+            <div style="font-size:12px;color:var(--ink-mid);margin-bottom:8px;">Does the vendor have access to, or process, sensitive client data, payment data, or proprietary trading information?</div>
+            <div class="toggle-group" id="q6">
+              <button class="toggle-btn" onclick="setToggle('q6','yes',this)">Yes — sensitive/restricted</button>
+              <button class="toggle-btn" onclick="setToggle('q6','limited',this)">Limited / anonymised</button>
+              <button class="toggle-btn" onclick="setToggle('q6','no',this)">No client data</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label style="font-size:13px;font-weight:600;color:var(--ink);margin-bottom:8px;">Q7 — Concentration Risk</label>
+            <div style="font-size:12px;color:var(--ink-mid);margin-bottom:8px;">Is this the same vendor (or its group) relied upon for multiple critical services, or does the same vendor serve a significant portion of the EU financial sector?</div>
+            <div class="toggle-group" id="q7">
+              <button class="toggle-btn" onclick="setToggle('q7','yes',this)">Yes — concentration risk</button>
+              <button class="toggle-btn" onclick="setToggle('q7','no',this)">No — single service</button>
+              <button class="toggle-btn" onclick="setToggle('q7','uncertain',this)">Unknown</button>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="divider"></div>
+        <div class="field">
+          <label>Additional context on function criticality (optional)</label>
+          <textarea id="cifNotes" placeholder="Describe the specific functions performed, internal processes supported, and any known dependencies…" rows="3"></textarea>
+        </div>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn btn-outline" onclick="goTo(2)">← Back</button>
+        <button class="btn btn-primary btn-lg" onclick="goTo(4)">Continue →</button>
+      </div>
+    </div>
+
+    <!-- ════ STEP 5: Risk Assessment ════ -->
+    <div class="page" id="page-4">
+      <div class="page-header">
+        <div class="page-eyebrow">Step 5</div>
+        <div class="page-title">Risk Assessment</div>
+        <div class="page-desc">Rate the inherent risks and answer AI-generated questions across key risk dimensions required by DORA Art. 28 and EBA GL/2019/02.</div>
+      </div>
+
+      <div class="notice notice-blue">
+        <strong>AI-Powered Risk Questionnaire:</strong> Click the button below to generate 10 context-specific risk questions per domain, based on the vendor details, service classification, and contract information you provided in earlier steps. Rate each domain (1–5) and answer the detailed questions to inform the final AI analysis.
+      </div>
+
+      <div class="gen-btn-wrap">
+        <button class="gen-btn" id="genQuestionsBtn" onclick="generateRiskQuestions()">
+          🤖 Generate AI Risk Questions
+        </button>
+        <div id="genQuestionsError" class="error-box" style="display:none;margin-top:12px;"></div>
+      </div>
+
+      <div style="font-size:12px;color:var(--ink-mid);margin-bottom:16px;text-align:center;">
+        Rate each risk dimension: <strong>1 = Very Low</strong>, <strong>2 = Low</strong>, <strong>3 = Medium</strong>, <strong>4 = High</strong>, <strong>5 = Critical</strong> · Click a domain to expand and view questions
+      </div>
+
+
+      <div class="domain-accordion" id="domain-ict">
+        <div class="domain-header" onclick="toggleDomain('ict')">
+          <div class="domain-icon icon-blue">⚡</div>
+          <div class="domain-meta">
+            <div class="domain-name">ICT / Operational Risk</div>
+            <div class="domain-ref">DORA Art. 3 / Art. 28</div>
+          </div>
+          <div class="domain-right">
+            <div class="domain-rating" onclick="event.stopPropagation()">
+              <div class="toggle-group" id="r_ict">
+                <button class="toggle-btn" onclick="event.stopPropagation();setToggle('r_ict','1',this)">1</button>
+                <button class="toggle-btn" onclick="event.stopPropagation();setToggle('r_ict','2',this)">2</button>
+                <button class="toggle-btn" onclick="event.stopPropagation();setToggle('r_ict','3',this)">3</button>
+                <button class="toggle-btn" onclick="event.stopPropagation();setToggle('r_ict','4',this)">4</button>
+                <button class="toggle-btn" onclick="event.stopPropagation();setToggle('r_ict','5',this)">5</button>
+              </div>
+            </div>
+            <span class="completion-badge" id="badge-ict">0/10</span>
+            <span class="domain-chevron">▼</span>
+          </div>
+        </div>
+        <div class="domain-body">
+          <div class="domain-body-inner">
+            <div style="font-size:11px;color:var(--ink-light);margin-top:14px;margin-bottom:4px;">Vulnerabilities, system reliability, patch management, incident response capability of the vendor.</div>
+            <div class="domain-placeholder" id="placeholder-ict">Click <strong>"Generate AI Risk Questions"</strong> above to populate domain-specific questions based on your vendor and contract details.</div>
+            <div class="questions-container" id="questions-ict"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="domain-accordion" id="domain-legal">
+        <div class="domain-header" onclick="toggleDomain('legal')">
+          <div class="domain-icon icon-purple">⚖️</div>
+          <div class="domain-meta">
+            <div class="domain-name">Legal &amp; Regulatory Risk</div>
+            <div class="domain-ref">EBA GL Art. 10</div>
+          </div>
+          <div class="domain-right">
+            <div class="domain-rating" onclick="event.stopPropagation()">
+              <div class="toggle-group" id="r_legal">
+                <button class="toggle-btn" onclick="event.stopPropagation();setToggle('r_legal','1',this)">1</button>
+                <button class="toggle-btn" onclick="event.stopPropagation();setToggle('r_legal','2',this)">2</button>
+                <button class="toggle-btn" onclick="event.stopPropagation();setToggle('r_legal','3',this)">3</button>
+                <button class="toggle-btn" onclick="event.stopPropagation();setToggle('r_legal','4',this)">4</button>
+                <button class="toggle-btn" onclick="event.stopPropagation();setToggle('r_legal','5',this)">5</button>
+              </div>
+            </div>
+            <span class="completion-badge" id="badge-legal">0/10</span>
+            <span class="domain-chevron">▼</span>
+          </div>
+        </div>
+        <div class="domain-body">
+          <div class="domain-body-inner">
+            <div style="font-size:11px;color:var(--ink-light);margin-top:14px;margin-bottom:4px;">Jurisdictional exposure, governing law enforceability, regulatory access rights, third-country risk.</div>
+            <div class="domain-placeholder" id="placeholder-legal">Click <strong>"Generate AI Risk Questions"</strong> above to populate domain-specific questions based on your vendor and contract details.</div>
+            <div class="questions-container" id="questions-legal"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="domain-accordion" id="domain-data">
+        <div class="domain-header" onclick="toggleDomain('data')">
+          <div class="domain-icon icon-green">🔒</div>
+          <div class="domain-meta">
+            <div class="domain-name">Data &amp; Information Security Risk</div>
+            <div class="domain-ref">DORA Art. 30 / GDPR</div>
+          </div>
+          <div class="domain-right">
+            <div class="domain-rating" onclick="event.stopPropagation()">
+              <div class="toggle-group" id="r_data">
+                <button class="toggle-btn" onclick="event.stopPropagation();setToggle('r_data','1',this)">1</button>
+                <button class="toggle-btn" onclick="event.stopPropagation();setToggle('r_data','2',this)">2</button>
+                <button class="toggle-btn" onclick="event.stopPropagation();setToggle('r_data','3',this)">3</button>
+                <button class="toggle-btn" onclick="event.stopPropagation();setToggle('r_data','4',this)">4</button>
+                <button class="toggle-btn" onclick="event.stopPropagation();setToggle('r_data','5',this)">5</button>
+              </div>
+            </div>
+            <span class="completion-badge" id="badge-data">0/10</span>
+            <span class="domain-chevron">▼</span>
+          </div>
+        </div>
+        <div class="domain-body">
+          <div class="domain-body-inner">
+            <div style="font-size:11px;color:var(--ink-light);margin-top:14px;margin-bottom:4px;">Data breach exposure, encryption standards, access controls, data residency compliance.</div>
+            <div class="domain-placeholder" id="placeholder-data">Click <strong>"Generate AI Risk Questions"</strong> above to populate domain-specific questions based on your vendor and contract details.</div>
+            <div class="questions-container" id="questions-data"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="domain-accordion" id="domain-concentration">
+        <div class="domain-header" onclick="toggleDomain('concentration')">
+          <div class="domain-icon icon-amber">🔗</div>
+          <div class="domain-meta">
+            <div class="domain-name">Concentration Risk</div>
+            <div class="domain-ref">DORA Art. 29</div>
+          </div>
+          <div class="domain-right">
+            <div class="domain-rating" onclick="event.stopPropagation()">
+              <div class="toggle-group" id="r_conc">
+                <button class="toggle-btn" onclick="event.stopPropagation();setToggle('r_conc','1',this)">1</button>
+                <button class="toggle-btn" onclick="event.stopPropagation();setToggle('r_conc','2',this)">2</button>
+                <button class="toggle-btn" onclick="event.stopPropagation();setToggle('r_conc','3',this)">3</button>
+                <button class="toggle-btn" onclick="event.stopPropagation();setToggle('r_conc','4',this)">4</button>
+                <button class="toggle-btn" onclick="event.stopPropagation();setToggle('r_conc','5',this)">5</button>
+              </div>
+            </div>
+            <span class="completion-badge" id="badge-concentration">0/10</span>
+            <span class="domain-chevron">▼</span>
+          </div>
+        </div>
+        <div class="domain-body">
+          <div class="domain-body-inner">
+            <div style="font-size:11px;color:var(--ink-light);margin-top:14px;margin-bottom:4px;">Dependency on single vendor, systemic market concentration, availability of alternatives.</div>
+            <div class="domain-placeholder" id="placeholder-concentration">Click <strong>"Generate AI Risk Questions"</strong> above to populate domain-specific questions based on your vendor and contract details.</div>
+            <div class="questions-container" id="questions-concentration"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="domain-accordion" id="domain-bc">
+        <div class="domain-header" onclick="toggleDomain('bc')">
+          <div class="domain-icon icon-blue">🔄</div>
+          <div class="domain-meta">
+            <div class="domain-name">Business Continuity Risk</div>
+            <div class="domain-ref">EBA GL Art. 12</div>
+          </div>
+          <div class="domain-right">
+            <div class="domain-rating" onclick="event.stopPropagation()">
+              <div class="toggle-group" id="r_bc">
+                <button class="toggle-btn" onclick="event.stopPropagation();setToggle('r_bc','1',this)">1</button>
+                <button class="toggle-btn" onclick="event.stopPropagation();setToggle('r_bc','2',this)">2</button>
+                <button class="toggle-btn" onclick="event.stopPropagation();setToggle('r_bc','3',this)">3</button>
+                <button class="toggle-btn" onclick="event.stopPropagation();setToggle('r_bc','4',this)">4</button>
+                <button class="toggle-btn" onclick="event.stopPropagation();setToggle('r_bc','5',this)">5</button>
+              </div>
+            </div>
+            <span class="completion-badge" id="badge-bc">0/10</span>
+            <span class="domain-chevron">▼</span>
+          </div>
+        </div>
+        <div class="domain-body">
+          <div class="domain-body-inner">
+            <div style="font-size:11px;color:var(--ink-light);margin-top:14px;margin-bottom:4px;">Vendor BCP/DRP maturity, exit plan feasibility, recovery time and point objectives.</div>
+            <div class="domain-placeholder" id="placeholder-bc">Click <strong>"Generate AI Risk Questions"</strong> above to populate domain-specific questions based on your vendor and contract details.</div>
+            <div class="questions-container" id="questions-bc"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="domain-accordion" id="domain-fin">
+        <div class="domain-header" onclick="toggleDomain('fin')">
+          <div class="domain-icon icon-amber">💰</div>
+          <div class="domain-meta">
+            <div class="domain-name">Financial Stability of Vendor</div>
+            <div class="domain-ref">Financial Due Diligence</div>
+          </div>
+          <div class="domain-right">
+            <div class="domain-rating" onclick="event.stopPropagation()">
+              <div class="toggle-group" id="r_fin">
+                <button class="toggle-btn" onclick="event.stopPropagation();setToggle('r_fin','1',this)">1</button>
+                <button class="toggle-btn" onclick="event.stopPropagation();setToggle('r_fin','2',this)">2</button>
+                <button class="toggle-btn" onclick="event.stopPropagation();setToggle('r_fin','3',this)">3</button>
+                <button class="toggle-btn" onclick="event.stopPropagation();setToggle('r_fin','4',this)">4</button>
+                <button class="toggle-btn" onclick="event.stopPropagation();setToggle('r_fin','5',this)">5</button>
+              </div>
+            </div>
+            <span class="completion-badge" id="badge-fin">0/10</span>
+            <span class="domain-chevron">▼</span>
+          </div>
+        </div>
+        <div class="domain-body">
+          <div class="domain-body-inner">
+            <div style="font-size:11px;color:var(--ink-light);margin-top:14px;margin-bottom:4px;">Vendor solvency, credit rating, business model viability, history of financial difficulty.</div>
+            <div class="domain-placeholder" id="placeholder-fin">Click <strong>"Generate AI Risk Questions"</strong> above to populate domain-specific questions based on your vendor and contract details.</div>
+            <div class="questions-container" id="questions-fin"></div>
+          </div>
+        </div>
+      </div>
+
+<div id="customDomainsContainer"></div>
+
+      <div class="card" style="margin-top:12px;border-style:dashed;border-color:var(--accent-border);">
+        <div class="card-title">
+          <div class="card-title-icon icon-purple">➕</div>
+          Add Custom Risk Domain
+        </div>
+        <div class="form-grid">
+          <div class="field">
+            <label>Domain Name <span class="req">*</span></label>
+            <input type="text" id="customDomainName" placeholder="e.g. ESG & Sustainability Risk">
+          </div>
+          <div class="field">
+            <label>Short Description</label>
+            <input type="text" id="customDomainDesc" placeholder="e.g. Environmental, social and governance risk exposure">
+          </div>
+        </div>
+        <div class="btn-group" style="margin-top:12px;">
+          <button class="btn btn-primary btn-sm" onclick="addCustomDomain()">+ Add Domain</button>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:20px;">
+        <div class="card-title">
+          <div class="card-title-icon icon-blue">📝</div>
+          Additional Risk Context
+        </div>
+        <div class="field">
+          <label>Existing controls / mitigants in place</label>
+          <textarea id="riskControls" placeholder="Describe any existing controls, contractual protections, monitoring procedures, or internal mitigants…" rows="3"></textarea>
+        </div>
+        <div class="field" style="margin-top:12px;">
+          <label>Known issues, incidents, or prior audit findings with this vendor</label>
+          <textarea id="riskIssues" placeholder="List any known past incidents, audit findings, regulatory actions, or service failures…" rows="2"></textarea>
+        </div>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn btn-outline" onclick="goTo(3)">← Back</button>
+        <button class="btn btn-primary btn-lg" onclick="goTo(5)">Continue →</button>
+      </div>
+    </div>
+    <!-- ════ STEP 6: Regulatory Scope ════ -->
+    <div class="page" id="page-5">
+      <div class="page-header">
+        <div class="page-eyebrow">Step 6</div>
+        <div class="page-title">Regulatory Scope Determination</div>
+        <div class="page-desc">Answer the following questions to determine the applicable regulatory framework for this arrangement.</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <div class="card-title-icon icon-purple">📜</div>
+          Institution Type & Applicable Framework
+        </div>
+        <div style="display:flex;flex-direction:column;gap:18px;">
+
+          <div class="field">
+            <label style="font-size:13px;font-weight:600;">What type of financial institution is the contracting entity? <span class="req">*</span></label>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;" id="instType">
+              <label class="check-row" onclick="toggleCheck(this)">
+                <input type="checkbox" name="instType" value="credit_institution">
+                <div><div class="radio-label">Credit Institution (bank)</div><div class="radio-hint">CRR/CRD IV, Wft</div></div>
+              </label>
+              <label class="check-row" onclick="toggleCheck(this)">
+                <input type="checkbox" name="instType" value="investment_firm">
+                <div><div class="radio-label">Investment Firm / MiFID</div><div class="radio-hint">MiFID II, IFR/IFD</div></div>
+              </label>
+              <label class="check-row" onclick="toggleCheck(this)">
+                <input type="checkbox" name="instType" value="insurance">
+                <div><div class="radio-label">Insurance / Reinsurance</div><div class="radio-hint">Solvency II, EIOPA GL</div></div>
+              </label>
+              <label class="check-row" onclick="toggleCheck(this)">
+                <input type="checkbox" name="instType" value="payment_institution">
+                <div><div class="radio-label">Payment / E-money Institution</div><div class="radio-hint">PSD2, EMD2</div></div>
+              </label>
+              <label class="check-row" onclick="toggleCheck(this)">
+                <input type="checkbox" name="instType" value="aml_obliged">
+                <div><div class="radio-label">AML Obliged Entity</div><div class="radio-hint">AMLR / Wwft 2025</div></div>
+              </label>
+              <label class="check-row" onclick="toggleCheck(this)">
+                <input type="checkbox" name="instType" value="asset_manager">
+                <div><div class="radio-label">Asset Manager / AIFM / UCITS</div><div class="radio-hint">AIFMD II, UCITS V</div></div>
+              </label>
+            </div>
+          </div>
+
+          <div class="field">
+            <label style="font-size:13px;font-weight:600;">Is the institution in scope of DORA (EU 2022/2554)?</label>
+            <div style="font-size:11px;color:var(--ink-light);margin-bottom:8px;">DORA applies to credit institutions, investment firms, payment institutions, e-money institutions, crypto-asset service providers, insurance undertakings and others listed in Art. 2 DORA.</div>
+            <div class="toggle-group" id="doraScope">
+              <button class="toggle-btn" onclick="setToggle('doraScope','yes',this)">Yes — in scope</button>
+              <button class="toggle-btn" onclick="setToggle('doraScope','no',this)">No — out of scope</button>
+              <button class="toggle-btn" onclick="setToggle('doraScope','uncertain',this)">Uncertain / under review</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label style="font-size:13px;font-weight:600;">Does the arrangement involve a Digital Operational Resilience-relevant ICT service?</label>
+            <div style="font-size:11px;color:var(--ink-light);margin-bottom:8px;">ICT services are defined broadly in DORA Art. 3(21) — including software, hardware, data, cloud services, and IT-related support.</div>
+            <div class="toggle-group" id="ictService">
+              <button class="toggle-btn" onclick="setToggle('ictService','yes',this)">Yes</button>
+              <button class="toggle-btn" onclick="setToggle('ictService','no',this)">No</button>
+              <button class="toggle-btn" onclick="setToggle('ictService','partial',this)">Partially</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label style="font-size:13px;font-weight:600;">Is EBA GL/2019/02 (Outsourcing Guidelines) applicable?</label>
+            <div style="font-size:11px;color:var(--ink-light);margin-bottom:8px;">EBA Outsourcing GL apply to credit institutions and investment firms under CRD IV/CRR. From January 2025, overlapping provisions are streamlined with DORA.</div>
+            <div class="toggle-group" id="ebaScope">
+              <button class="toggle-btn" onclick="setToggle('ebaScope','yes',this)">Yes</button>
+              <button class="toggle-btn" onclick="setToggle('ebaScope','no',this)">No</button>
+              <button class="toggle-btn" onclick="setToggle('ebaScope','uncertain',this)">Uncertain</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label style="font-size:13px;font-weight:600;">Does Dutch law (Wft / Wwft / DNB policy) impose additional requirements?</label>
+            <div class="toggle-group" id="nlScope">
+              <button class="toggle-btn" onclick="setToggle('nlScope','yes',this)">Yes</button>
+              <button class="toggle-btn" onclick="setToggle('nlScope','no',this)">No</button>
+              <button class="toggle-btn" onclick="setToggle('nlScope','partial',this)">Partially</button>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="divider"></div>
+        <div class="field">
+          <label>Additional regulatory considerations or pending regulatory changes</label>
+          <textarea id="regNotes" placeholder="Note any pending regulations, supervisory correspondence, or specific compliance requirements relevant to this arrangement…" rows="2"></textarea>
+        </div>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn btn-outline" onclick="goTo(4)">← Back</button>
+        <button class="btn btn-primary btn-lg" onclick="startAnalysis()">🔍 Generate AI Analysis</button>
+      </div>
+    </div>
+
+    <!-- ════ STEP 7: Analysis & Report ════ -->
+    <div class="page" id="page-6">
+      <div class="page-header">
+        <div class="page-eyebrow">Step 7</div>
+        <div class="page-title">AI Analysis & Assessment Report</div>
+        <div class="page-desc">Your Third-Party Vendor Assessment Report, generated in accordance with DORA and EBA requirements.</div>
+      </div>
+
+      <!-- Loading state -->
+      <div id="analysisLoading" class="analysis-loading" style="display:none;">
+        <div class="loader"></div>
+        <div style="font-size:15px;font-weight:600;color:var(--ink);">Generating Assessment Report</div>
+        <div style="font-size:13px;color:var(--ink-light);margin-top:6px;" id="loadingStatus">Analysing regulatory applicability…</div>
+      </div>
+
+      <!-- Error state -->
+      <div id="analysisError" class="error-box" style="display:none;"></div>
+
+      <!-- Report output -->
+      <div id="reportOutput" style="display:none;">
+        <div class="report-wrapper" id="reportContent">
+          <div class="report-topbar">
+            <div class="report-topbar-left">
+              <div class="report-institution" id="rpt-institution"></div>
+              <div class="report-main-title">Third-Party Vendor Assessment Report</div>
+              <div class="report-date" id="rpt-date"></div>
+            </div>
+            <div class="report-badges" id="rpt-badges"></div>
+          </div>
+
+          <div class="report-body">
+
+            <!-- Section 1: Identification -->
+            <div class="report-section">
+              <div class="report-section-title">1. Arrangement Identification</div>
+              <table class="reg-table">
+                <tbody id="rpt-identification"></tbody>
+              </table>
+            </div>
+
+            <!-- Section 2: Classification -->
+            <div class="report-section">
+              <div class="report-section-title">2. Classification & Regulatory Determination</div>
+              <div class="findings-list" id="rpt-classification"></div>
+            </div>
+
+            <!-- Section 3: CIF Determination -->
+            <div class="report-section">
+              <div class="report-section-title">3. Critical & Important Function (CIF) Determination</div>
+              <div id="rpt-cif"></div>
+            </div>
+
+            <!-- Section 4: Risk Assessment -->
+            <div class="report-section">
+              <div class="report-section-title">4. Risk Assessment Summary</div>
+              <div class="risk-summary-grid" id="rpt-risks"></div>
+            </div>
+
+            <!-- Section 5: AI Analysis -->
+            <div class="report-section">
+              <div class="report-section-title">5. Compliance Analysis & Findings</div>
+              <div id="rpt-ai-analysis" style="font-size:13px;color:var(--ink);line-height:1.7;"></div>
+            </div>
+
+            <!-- Section 6: Required Actions -->
+            <div class="report-section">
+              <div class="report-section-title">6. Required Actions & Recommendations</div>
+              <div class="findings-list" id="rpt-actions"></div>
+            </div>
+
+            <!-- Section 7: Applicable Regulation -->
+            <div class="report-section">
+              <div class="report-section-title">7. Applicable Regulatory Framework</div>
+              <table class="reg-table" id="rpt-reg-table">
+                <thead>
+                  <tr>
+                    <th>Regulation / Guideline</th>
+                    <th>Applicable</th>
+                    <th>Key Provisions</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="rpt-reg-body"></tbody>
+              </table>
+            </div>
+
+          </div>
+
+          
+            <!-- Section 8: Due Diligence Requirements -->
+            <div class="report-section">
+              <div class="report-section-title">8. Due Diligence Requirements</div>
+              <div id="rpt-dd-summary" style="font-size:13px;color:var(--ink);line-height:1.7;margin-bottom:20px;"></div>
+
+              <div style="font-size:12px;font-weight:700;color:var(--ink-mid);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px;font-family:'IBM Plex Mono',monospace;">8a. Due Diligence Questionnaire</div>
+              <div class="dd-question-list" id="rpt-dd-questions"></div>
+
+              <div style="font-size:12px;font-weight:700;color:var(--ink-mid);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px;margin-top:24px;font-family:'IBM Plex Mono',monospace;">8b. Required Documentation</div>
+              <table class="reg-table">
+                <thead>
+                  <tr>
+                    <th>Document</th>
+                    <th>Purpose / Relevance</th>
+                    <th>Priority</th>
+                    <th>Regulatory Basis</th>
+                  </tr>
+                </thead>
+                <tbody id="rpt-dd-docs-body"></tbody>
+              </table>
+            </div>
+
+<!-- Disclaimer -->
+          <div class="disclaimer">
+            <div class="disclaimer-title">⚠ Disclaimer</div>
+            <div id="reportDisclaimer">
+              This Third-Party Vendor Assessment Report ("Report") has been generated by an AI-assisted compliance tool and is intended solely as a preliminary analytical aid for internal use by regulated financial institutions. The Report does not constitute legal advice, regulatory guidance, or a formal compliance opinion, and must not be relied upon as such.<br><br>
+              The analysis contained in this Report is based solely on the information and documentation provided by the user at the time of generation. It does not take into account all facts, circumstances, or regulatory developments that may be relevant to a specific arrangement. The accuracy, completeness, and currency of the regulatory references, risk assessments, and compliance determinations set out herein are not guaranteed.<br><br>
+              This Report does not represent the official position of De Nederlandsche Bank (DNB), the Autoriteit Financiële Markten (AFM), the European Banking Authority (EBA), the European Securities and Markets Authority (ESMA), the European Insurance and Occupational Pensions Authority (EIOPA), or any other competent authority or European Supervisory Authority. References to regulatory provisions (including DORA (EU 2022/2554), EBA GL/2019/02, the Wet op het financieel toezicht (Wft), the Wet ter voorkoming van witwassen en financieren van terrorisme (Wwft), and related instruments) are provided for informational purposes only and may not reflect the most recent legislative or regulatory changes.<br><br>
+              Users of this Report are responsible for ensuring that any outsourcing or third-party arrangement is assessed in accordance with all applicable legal and regulatory requirements, and are strongly advised to seek qualified legal and compliance counsel before making any material decisions based on this Report. The institution's Management Body retains full responsibility for compliance with all applicable laws and regulations, including those governing outsourcing, ICT risk, and third-party risk management.<br><br>
+              This Report is confidential and intended exclusively for the internal use of the institution named herein. It must not be shared with third parties, disclosed to regulators as a final compliance determination, or used as the sole basis for any legal or regulatory filing without independent legal review.
+            </div>
+          </div>
+
+          <!-- Download bar -->
+          <div class="download-bar">
+            <div class="download-bar-left">
+              Report generated · <span id="rpt-gen-time"></span>
+            </div>
+            <div style="display:flex;gap:10px;">
+              <button class="btn btn-success btn-sm" onclick="downloadPDF()">⬇ Download PDF</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="btn-group" style="margin-top:20px;">
+          <button class="btn btn-outline" onclick="goTo(5)">← Edit Inputs</button>
+          <button class="btn btn-outline" onclick="resetAll()">🔄 New Assessment</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+const state = {
+  currentStep: 0,
+  toggleValues: {},
+  uploadedFiles: { contract: [], support: [] },
+  riskQuestions: {},
+  questionsGenerated: false,
+  customDomains: [],
+  customDomainCounter: 0,
+};
+
+const STEP_LABELS = [
+  'General Information', 'Contract Upload', 'Service Classification',
+  'Critical & Important Functions', 'Risk Assessment', 'Regulatory Scope', 'AI Analysis & Report',
+];
+
+const RISK_DOMAINS = [
+  { id: 'ict', name: 'ICT / Operational Risk', icon: '⚡', toggleId: 'r_ict' },
+  { id: 'legal', name: 'Legal & Regulatory Risk', icon: '⚖️', toggleId: 'r_legal' },
+  { id: 'data', name: 'Data & Information Security Risk', icon: '🔒', toggleId: 'r_data' },
+  { id: 'concentration', name: 'Concentration Risk', icon: '🔗', toggleId: 'r_conc' },
+  { id: 'bc', name: 'Business Continuity Risk', icon: '🔄', toggleId: 'r_bc' },
+  { id: 'fin', name: 'Financial Stability of Vendor', icon: '💰', toggleId: 'r_fin' },
+];
+
+// ── Navigation ──────────────────────────────────────────────────────────────
+function goTo(idx) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + idx).classList.add('active');
+  document.querySelectorAll('.step-btn').forEach((b, i) => {
+    b.classList.remove('active', 'completed');
+    if (i < idx) b.classList.add('completed');
+    document.getElementById('step-num-' + i).textContent = i < idx ? '✓' : (i + 1);
+  });
+  document.getElementById('step-btn-' + idx).classList.add('active');
+  const pct = Math.round(((idx + 1) / 7) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = `Step ${idx + 1} of 7 — ${STEP_LABELS[idx]}`;
+  state.currentStep = idx;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── Form helpers ──────────────────────────────────────────────────────────
+function selectRadio(label) {
+  const group = label.closest('.radio-group');
+  group.querySelectorAll('.radio-row').forEach(r => r.classList.remove('selected'));
+  label.classList.add('selected');
+  label.querySelector('input').checked = true;
+}
+function toggleCheck(label) {
+  label.classList.toggle('selected');
+  label.querySelector('input').checked = label.classList.contains('selected');
+}
+function setToggle(groupId, value, btn) {
+  const group = document.getElementById(groupId);
+  group.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  state.toggleValues[groupId] = value;
+}
+
+// ── Domain Accordion ──────────────────────────────────────────────────────
+function toggleDomain(domainId) {
+  document.getElementById('domain-' + domainId).classList.toggle('expanded');
+}
+
+function setQuestionAnswer(domain, qIndex, answer, btn) {
+  if (!state.riskQuestions[domain]) return;
+  state.riskQuestions[domain][qIndex].answer = answer;
+  const row = btn.closest('.question-answers');
+  row.querySelectorAll('.q-toggle').forEach(b => b.classList.remove('yes', 'no', 'unknown'));
+  btn.classList.add(answer);
+  updateCompletionBadge(domain);
+}
+
+function updateCompletionBadge(domain) {
+  const qs = state.riskQuestions[domain] || [];
+  const answered = qs.filter(q => q.answer !== null).length;
+  const total = qs.length;
+  const badge = document.getElementById('badge-' + domain);
+  if (!badge) return;
+  badge.textContent = answered + '/' + total;
+  badge.classList.remove('partial', 'complete');
+  if (answered === total && total > 0) badge.classList.add('complete');
+  else if (answered > 0) badge.classList.add('partial');
+}
+
+function renderDomainQuestions(domain, questions) {
+  const container = document.getElementById('questions-' + domain);
+  const placeholder = document.getElementById('placeholder-' + domain);
+  if (placeholder) placeholder.style.display = 'none';
+  container.innerHTML = questions.map((q, i) =>
+    '<div class="question-row">' +
+      '<div class="question-num">' + (i + 1) + '</div>' +
+      '<div class="question-text">' + q + '</div>' +
+      '<div class="question-answers">' +
+        '<button class="q-toggle" onclick="setQuestionAnswer(\'' + domain + '\',' + i + ',\'yes\',this)">Yes</button>' +
+        '<button class="q-toggle" onclick="setQuestionAnswer(\'' + domain + '\',' + i + ',\'no\',this)">No</button>' +
+        '<button class="q-toggle" onclick="setQuestionAnswer(\'' + domain + '\',' + i + ',\'unknown\',this)">Unknown</button>' +
+      '</div>' +
+    '</div>'
+  ).join('');
+  state.riskQuestions[domain] = questions.map(q => ({ question: q, answer: null }));
+  updateCompletionBadge(domain);
+}
+
+
+// ── Custom Domains ────────────────────────────────────────────────────────
+function addCustomDomain() {
+  var nameEl = document.getElementById('customDomainName');
+  var descEl = document.getElementById('customDomainDesc');
+  var name = nameEl.value.trim();
+  var desc = descEl.value.trim();
+  if (!name) { nameEl.style.borderColor = 'var(--red)'; return; }
+  nameEl.style.borderColor = '';
+
+  var id = 'custom_' + state.customDomainCounter++;
+  var toggleId = 'r_' + id;
+  var domain = { id: id, name: name, desc: desc || name, toggleId: toggleId };
+  state.customDomains.push(domain);
+
+  var btns = '';
+  for (var i = 1; i <= 5; i++) {
+    btns += '<button class="toggle-btn" onclick="event.stopPropagation();setToggle(\'' + toggleId + '\',\'' + i + '\',this)">' + i + '</button>';
+  }
+
+  var html = '<div class="domain-accordion" id="domain-' + id + '">' +
+    '<div class="domain-header" onclick="toggleDomain(\'' + id + '\')">' +
+      '<div class="domain-icon icon-purple">🔧</div>' +
+      '<div class="domain-meta">' +
+        '<div class="domain-name">' + name + ' <span style="font-size:10px;color:var(--ink-light);font-weight:400;">(custom)</span></div>' +
+        '<div class="domain-ref">' + desc + '</div>' +
+      '</div>' +
+      '<div class="domain-right">' +
+        '<div class="domain-rating" onclick="event.stopPropagation()">' +
+          '<div class="toggle-group" id="' + toggleId + '">' + btns + '</div>' +
+        '</div>' +
+        '<span class="completion-badge" id="badge-' + id + '">0/10</span>' +
+        '<span class="domain-chevron">▼</span>' +
+        '<span class="file-remove" onclick="event.stopPropagation();removeCustomDomain(\'' + id + '\')" style="margin-left:4px;cursor:pointer;color:var(--ink-light);font-size:14px;" title="Remove domain">✕</span>' +
+      '</div>' +
+    '</div>' +
+    '<div class="domain-body">' +
+      '<div class="domain-body-inner">' +
+        '<div style="font-size:11px;color:var(--ink-light);margin-top:14px;margin-bottom:4px;">' + desc + '</div>' +
+        '<div class="domain-placeholder" id="placeholder-' + id + '">Click <strong>"Generate AI Risk Questions"</strong> to populate questions for this domain.</div>' +
+        '<div class="questions-container" id="questions-' + id + '"></div>' +
+      '</div>' +
+    '</div>' +
+  '</div>';
+
+  document.getElementById('customDomainsContainer').insertAdjacentHTML('beforeend', html);
+  nameEl.value = '';
+  descEl.value = '';
+}
+
+function removeCustomDomain(id) {
+  state.customDomains = state.customDomains.filter(function(d) { return d.id !== id; });
+  delete state.riskQuestions[id];
+  delete state.toggleValues['r_' + id];
+  var el = document.getElementById('domain-' + id);
+  if (el) el.remove();
+}
+
+function getAllDomains() {
+  var all = RISK_DOMAINS.map(function(d) { return { id: d.id, name: d.name, desc: d.name, toggleId: d.toggleId }; });
+  state.customDomains.forEach(function(d) { all.push(d); });
+  return all;
+}
+// ── Generate Risk Questions via AI ────────────────────────────────────────
+async function generateRiskQuestions() {
+
+  const btn = document.getElementById('genQuestionsBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="mini-loader"></span> Generating questions…';
+  document.getElementById('genQuestionsError').style.display = 'none';
+
+getAllDomains().forEach(function(d) {
+    var container = document.getElementById('questions-' + d.id);
+    var placeholder = document.getElementById('placeholder-' + d.id);
+    if (placeholder) placeholder.style.display = 'none';
+    if (container) container.innerHTML = '<div class="domain-loading"><span class="mini-loader"></span> Generating questions…</div>';
+  });
+
+  const g = id => (document.getElementById(id) || {}).value || '';
+  const radVal = name => { const el = document.querySelector('input[name="' + name + '"]:checked'); return el ? el.value : 'not specified'; };
+  const checks = name => Array.from(document.querySelectorAll('input[name="' + name + '"]:checked')).map(e => e.value);
+  const tv = state.toggleValues;
+
+  const contextData = {
+    institution: { name: g('instName'), country: g('instCountry'), competentAuthority: g('instCA') },
+    vendor: { name: g('vendorName'), country: g('vendorCountry'), service: g('vendorService'), serviceDesc: g('serviceDesc') },
+    classification: { arrangementType: radVal('arrType'), ictCharacteristics: checks('ictChar') },
+    cif: { q1_operational: tv['q1'] || 'not answered', q2_financial: tv['q2'] || 'not answered',
+      q3_replication: tv['q3'] || 'not answered', q4_regulatory: tv['q4'] || 'not answered',
+      q5_reputational: tv['q5'] || 'not answered', q6_data: tv['q6'] || 'not answered',
+      q7_concentration: tv['q7'] || 'not answered' },
+    filesUploaded: { contract: state.uploadedFiles.contract.map(f => f.name), support: state.uploadedFiles.support.map(f => f.name) },
+  };
+
+var allDomainKeys = ['ict', 'legal', 'data', 'concentration', 'bc', 'fin'];
+  var customDomainList = '';
+  state.customDomains.forEach(function(d) {
+    allDomainKeys.push(d.id);
+    customDomainList += '\\n  "' + d.id + '": ["Question 1 about ' + d.name + '..."]';
+  });
+
+  var prompt = 'You are a senior regulatory compliance expert specialising in DORA (EU 2022/2554), EBA Guidelines on Outsourcing (EBA/GL/2019/02), and Dutch financial regulation.\\n\\nBased on the following vendor assessment context, generate exactly 10 specific, relevant risk assessment questions for EACH of the risk domains listed below. Questions must be answerable with Yes, No, or Unknown. Questions must be in English, specific to this vendor/service context, and reference relevant regulatory requirements where applicable.\\n\\nVENDOR ASSESSMENT CONTEXT:\\n' + JSON.stringify(contextData, null, 2) + '\\n\\nReturn a JSON object with these keys, each containing an array of exactly 10 question strings:\\n{\\n  "ict": ["Question 1 about ICT/operational risk..."],\\n  "legal": ["Question 1 about legal/regulatory risk..."],\\n  "data": ["Question 1 about data/information security..."],\\n  "concentration": ["Question 1 about concentration risk..."],\\n  "bc": ["Question 1 about business continuity..."],\\n  "fin": ["Question 1 about financial stability..."]' + customDomainList + '\\n}\\n\\nDo not include any text outside the JSON object.';
+
+  let messageContent = [{ type: 'text', text: prompt }];
+  if (state.uploadedFiles.contract.length > 0) {
+    try {
+      const file = state.uploadedFiles.contract[0];
+      const base64 = await formatFileAsBase64(file);
+      if (file.name.endsWith('.pdf')) {
+        messageContent.unshift({ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64 } });
+      }
+    } catch(e) { /* skip */ }
+  }
+
+  try {
+    const response = await fetch('/api/vendor-claude', {
+      method: 'POST',
+      headers: {
+  'Content-Type': 'application/json',
+  'Authorization': 'Bearer ' + (sessionStorage.getItem('va_token') || '')
+},
+      body: JSON.stringify({ messages: [{ role: 'user', content: messageContent }], maxTokens: 6000 })
+    });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error?.message || 'API error ' + response.status);
+    }
+    const result = await response.json();
+    const text = result.content.map(c => c.text || '').join('');
+    const clean = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+    const questions = JSON.parse(clean);
+   allDomainKeys.forEach(function(id) {
+      if (questions[id] && Array.isArray(questions[id])) renderDomainQuestions(id, questions[id]);
+    });
+    state.questionsGenerated = true;
+    btn.innerHTML = '✓ Questions Generated';
+    btn.style.background = 'var(--green)';
+  } catch (err) {
+    const errEl = document.getElementById('genQuestionsError');
+    errEl.style.display = 'block';
+    errEl.textContent = '⚠ Error generating questions: ' + err.message;
+    btn.disabled = false;
+    btn.innerHTML = '🤖 Generate AI Risk Questions';
+getAllDomains().forEach(function(d) {
+      var container = document.getElementById('questions-' + d.id);
+      var placeholder = document.getElementById('placeholder-' + d.id);
+      if (container) container.innerHTML = '';
+      if (placeholder) placeholder.style.display = 'block';
+    });
+  }
+}
+
+
+// ── File upload ────────────────────────────────────────────────────────────
+function handleDragOver(e) { e.preventDefault(); e.currentTarget.classList.add('dragover'); }
+function handleDrop(e, type) { e.preventDefault(); e.currentTarget.classList.remove('dragover'); addFiles(Array.from(e.dataTransfer.files), type); }
+function handleFileSelect(e, type) { addFiles(Array.from(e.target.files), type); }
+function addFiles(files, type) { state.uploadedFiles[type].push(...files); renderFileList(type); }
+function removeFile(type, idx) { state.uploadedFiles[type].splice(idx, 1); renderFileList(type); }
+function renderFileList(type) {
+  const list = document.getElementById(type === 'contract' ? 'contractFileList' : 'supportFileList');
+  list.innerHTML = state.uploadedFiles[type].map((f, i) =>
+    '<div class="upload-file-item"><span class="file-icon">📄</span><span class="file-name">' + f.name + '</span><span class="file-size">' + (f.size / 1024).toFixed(0) + ' KB</span><span class="file-remove" onclick="removeFile(\'' + type + '\',' + i + ')">✕</span></div>'
+  ).join('');
+}
+function formatFileAsBase64(file) {
+  return new Promise((res, rej) => {
+    const reader = new FileReader();
+    reader.onload = e => res(e.target.result.split(',')[1]);
+    reader.onerror = rej;
+    reader.readAsDataURL(file);
+  });
+}
+
+// ── Collect form data ──────────────────────────────────────────────────────
+function collectFormData() {
+  const g = id => (document.getElementById(id) || {}).value || '';
+  const radVal = name => { const el = document.querySelector('input[name="' + name + '"]:checked'); return el ? el.value : 'not specified'; };
+  const checks = name => Array.from(document.querySelectorAll('input[name="' + name + '"]:checked')).map(e => e.value);
+  const tv = state.toggleValues;
+  return {
+    institution: { name: g('instName'), lei: g('instLEI'), country: g('instCountry'), competentAuthority: g('instCA'), assessorName: g('assessorName'), assessmentDate: g('assessmentDate') },
+    vendor: { name: g('vendorName'), country: g('vendorCountry'), service: g('vendorService'), contractRef: g('contractRef'), contractStart: g('contractStart'), contractEnd: g('contractEnd'), serviceDesc: g('serviceDesc') },
+    classification: { arrangementType: radVal('arrType'), ictCharacteristics: checks('ictChar') },
+    cif: { q1_operational: tv['q1'] || 'not answered', q2_financial: tv['q2'] || 'not answered', q3_replication: tv['q3'] || 'not answered', q4_regulatory: tv['q4'] || 'not answered', q5_reputational: tv['q5'] || 'not answered', q6_data: tv['q6'] || 'not answered', q7_concentration: tv['q7'] || 'not answered', notes: g('cifNotes') },
+   
+
+risks: { ict: tv['r_ict'] || 'not rated', legal: tv['r_legal'] || 'not rated', data: tv['r_data'] || 'not rated', concentration: tv['r_conc'] || 'not rated', businessContinuity: tv['r_bc'] || 'not rated', financialStability: tv['r_fin'] || 'not rated', controls: g('riskControls'), issues: g('riskIssues'), custom: state.customDomains.map(function(d) { return { id: d.id, name: d.name, desc: d.desc, rating: tv[d.toggleId] || 'not rated' }; }) },
+
+
+    riskQuestions: Object.fromEntries(Object.entries(state.riskQuestions).map(([domain, qs]) => [domain, qs.map(q => ({ question: q.question, answer: q.answer || 'not answered' }))])),
+    regulatory: { institutionTypes: checks('instType'), doraScope: tv['doraScope'] || 'not answered', ictService: tv['ictService'] || 'not answered', ebaScope: tv['ebaScope'] || 'not answered', nlScope: tv['nlScope'] || 'not answered', notes: g('regNotes') },
+    filesUploaded: { contract: state.uploadedFiles.contract.map(f => f.name), support: state.uploadedFiles.support.map(f => f.name) }
+  };
+}
+
+// ── Build prompt ──────────────────────────────────────────────────────────
+function buildPrompt(data) {
+  var aiRatingTemplate = '"ict": 1, "legal": 1, "data": 1, "concentration": 1, "bc": 1, "fin": 1';
+  if (data.risks && data.risks.custom) {
+    data.risks.custom.forEach(function(c) {
+      aiRatingTemplate += ', "' + c.id + '": 1';
+    });
+  }
+
+  return 'You are a senior regulatory compliance expert specialising in EU financial regulation, specifically DORA (EU 2022/2554), EBA Guidelines on Outsourcing (EBA/GL/2019/02), and related Dutch financial regulation (Wft, Wwft, DNB policy).\\n\\nYou are generating a formal Third-Party Vendor Assessment Report for a regulated financial institution. Your analysis must be structured, precise, and directly reference the applicable regulatory provisions. Use formal, professional language appropriate for regulatory compliance documentation.\\n\\nASSESSMENT INPUT DATA:\\n' + JSON.stringify(data, null, 2) + '\\n\\nPlease generate a comprehensive compliance analysis covering ALL of the following sections. Return your response as a JSON object with exactly these keys:\\n\\n{\\n  "overallRiskRating": "LOW | MEDIUM | HIGH | CRITICAL",\\n  "cifDetermination": "YES | NO | UNCERTAIN",\\n  "cifRationale": "2-3 sentence explanation of CIF determination with regulatory basis",\\n  "arrangementClassification": "Single clear classification with brief justification",\\n  "primaryRegulation": ["list of primary applicable regulation names"],\\n  "complianceAnalysis": "Detailed 4-6 paragraph analysis covering: (1) regulatory classification and basis, (2) CIF determination analysis, (3) contractual requirement gaps based on DORA Art. 30 and EBA GL Art. 13, (4) identified risk areas and concentration risk based on the detailed risk questionnaire answers, (5) DORA resilience testing and incident reporting obligations if applicable, (6) any third-country or sub-outsourcing concerns. Use regulatory article references throughout. Incorporate insights from the risk questionnaire answers provided.",\\n  "findings": [{"severity": "HIGH|MEDIUM|LOW|INFO", "title": "Finding title", "detail": "Detailed finding", "reference": "Regulation article reference", "icon": "⚠️|🔴|🟡|🟢|ℹ️"}],\\n  "requiredActions": [{"priority": "IMMEDIATE|SHORT-TERM|ONGOING", "action": "Action description", "basis": "Regulatory basis", "icon": "🔴|🟡|🔵"}],\\n  "regulatoryFramework": [{"regulation": "Regulation name", "applicable": "YES|NO|PARTIAL", "keyProvisions": "Key articles/provisions", "status": "COMPLIANT|REVIEW REQUIRED|NOT ASSESSED"}],\\n  "overallConclusion": "2-3 sentence overall conclusion and next steps",\\n  "aiRiskRatings": {' + aiRatingTemplate + '},\\n  "dueDiligenceSummary": "One concise paragraph (max 80 words) summarising the recommended due diligence approach, scope and key focus areas.",\\n "dueDiligenceQuestions": ["Exactly 10 short due diligence questions (max 15 words each) to pose to the vendor"],\\n  "requiredDocuments": [{"document": "Short document name", "purpose": "One sentence max", "priority": "Required|Recommended|Optional", "regulatoryBasis": "Article ref only"}]\\n}\\n\\nIMPORTANT: Generate exactly 8 entries in requiredDocuments. Keep all string values concise — no value should exceed 20 words. Keep complianceAnalysis to max 4 short paragraphs. Keep findings to max 5 items and requiredActions to max 5 items. For aiRiskRatings, assign a score 1-5 per domain based strictly on the riskQuestions answers (more No/Unknown = higher risk). 1=Very Low, 2=Low, 3=Medium, 4=High, 5=Critical.\\n\\nBe specific, reference actual article numbers, and provide actionable compliance guidance. Do not include any text outside the JSON object.';
+}
+
+// ── Call API ──────────────────────────────────────────────────────────────
+async function callClaudeAPI(data) {
+
+  const prompt = buildPrompt(data);
+  let messageContent = [{ type: 'text', text: prompt }];
+  if (state.uploadedFiles.contract.length > 0) {
+    const contractFile = state.uploadedFiles.contract[0];
+    try {
+      const base64 = await formatFileAsBase64(contractFile);
+      const mediaType = contractFile.name.endsWith('.pdf') ? 'application/pdf' : 'text/plain';
+      if (contractFile.name.endsWith('.pdf')) {
+        messageContent.unshift({ type: 'document', source: { type: 'base64', media_type: mediaType, data: base64 } });
+      }
+    } catch(e) { /* Skip */ }
+  }
+  const response = await fetch('/api/vendor-claude', {
+    method: 'POST',
+    headers: {
+  'Content-Type': 'application/json',
+  'Authorization': 'Bearer ' + (sessionStorage.getItem('va_token') || '')
+},
+    body: JSON.stringify({ messages: [{ role: 'user', content: messageContent }], maxTokens: 8000 })
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.error?.message || 'API error ' + response.status);
+  }
+  const result = await response.json();
+  const text = result.content.map(c => c.text || '').join('');
+  
+  
+let clean = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+  // Fix truncated JSON response
+  if (!clean.endsWith('}')) {
+    let braceCount = 0;
+    let inString = false;
+    let escaped = false;
+    for (let i = 0; i < clean.length; i++) {
+      const c = clean[i];
+      if (escaped) { escaped = false; continue; }
+      if (c === '\\') { escaped = true; continue; }
+      if (c === '"') { inString = !inString; continue; }
+      if (!inString) {
+        if (c === '{' || c === '[') braceCount++;
+        if (c === '}' || c === ']') braceCount--;
+      }
+    }
+    // Close any open strings and brackets
+    if (inString) clean += '"';
+    if (clean.endsWith(',')) clean = clean.slice(0, -1);
+    while (braceCount > 0) {
+      clean += clean.lastIndexOf('[') > clean.lastIndexOf('{') ? ']' : '}';
+      braceCount--;
+    }
+  }
+  return JSON.parse(clean);
+}
+
+// ── Render Report ──────────────────────────────────────────────────────────
+function renderReport(analysis, formData) {
+  const now = new Date();
+  document.getElementById('rpt-institution').textContent = formData.institution.name || 'Financial Institution';
+  document.getElementById('rpt-date').textContent = 'Assessment Date: ' + (formData.institution.assessmentDate || now.toISOString().split('T')[0]) + ' · Assessor: ' + (formData.institution.assessorName || '—');
+  document.getElementById('rpt-gen-time').textContent = now.toLocaleString('en-GB');
+
+  const riskColors = { LOW: 'badge-green', MEDIUM: 'badge-amber', HIGH: 'badge-red', CRITICAL: 'badge-red' };
+  const cifColors = { YES: 'badge-red', NO: 'badge-green', UNCERTAIN: 'badge-amber' };
+  document.getElementById('rpt-badges').innerHTML =
+    '<span class="badge ' + (riskColors[analysis.overallRiskRating] || 'badge-blue') + '">' + analysis.overallRiskRating + ' RISK</span>' +
+    '<span class="badge ' + (cifColors[analysis.cifDetermination] || 'badge-amber') + '">CIF: ' + analysis.cifDetermination + '</span>' +
+    '<span class="badge badge-blue">' + formData.classification.arrangementType.replace(/_/g,' ').toUpperCase() + '</span>';
+
+  document.getElementById('rpt-identification').innerHTML = [
+    ['Institution', formData.institution.name], ['LEI', formData.institution.lei || '—'],
+    ['Competent Authority', formData.institution.competentAuthority],
+    ['Vendor / Service Provider', formData.vendor.name], ['Vendor Country', formData.vendor.country],
+    ['Service Description', formData.vendor.service], ['Contract Reference', formData.vendor.contractRef || '—'],
+    ['Contract Period', (formData.vendor.contractStart || '—') + ' → ' + (formData.vendor.contractEnd || '—')],
+    ['Documents Reviewed', [...formData.filesUploaded.contract, ...formData.filesUploaded.support].join(', ') || 'None uploaded — based on user inputs only'],
+  ].map(function(r) { return '<tr><td style="font-weight:600;width:220px;color:var(--ink-mid)">' + r[0] + '</td><td>' + r[1] + '</td></tr>'; }).join('');
+
+  var classFindings = [
+    { icon: '📋', title: 'Arrangement Classification', text: analysis.arrangementClassification, ref: 'EBA GL/2019/02 Art. 3 · DORA Art. 3' },
+    { icon: '⚖️', title: 'CIF Determination: ' + analysis.cifDetermination, text: analysis.cifRationale, ref: 'EBA GL/2019/02 Art. 8 · DORA Art. 3(22)' },
+    { icon: '📜', title: 'Primary Applicable Regulation', text: (analysis.primaryRegulation || []).join(' · '), ref: 'Multi-framework assessment' }
+  ];
+  document.getElementById('rpt-classification').innerHTML = classFindings.map(function(f) {
+    return '<div class="finding-item"><div class="finding-icon">' + f.icon + '</div><div class="finding-content"><div class="finding-title">' + f.title + '</div><div class="finding-text">' + f.text + '</div><div class="finding-ref">' + f.ref + '</div></div></div>';
+  }).join('');
+
+  var cifColor = analysis.cifDetermination === 'YES' ? 'red' : analysis.cifDetermination === 'NO' ? 'green' : 'amber';
+  document.getElementById('rpt-cif').innerHTML =
+    '<div class="notice notice-' + cifColor + '"><strong>CIF Determination: ' + analysis.cifDetermination + '</strong><br>' + analysis.cifRationale + '</div>' +
+    '<table class="reg-table" style="margin-top:8px;"><thead><tr><th>Question</th><th>Response</th></tr></thead><tbody>' +
+    '<tr><td>Q1 — Operational Impact</td><td>' + formData.cif.q1_operational + '</td></tr>' +
+    '<tr><td>Q2 — Financial Significance</td><td>' + formData.cif.q2_financial + '</td></tr>' +
+    '<tr><td>Q3 — Replication Difficulty</td><td>' + formData.cif.q3_replication + '</td></tr>' +
+    '<tr><td>Q4 — Supervisory/Regulatory Impact</td><td>' + formData.cif.q4_regulatory + '</td></tr>' +
+    '<tr><td>Q5 — Reputational Risk</td><td>' + formData.cif.q5_reputational + '</td></tr>' +
+    '<tr><td>Q6 — Data Criticality</td><td>' + formData.cif.q6_data + '</td></tr>' +
+    '<tr><td>Q7 — Concentration Risk</td><td>' + formData.cif.q7_concentration + '</td></tr>' +
+    '</tbody></table>';
+
+  var riskDims = [['ICT / Operational', formData.risks.ict], ['Legal & Regulatory', formData.risks.legal],
+    ['Data & Info Security', formData.risks.data], ['Concentration', formData.risks.concentration],
+    ['Business Continuity', formData.risks.businessContinuity], ['Vendor Financial', formData.risks.financialStability]];
+  var riskColors2 = { '1': '#166534', '2': '#15803d', '3': '#b45309', '4': '#b91c1c', '5': '#7f1d1d' };
+  
+
+var aiRatings = analysis.aiRiskRatings || {};
+  var riskDimsExt = [
+    ['ICT / Operational', formData.risks.ict, aiRatings.ict],
+    ['Legal & Regulatory', formData.risks.legal, aiRatings.legal],
+    ['Data & Info Security', formData.risks.data, aiRatings.data],
+    ['Concentration', formData.risks.concentration, aiRatings.concentration],
+    ['Business Continuity', formData.risks.businessContinuity, aiRatings.bc],
+    ['Vendor Financial', formData.risks.financialStability, aiRatings.fin],
+ 
+];
+  if (formData.risks.custom) {
+    formData.risks.custom.forEach(function(c) {
+      riskDimsExt.push([c.name, c.rating, aiRatings[c.id] || '—']);
+    });
+  }
+
+
+
+  document.getElementById('rpt-risks').innerHTML = riskDimsExt.map(function(r) {
+    var manualVal = r[1] === 'not rated' ? '—' : r[1];
+    var aiVal = r[2] ? r[2] : '—';
+    var manualColor = riskColors2[r[1]] || '#6b7f8e';
+    var aiColor = riskColors2[String(r[2])] || '#6b7f8e';
+    return '<div class="risk-stat">' +
+      '<div class="risk-stat-val" style="color:' + manualColor + '">' + manualVal + '</div>' +
+      '<div class="risk-stat-label">Manual</div>' +
+      '<div class="risk-stat-val" style="color:' + aiColor + ';margin-top:6px;font-size:18px;">' + aiVal + '</div>' +
+      '<div class="risk-stat-label">AI Assessment</div>' +
+      '<div style="margin-top:6px;font-size:11px;font-weight:600;color:var(--ink);">' + r[0] + '</div>' +
+    '</div>';
+  }).join('');
+
+
+
+
+  document.getElementById('rpt-ai-analysis').innerHTML = (analysis.complianceAnalysis || '').split('\n').filter(Boolean).map(function(p) { return '<p style="margin-bottom:12px;">' + p + '</p>'; }).join('');
+
+  document.getElementById('rpt-actions').innerHTML = (analysis.requiredActions || []).map(function(a) {
+    return '<div class="finding-item"><div class="finding-icon">' + (a.icon || '🔵') + '</div><div class="finding-content"><div class="finding-title"><span style="font-size:10px;font-family:monospace;background:var(--border-light);padding:1px 6px;border-radius:10px;margin-right:6px;">' + a.priority + '</span>' + a.action + '</div><div class="finding-ref">' + a.basis + '</div></div></div>';
+  }).join('');
+
+  document.getElementById('rpt-reg-body').innerHTML = (analysis.regulatoryFramework || []).map(function(r) {
+    var statusColor = r.status === 'COMPLIANT' ? 'badge-green' : r.status === 'REVIEW REQUIRED' ? 'badge-amber' : 'badge-blue';
+    return '<tr><td style="font-weight:600">' + r.regulation + '</td><td>' + r.applicable + '</td><td style="font-size:11px;color:var(--ink-mid)">' + r.keyProvisions + '</td><td><span class="badge ' + statusColor + '" style="font-size:10px">' + r.status + '</span></td></tr>';
+  }).join('');
+
+  // Section 8: Due Diligence
+  var ddSummary = document.getElementById('rpt-dd-summary');
+  if (ddSummary && analysis.dueDiligenceSummary) {
+    ddSummary.innerHTML = analysis.dueDiligenceSummary.split('\n').filter(Boolean).map(function(p) { return '<p style="margin-bottom:12px;">' + p + '</p>'; }).join('');
+  }
+  var ddQuestions = document.getElementById('rpt-dd-questions');
+  if (ddQuestions && analysis.dueDiligenceQuestions) {
+    ddQuestions.innerHTML = analysis.dueDiligenceQuestions.map(function(q, i) {
+      return '<div class="dd-question-item"><div class="dd-question-num">' + (i + 1) + '.</div><div>' + q + '</div></div>';
+    }).join('');
+  }
+  var ddDocs = document.getElementById('rpt-dd-docs-body');
+  if (ddDocs && analysis.requiredDocuments) {
+    ddDocs.innerHTML = analysis.requiredDocuments.map(function(d) {
+      var pClass = d.priority === 'Required' ? 'priority-required' : d.priority === 'Recommended' ? 'priority-recommended' : 'priority-optional';
+      return '<tr><td style="font-weight:600">' + d.document + '</td><td style="font-size:11px;color:var(--ink-mid)">' + d.purpose + '</td><td><span class="priority-badge ' + pClass + '">' + d.priority + '</span></td><td style="font-size:11px;color:var(--ink-light);font-family:monospace">' + d.regulatoryBasis + '</td></tr>';
+    }).join('');
+  }
+
+  document.getElementById('reportOutput').style.display = 'block';
+}
+
+// ── Start Analysis ─────────────────────────────────────────────────────────
+async function startAnalysis() {
+  goTo(6);
+  document.getElementById('analysisLoading').style.display = 'flex';
+  document.getElementById('reportOutput').style.display = 'none';
+  document.getElementById('analysisError').style.display = 'none';
+  var loadingMsgs = ['Analysing regulatory applicability…', 'Determining CIF classification…',
+    'Reviewing risk dimensions & questionnaire responses…', 'Drafting compliance findings…',
+    'Generating due diligence requirements…', 'Assembling report…'];
+  var msgIdx = 0;
+  var msgInterval = setInterval(function() { msgIdx = (msgIdx + 1) % loadingMsgs.length; document.getElementById('loadingStatus').textContent = loadingMsgs[msgIdx]; }, 2200);
+  try {
+    var formData = collectFormData();
+    var analysis = await callClaudeAPI(formData);
+    clearInterval(msgInterval);
+    document.getElementById('analysisLoading').style.display = 'none';
+    renderReport(analysis, formData);
+  } catch (err) {
+    clearInterval(msgInterval);
+    document.getElementById('analysisLoading').style.display = 'none';
+    var errBox = document.getElementById('analysisError');
+    errBox.style.display = 'block';
+    errBox.textContent = '⚠ Error generating report: ' + err.message;
+  }
+}
+
+// ── Downloads ──────────────────────────────────────────────────────────────
+function downloadPDF() {
+  var report = document.getElementById('reportContent');
+  var printWindow = window.open('', '_blank');
+  printWindow.document.write('<html><head><title>Vendor Assessment Report</title><style>' +
+    '@page { size: A4; margin: 20mm; }' +
+    'body { font-family: Calibri, Arial, sans-serif; font-size: 10pt; color: #0f1923; line-height: 1.5; -webkit-print-color-adjust: exact; print-color-adjust: exact; }' +
+    'table { border-collapse: collapse; width: 100%; page-break-inside: auto; }' +
+    'tr { page-break-inside: avoid; }' +
+    'th, td { border: 1px solid #d4dde4; padding: 5px 8px; font-size: 9pt; }' +
+    'th { background: #f7f9fb !important; font-weight: bold; }' +
+    '.report-topbar { background: #0f1923 !important; color: white; padding: 20px 24px; display: flex; align-items: center; justify-content: space-between; }' +
+    '.report-topbar-left { }' +
+    '.report-institution { font-size: 10pt; color: #94a3b8; font-family: monospace; }' +
+    '.report-main-title { font-size: 16pt; font-weight: bold; margin-top: 2px; color: white; }' +
+    '.report-date { font-size: 9pt; color: #64748b; margin-top: 4px; font-family: monospace; }' +
+    '.report-badges { display: flex; gap: 6px; flex-wrap: wrap; }' +
+    '.badge { padding: 3px 8px; border-radius: 12px; font-size: 9pt; font-weight: 600; font-family: monospace; display: inline-block; }' +
+    '.badge-red { background: #fef2f2 !important; color: #b91c1c; border: 1px solid #fca5a5; }' +
+    '.badge-amber { background: #fffbeb !important; color: #b45309; border: 1px solid #fcd34d; }' +
+    '.badge-green { background: #f0fdf4 !important; color: #166534; border: 1px solid #86efac; }' +
+    '.badge-blue { background: #eef3ff !important; color: #1a56db; border: 1px solid #b8ccf8; }' +
+    '.badge-purple { background: #f5f3ff !important; color: #5b21b6; border: 1px solid #c4b5fd; }' +
+    '.report-body { padding: 24px; }' +
+    '.report-section { margin-bottom: 20px; page-break-inside: avoid; }' +
+    '.report-section-title { font-size: 10pt; font-weight: bold; color: #6b7f8e; text-transform: uppercase; letter-spacing: 0.05em; font-family: monospace; border-bottom: 1px solid #d4dde4; padding-bottom: 6px; margin-bottom: 10px; }' +
+    '.findings-list { display: flex; flex-direction: column; gap: 8px; }' +
+    '.finding-item { display: flex; gap: 10px; padding: 10px 12px; border: 1px solid #d4dde4; border-radius: 4px; background: #f7f9fb !important; page-break-inside: avoid; }' +
+    '.finding-icon { font-size: 14px; flex-shrink: 0; }' +
+    '.finding-content { flex: 1; }' +
+    '.finding-title { font-size: 10pt; font-weight: 600; color: #0f1923; margin-bottom: 2px; }' +
+    '.finding-text { font-size: 9pt; color: #3d4f5e; line-height: 1.5; }' +
+    '.finding-ref { font-size: 8pt; color: #6b7f8e; font-family: monospace; margin-top: 3px; }' +
+    '.notice { padding: 10px 14px; border-radius: 4px; font-size: 9pt; border-left: 3px solid; margin-bottom: 12px; }' +
+    '.notice-red { background: #fef2f2 !important; border-color: #b91c1c; color: #b91c1c; }' +
+    '.notice-green { background: #f0fdf4 !important; border-color: #166534; color: #166534; }' +
+    '.notice-amber { background: #fffbeb !important; border-color: #b45309; color: #b45309; }' +
+    '.risk-summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }' +
+    '.risk-stat { text-align: center; padding: 10px 8px; border: 1px solid #d4dde4; border-radius: 4px; background: #f7f9fb !important; }' +
+    '.risk-stat-val { font-size: 18pt; font-weight: bold; font-family: monospace; }' +
+    '.risk-stat-label { font-size: 8pt; color: #6b7f8e; margin-top: 2px; }' +
+    '.disclaimer { padding: 12px; background: #f8fafc !important; border: 1px solid #d4dde4; border-radius: 4px; font-size: 8pt; color: #6b7f8e; line-height: 1.5; margin: 0 0 20px; }' +
+    '.disclaimer-title { font-weight: bold; color: #3d4f5e; margin-bottom: 4px; font-size: 9pt; text-transform: uppercase; }' +
+    '.download-bar { display: none !important; }' +
+    '.dd-question-list { display: flex; flex-direction: column; gap: 4px; margin-bottom: 16px; }' +
+    '.dd-question-item { display: flex; gap: 8px; padding: 6px 10px; background: #f7f9fb !important; border-radius: 4px; font-size: 9pt; }' +
+    '.dd-question-num { color: #1a56db; font-weight: bold; font-family: monospace; min-width: 20px; }' +
+    '.priority-badge { font-size: 8pt; padding: 1px 6px; border-radius: 8px; font-weight: 600; font-family: monospace; }' +
+    '.priority-required { background: #fef2f2 !important; color: #b91c1c; }' +
+    '.priority-recommended { background: #fffbeb !important; color: #b45309; }' +
+    '.priority-optional { background: #eef3ff !important; color: #1a56db; }' +
+    '</style></head><body>');
+  printWindow.document.write(report.innerHTML);
+  printWindow.document.write('</body></html>');
+  printWindow.document.close();
+  printWindow.onload = function() {
+    printWindow.print();
+    printWindow.onafterprint = function() { printWindow.close(); };
+  };
+}
+
+function resetAll() {
+  if (!confirm('Start a new assessment? All current data will be cleared.')) return;
+  location.reload();
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────
+document.getElementById('assessmentDate').value = new Date().toISOString().split('T')[0];
+
+// ── Auth Check & Logout ──────────────────────────────────────────────────
+function doLogout() {
+  sessionStorage.removeItem('va_token');
+  window.location.href = '/vendor-assessment/login.html';
+}
+(function checkAuth() {
+  var tok = sessionStorage.getItem('va_token');
+  if (!tok) { window.location.href = '/vendor-assessment/login.html'; return; }
+  fetch('/api/vendor-auth', {
+    method: 'GET',
+    headers: { 'Authorization': 'Bearer ' + tok }
+  }).then(function(r) {
+    if (!r.ok) {
+      sessionStorage.removeItem('va_token');
+      window.location.href = '/vendor-assessment/login.html';
+    }
+  }).catch(function() {});
+})();
+</script>
+</body>
+</html>
