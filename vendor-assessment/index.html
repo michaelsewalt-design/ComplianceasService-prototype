@@ -471,6 +471,8 @@
   .priority-optional { background:var(--accent-light); color:var(--accent); }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
 </head>
 <body>
 
@@ -1425,6 +1427,7 @@ const state = {
   currentStep: 0,
   toggleValues: {},
   uploadedFiles: { contract: [], support: [] },
+  extractedContractText: '',
   riskQuestions: {},
   questionsGenerated: false,
   customDomains: [],
@@ -1629,14 +1632,8 @@ var allDomainKeys = ['ict', 'legal', 'data', 'concentration', 'bc', 'fin'];
   var prompt = 'You are a senior regulatory compliance expert specialising in DORA (EU 2022/2554), EBA Guidelines on Outsourcing (EBA/GL/2019/02), and Dutch financial regulation.\\n\\nBased on the following vendor assessment context, generate exactly 10 specific, relevant risk assessment questions for EACH of the risk domains listed below. Questions must be answerable with Yes, No, or Unknown. Questions must be in English, specific to this vendor/service context, and reference relevant regulatory requirements where applicable.\\n\\nVENDOR ASSESSMENT CONTEXT:\\n' + JSON.stringify(contextData, null, 2) + '\\n\\nReturn a JSON object with these keys, each containing an array of exactly 10 question strings:\\n{\\n  "ict": ["Question 1 about ICT/operational risk..."],\\n  "legal": ["Question 1 about legal/regulatory risk..."],\\n  "data": ["Question 1 about data/information security..."],\\n  "concentration": ["Question 1 about concentration risk..."],\\n  "bc": ["Question 1 about business continuity..."],\\n  "fin": ["Question 1 about financial stability..."]' + customDomainList + '\\n}\\n\\nDo not include any text outside the JSON object.';
 
   let messageContent = [{ type: 'text', text: prompt }];
-  if (state.uploadedFiles.contract.length > 0) {
-    try {
-      const file = state.uploadedFiles.contract[0];
-      const base64 = await formatFileAsBase64(file);
-      if (file.name.endsWith('.pdf')) {
-        messageContent.unshift({ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64 } });
-      }
-    } catch(e) { /* skip */ }
+  if (state.extractedContractText) {
+    messageContent[0].text = 'CONTRACT TEXT:\n' + state.extractedContractText.substring(0, 60000) + '\n\n' + messageContent[0].text;
   }
 
   try {
@@ -1682,8 +1679,31 @@ getAllDomains().forEach(function(d) {
 function handleDragOver(e) { e.preventDefault(); e.currentTarget.classList.add('dragover'); }
 function handleDrop(e, type) { e.preventDefault(); e.currentTarget.classList.remove('dragover'); addFiles(Array.from(e.dataTransfer.files), type); }
 function handleFileSelect(e, type) { addFiles(Array.from(e.target.files), type); }
-function addFiles(files, type) { state.uploadedFiles[type].push(...files); renderFileList(type); }
-function removeFile(type, idx) { state.uploadedFiles[type].splice(idx, 1); renderFileList(type); }
+function addFiles(files, type) {
+  for (var i = 0; i < files.length; i++) {
+    state.uploadedFiles[type].push(files[i]);
+  }
+  renderFileList(type);
+  // Auto-extract text from contract PDFs
+  if (type === 'contract') {
+    state.extractedContractText = '';
+    var contractFile = state.uploadedFiles.contract[0];
+    if (contractFile && contractFile.name.toLowerCase().endsWith('.pdf')) {
+      extractPdfText(contractFile).then(function(text) {
+        state.extractedContractText = text;
+        console.log('PDF text extracted: ' + text.length + ' characters');
+      }).catch(function(e) {
+        console.warn('PDF text extraction failed:', e);
+        state.extractedContractText = '';
+      });
+    }
+  }
+}
+function removeFile(type, idx) {
+  state.uploadedFiles[type].splice(idx, 1);
+  renderFileList(type);
+  if (type === 'contract') { state.extractedContractText = ''; }
+}
 function renderFileList(type) {
   const list = document.getElementById(type === 'contract' ? 'contractFileList' : 'supportFileList');
   list.innerHTML = state.uploadedFiles[type].map((f, i) =>
@@ -1696,6 +1716,32 @@ function formatFileAsBase64(file) {
     reader.onload = e => res(e.target.result.split(',')[1]);
     reader.onerror = rej;
     reader.readAsDataURL(file);
+  });
+}
+
+function extractPdfText(file) {
+  return new Promise(function(resolve, reject) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var typedArray = new Uint8Array(e.target.result);
+      pdfjsLib.getDocument({ data: typedArray }).promise.then(function(pdf) {
+        var pages = [];
+        var total = pdf.numPages;
+        function getPage(num) {
+          pdf.getPage(num).then(function(page) {
+            page.getTextContent().then(function(content) {
+              var text = content.items.map(function(item) { return item.str; }).join(' ');
+              pages.push(text);
+              if (num < total) { getPage(num + 1); }
+              else { resolve(pages.join('\n\n')); }
+            });
+          });
+        }
+        if (total > 0) { getPage(1); } else { resolve(''); }
+      }).catch(reject);
+    };
+    reader.onerror = reject;
+    reader.readAsArrayBuffer(file);
   });
 }
 
@@ -1738,15 +1784,8 @@ async function callClaudeAPI(data) {
 
   const prompt = buildPrompt(data);
   let messageContent = [{ type: 'text', text: prompt }];
-  if (state.uploadedFiles.contract.length > 0) {
-    const contractFile = state.uploadedFiles.contract[0];
-    try {
-      const base64 = await formatFileAsBase64(contractFile);
-      const mediaType = contractFile.name.endsWith('.pdf') ? 'application/pdf' : 'text/plain';
-      if (contractFile.name.endsWith('.pdf')) {
-        messageContent.unshift({ type: 'document', source: { type: 'base64', media_type: mediaType, data: base64 } });
-      }
-    } catch(e) { /* Skip */ }
+  if (state.extractedContractText) {
+    messageContent[0].text = 'CONTRACT TEXT:\n' + state.extractedContractText.substring(0, 60000) + '\n\n' + messageContent[0].text;
   }
   const response = await fetch('/api/vendor-claude', {
     method: 'POST',
