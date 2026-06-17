@@ -32,6 +32,18 @@
     {
       "src": "api/incident-review.js",
       "use": "@vercel/node"
+    },
+    {
+      "src": "vendor-assessment/**",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "api/vendor-auth.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "api/vendor-claude.js",
+      "use": "@vercel/node"
     }
   ],
   "routes": [
@@ -114,6 +126,30 @@
     {
       "src": "/incident-request/(.*)",
       "dest": "/incident-request/$1"
+    },
+    {
+      "src": "/api/vendor-auth",
+      "dest": "/api/vendor-auth.js"
+    },
+    {
+      "src": "/api/vendor-claude",
+      "dest": "/api/vendor-claude.js"
+    },
+    {
+      "src": "/vendor-assessment/login(\\.html)?$",
+      "dest": "/vendor-assessment/login.html"
+    },
+    {
+      "src": "/vendor-assessment/?$",
+      "dest": "/vendor-assessment/login.html"
+    },
+    {
+      "src": "/vendor-assessment/index\\.html$",
+      "dest": "/vendor-assessment/index.html"
+    },
+    {
+      "src": "/vendor-assessment/(.*)",
+      "dest": "/vendor-assessment/$1"
     },
     {
       "src": "/(.*)",
