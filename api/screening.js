@@ -50,11 +50,19 @@ async function checkIndividual(apiKey, name) {
 
 /* ── Helper: summarize Dilisense hits ── */
 function summarizeHits(data, limit) {
-  if (!data || !data.matches) return [];
-  return data.matches.slice(0, limit).map(m => ({
-    name: m.name,
-    type: m.type,
-    source: m.source
+  if (!data || !Array.isArray(data.found_records)) return [];
+  return data.found_records.slice(0, limit).map(m => ({
+    name:        m.name,
+    sourceType:  m.source_type,                    // SANCTION | PEP | CRIMINAL | OTHER
+    sourceId:    m.source_id,                      // e.g. "EU_SANCTIONS"
+    pepType:     m.pep_type || null,
+    pepLevel:    m.pep_level || null,
+    details:     Array.isArray(m.sanction_details)
+                   ? m.sanction_details.slice(0, 3)
+                   : null,
+    jurisdiction: Array.isArray(m.jurisdiction)
+                   ? m.jurisdiction
+                   : (Array.isArray(m.source_country) ? m.source_country : null)
   }));
 }
 
@@ -141,8 +149,11 @@ module.exports = async (req, res) => {
 
       dilisenseContext += 'Entity screening results:\n';
       dilisenseContext += entityScreening
-        ? JSON.stringify({ hits: summarizeHits(entityScreening, 5) }, null, 2)
-        : 'No results or API call failed.';
+  ? JSON.stringify({
+      totalHits: entityScreening.total_hits || 0,
+      hits: summarizeHits(entityScreening, 5)
+    }, null, 2)
+  : 'No results or API call failed.';
 
       if (uboScreening.length > 0) {
         dilisenseContext += '\n\nUBO screening results:\n';
