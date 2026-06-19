@@ -142,8 +142,7 @@ const systemPrompt = [
     }
 
     const userPrompt = 'Screen the following corporate profile for adverse media and open-source sanctions concerns. Return concise professional findings.\n\n'
-      + JSON.stringify(payload, null, 2)
-      + dilisenseContext;
+      + JSON.stringify(payload, null, 2);
 
     /* ════════════════════════════════════════
        STEP 3: Call Claude API
@@ -158,7 +157,7 @@ const systemPrompt = [
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
-        max_tokens: 1200,
+        max_tokens: 2500,
         system: systemPrompt,
         messages: [{ role: 'user', content: userPrompt }]
       })
@@ -170,11 +169,19 @@ const systemPrompt = [
       return res.status(response.status).json({ error: 'Claude API error', details: errText });
     }
 
-    const data = await response.json();
+  const data = await response.json();
 
-    const textContent = Array.isArray(data.content)
-      ? data.content.map(function(part) { return part.text || ''; }).join('\n')
-      : '';
+if (data.stop_reason === 'max_tokens') {
+  console.error('Claude response was truncated because max_tokens was reached.');
+  return res.status(502).json({
+    error: 'AI response was truncated',
+    message: 'The screening output was too large. Reduce database detail or increase max_tokens.'
+  });
+}
+
+const textContent = Array.isArray(data.content)
+  ? data.content.map(function(part) { return part.text || ''; }).join('\n')
+  : '';
 
     var cleaned = textContent.trim();
     if (cleaned.startsWith('```')) {
@@ -194,13 +201,24 @@ try {
     throw new Error("No JSON found in AI response");
   }
 
+  if (!jsonString.trim().endsWith('}')) {
+    console.error("TRUNCATED JSON RESPONSE:", jsonString);
+    throw new Error("Incomplete JSON detected. AI response appears truncated.");
+  }
+
   parsed = JSON.parse(jsonString);
 
 } catch (e) {
   console.error("RAW AI RESPONSE:", cleaned);
   throw new Error("Invalid JSON from AI: " + e.message);
 }
-    return res.status(200).json(parsed);
+
+   parsed.rawDatabaseScreening = {
+  entity: entityScreening || null,
+  ubo: uboScreening || []
+};
+
+return res.status(200).json(parsed);
 
   } catch (error) {
     console.error('Screening API error:', error);
