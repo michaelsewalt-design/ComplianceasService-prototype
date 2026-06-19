@@ -181,7 +181,25 @@ module.exports = async (req, res) => {
       cleaned = cleaned.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
     }
 
-    const parsed = JSON.parse(cleaned);
+    function extractJson(text) {
+  const match = text.match(/\{[\s\S]*\}/);
+  return match ? match[0] : null;
+}
+
+let parsed;
+try {
+  const jsonString = extractJson(cleaned);
+
+  if (!jsonString) {
+    throw new Error("No JSON found in AI response");
+  }
+
+  parsed = JSON.parse(jsonString);
+
+} catch (e) {
+  console.error("RAW AI RESPONSE:", cleaned);
+  throw new Error("Invalid JSON from AI: " + e.message);
+}
     return res.status(200).json(parsed);
 
   } catch (error) {
