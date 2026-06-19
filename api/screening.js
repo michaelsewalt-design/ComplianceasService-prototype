@@ -95,27 +95,27 @@ module.exports = async (req, res) => {
        STEP 2: Build Claude prompt
        ════════════════════════════════════════ */
 
-    const systemPrompt = [
-      'You are an AML/KYC screening assistant.',
-      'Return valid JSON only (no markdown fences, no commentary) with the following keys:',
-      '  basicCompanyInfo  - object with: companyName, registrationNumber, country, website, industry, uboInfo (array of {name, ownership, country}), overview (string)',
-      '  databaseScreening - object with:',
-      '    entityHits (array of {name, sourceType, details, source} or empty array if no hits),',
-      '    summary (string: concise summary of entity screening findings, or "No hits found in sanctions, PEP, or criminal databases." if empty)',
-      '  uboScreening - array of objects, one per UBO:',
-      '    {uboName, hits (array of {name, sourceType, pepType, pepLevel, details, source} or empty array), summary (string per UBO)}',
-      '    If no UBOs were provided, return empty array.',
-      '    If a UBO has no hits, set hits to [] and summary to "No hits found in sanctions, PEP, or criminal databases for [name]."',
-      '  adverseMediaFound - array of strings',
-      '  companyAnalysis   - string',
-      '  amlRisks          - array of strings',
-      '  riskAnalysis      - string with a motivated explanation for the risk rating, covering key risk factors (including database screening results), mitigating factors, and an overall assessment (3-5 sentences)',
-      '  shortSummary      - string',
-      '  riskRating        - "HIGH", "MEDIUM", or "LOW"',
-      'Base your analysis on the company data, the database screening results, and publicly known information.',
-      'Database hits (sanctions, PEP, criminal) should significantly influence the risk rating.',
-      'Be concise and professional.'
-    ].join('\n');
+const systemPrompt = [
+  'You are an AML/KYC screening assistant.',
+  'Return valid JSON only (no markdown fences, no commentary) with the following keys:',
+  '  basicCompanyInfo  - object with: companyName, registrationNumber, country, website, industry, uboInfo (array of {name, ownership, country}), overview (string)',
+  '  databaseScreening - object with:',
+  '    entityHits (array of {name, sourceType, details, source} or empty array if no hits),',
+  '    summary (string: concise summary of entity screening findings, or "No hits found in sanctions, PEP, or criminal databases." if empty)',
+  '  uboScreening - array of objects, one per UBO:',
+  '    {uboName, hits (array of {name, sourceType, pepType, pepLevel, details, source} or empty array), summary (string per UBO)}',
+  '    If no UBOs were provided, return empty array.',
+  '    If a UBO has no hits, set hits to [] and summary to "No hits found in sanctions, PEP, or criminal databases for [name]."',
+  '  adverseMediaFound - array of strings',
+  '  companyAnalysis   - string',
+  '  amlRisks          - array of strings',
+  '  riskAnalysis      - string with a motivated explanation for the risk rating, covering key risk factors (including database screening results), mitigating factors, and an overall assessment (3-5 sentences)',
+  '  shortSummary      - string',
+  '  riskRating        - "HIGH", "MEDIUM", or "LOW"',
+  'Base your analysis on the company data, the database screening results, and publicly known information.',
+  'Database hits (sanctions, PEP, criminal) should significantly influence the risk rating.',
+  'Be concise and professional.'
+].join('\n');
 
     let dilisenseContext = '';
     if (dilisenseKey) {
@@ -158,7 +158,7 @@ module.exports = async (req, res) => {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
-        max_tokens: 2500,
+        max_tokens: 1200,
         system: systemPrompt,
         messages: [{ role: 'user', content: userPrompt }]
       })
