@@ -38,7 +38,7 @@ function callClaude(messages, systemPrompt, maxTokens) {
             messages: messages,
             system: systemPrompt,
             max_tokens: maxTokens || 1024,
-            model: "claude-sonnet-4-20250514"
+            model: "claude-sonnet-4-6"
         })
     }).then(function(resp) {
         if (resp.status === 401) {
