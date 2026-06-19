@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 
+/* ── Token verification ── */
 function verifyToken(token, secret) {
   try {
     const [data, signature] = token.split('.');
@@ -9,7 +10,9 @@ function verifyToken(token, secret) {
     const payload = JSON.parse(Buffer.from(data, 'base64url').toString());
     if (payload.exp < Date.now()) return false;
     return payload.authenticated === true;
-  } catch { return false; }
+  } catch {
+    return false;
+  }
 }
 
 /* ── Dilisense helpers ── */
@@ -18,9 +21,15 @@ async function checkEntity(apiKey, companyName) {
     const url = 'https://api.dilisense.com/v1/checkEntity?names='
       + encodeURIComponent(companyName) + '&fuzzy_search=1';
     const res = await fetch(url, { headers: { 'x-api-key': apiKey } });
-    if (!res.ok) { console.error('Dilisense checkEntity error:', res.status); return null; }
+    if (!res.ok) {
+      console.error('Dilisense checkEntity error:', res.status);
+      return null;
+    }
     return await res.json();
-  } catch (e) { console.error('Dilisense checkEntity failed:', e); return null; }
+  } catch (e) {
+    console.error('Dilisense checkEntity failed:', e);
+    return null;
+  }
 }
 
 async function checkIndividual(apiKey, name) {
@@ -28,9 +37,31 @@ async function checkIndividual(apiKey, name) {
     const url = 'https://api.dilisense.com/v1/checkIndividual?names='
       + encodeURIComponent(name) + '&fuzzy_search=1';
     const res = await fetch(url, { headers: { 'x-api-key': apiKey } });
-    if (!res.ok) { console.error('Dilisense checkIndividual error:', res.status); return null; }
+    if (!res.ok) {
+      console.error('Dilisense checkIndividual error:', res.status);
+      return null;
+    }
     return await res.json();
-  } catch (e) { console.error('Dilisense checkIndividual failed:', e); return null; }
+  } catch (e) {
+    console.error('Dilisense checkIndividual failed:', e);
+    return null;
+  }
+}
+
+/* ── Helper: summarize Dilisense hits ── */
+function summarizeHits(data, limit) {
+  if (!data || !data.matches) return [];
+  return data.matches.slice(0, limit).map(m => ({
+    name: m.name,
+    type: m.type,
+    source: m.source
+  }));
+}
+
+/* ── Helper: extract first JSON object from text ── */
+function extractJson(text) {
+  const match = text.match(/\{[\s\S]*\}/);
+  return match ? match[0] : null;
 }
 
 module.exports = async (req, res) => {
@@ -62,78 +93,56 @@ module.exports = async (req, res) => {
     const payload = req.body;
     const dilisenseKey = process.env.DILISENSE_API_KEY;
 
-    /* ════════════════════════════════════════
-       STEP 1: Dilisense Database Screening
-       ════════════════════════════════════════ */
+    const systemPrompt = [
+      'You are an AML/KYC screening assistant.',
+      'Return valid JSON only (no markdown fences, no commentary) with the following keys:',
+      '  basicCompanyInfo  - object with: companyName, registrationNumber, country, website, industry, uboInfo (array of {name, ownership, country}), overview (string)',
+      '  databaseScreening - object with:',
+      '    entityHits (array of {name, sourceType, details, source} or empty array if no hits),',
+      '    summary (string: concise summary of entity screening findings, or "No hits found in sanctions, PEP, or criminal databases." if empty)',
+      '  uboScreening - array of objects, one per UBO:',
+      '    {uboName, hits (array of {name, sourceType, pepType, pepLevel, details, source} or empty array), summary (string per UBO)}',
+      '    If no UBOs were provided, return empty array.',
+      '    If a UBO has no hits, set hits to [] and summary to "No hits found in sanctions, PEP, or criminal databases for [name]."',
+      '  adverseMediaFound - array of strings',
+      '  companyAnalysis   - string',
+      '  amlRisks          - array of strings',
+      '  riskAnalysis      - string with a motivated explanation for the risk rating, covering key risk factors (including database screening results), mitigating factors, and an overall assessment (3-5 sentences)',
+      '  shortSummary      - string',
+      '  riskRating        - "HIGH", "MEDIUM", or "LOW"',
+      'Base your analysis on the company data, the database screening results, and publicly known information.',
+      'Database hits (sanctions, PEP, criminal) should significantly influence the risk rating.',
+      'Be concise and professional.'
+    ].join('\n');
 
+    /* ════════════════════════════════════════
+       STEP 1: Run Dilisense database screening
+       ════════════════════════════════════════ */
+    let dilisenseContext = '';
     let entityScreening = null;
     let uboScreening = [];
 
     if (dilisenseKey) {
-      /* 1a. Check entity (company) */
-      if (payload.companyName) {
+      dilisenseContext = '\n\n--- BEGIN DATABASE SCREENING ---\n';
+
+      // Entity screening
+      if (payload && payload.companyName) {
         entityScreening = await checkEntity(dilisenseKey, payload.companyName);
       }
 
-      /* 1b. Check each UBO (sequential) */
-      if (Array.isArray(payload.uboInfo)) {
-        for (const ubo of payload.uboInfo) {
-          if (ubo.name && ubo.name.trim()) {
-            const result = await checkIndividual(dilisenseKey, ubo.name.trim());
-            uboScreening.push({
-              uboName: ubo.name.trim(),
-              ownership: ubo.ownership || '',
-              country: ubo.country || '',
-              results: result
-            });
-          }
-        }
+      // UBO screening
+      const ubos = (payload && Array.isArray(payload.ubos)) ? payload.ubos : [];
+      for (const ubo of ubos) {
+        const uboName = ubo && ubo.name ? ubo.name : null;
+        if (!uboName) continue;
+        const results = await checkIndividual(dilisenseKey, uboName);
+        uboScreening.push({ uboName, results });
       }
-    }
 
-    /* ════════════════════════════════════════
-       STEP 2: Build Claude prompt
-       ════════════════════════════════════════ */
-
-const systemPrompt = [
-  'You are an AML/KYC screening assistant.',
-  'Return valid JSON only (no markdown fences, no commentary) with the following keys:',
-  '  basicCompanyInfo  - object with: companyName, registrationNumber, country, website, industry, uboInfo (array of {name, ownership, country}), overview (string)',
-  '  databaseScreening - object with:',
-  '    entityHits (array of {name, sourceType, details, source} or empty array if no hits),',
-  '    summary (string: concise summary of entity screening findings, or "No hits found in sanctions, PEP, or criminal databases." if empty)',
-  '  uboScreening - array of objects, one per UBO:',
-  '    {uboName, hits (array of {name, sourceType, pepType, pepLevel, details, source} or empty array), summary (string per UBO)}',
-  '    If no UBOs were provided, return empty array.',
-  '    If a UBO has no hits, set hits to [] and summary to "No hits found in sanctions, PEP, or criminal databases for [name]."',
-  '  adverseMediaFound - array of strings',
-  '  companyAnalysis   - string',
-  '  amlRisks          - array of strings',
-  '  riskAnalysis      - string with a motivated explanation for the risk rating, covering key risk factors (including database screening results), mitigating factors, and an overall assessment (3-5 sentences)',
-  '  shortSummary      - string',
-  '  riskRating        - "HIGH", "MEDIUM", or "LOW"',
-  'Base your analysis on the company data, the database screening results, and publicly known information.',
-  'Database hits (sanctions, PEP, criminal) should significantly influence the risk rating.',
-  'Be concise and professional.'
-].join('\n');
-
-    let dilisenseContext = '';
-    if (dilisenseKey) {
-      dilisenseContext = '\n\n--- DATABASE SCREENING RESULTS ---\n';
-      dilisenseContext += '\nEntity screening for "' + (payload.companyName || '') + '":\n';
-function summarizeHits(data, limit) {
-  if (!data || !data.matches) return [];
-
-  return data.matches.slice(0, limit).map(m => ({
-    name: m.name,
-    type: m.type,
-    source: m.source
-  }));
-}
-
-dilisenseContext += entityScreening
-  ? JSON.stringify({ hits: summarizeHits(entityScreening, 5) }, null, 2)
-  : 'No results or API call failed.';
+      dilisenseContext += 'Entity screening results:\n';
+      dilisenseContext += entityScreening
+        ? JSON.stringify({ hits: summarizeHits(entityScreening, 5) }, null, 2)
+        : 'No results or API call failed.';
 
       if (uboScreening.length > 0) {
         dilisenseContext += '\n\nUBO screening results:\n';
@@ -151,101 +160,104 @@ dilisenseContext += entityScreening
       dilisenseContext = '\n\nNo database screening was performed (Dilisense API key not configured). Analyze based on publicly known information only.';
     }
 
+    /* ════════════════════════════════════════
+       STEP 2: Build user prompt
+       ════════════════════════════════════════ */
     let userPrompt = 'Screen the following corporate profile for adverse media and open-source sanctions concerns. Return concise professional findings.\n\n'
-  + JSON.stringify(payload, null, 2);
+      + JSON.stringify(payload, null, 2);
 
     /* ════════════════════════════════════════
        STEP 3: Call Claude API
        ════════════════════════════════════════ */
+    const MAX_INPUT_SIZE = 60000;
+    let finalUserPrompt = userPrompt + dilisenseContext;
 
-
-const MAX_INPUT_SIZE = 60000;
-
-let finalUserPrompt = userPrompt + dilisenseContext;
-
-if ((systemPrompt + finalUserPrompt).length > MAX_INPUT_SIZE) {
-  console.warn("Prompt too large, trimming Dilisense context");
-  dilisenseContext = dilisenseContext.substring(0, 20000);
-  finalUserPrompt = userPrompt + dilisenseContext;
-}
+    if ((systemPrompt + finalUserPrompt).length > MAX_INPUT_SIZE) {
+      console.warn('Prompt too large, trimming Dilisense context');
+      dilisenseContext = dilisenseContext.substring(0, 20000);
+      finalUserPrompt = userPrompt + dilisenseContext;
+    }
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'content-type': 'application/json',
         'x-api-key': apiKey,
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 4000,
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 8000,
+        temperature: 0,
         system: systemPrompt,
-        messages: [{ role: 'user', content: finalUserPrompt }]
+        messages: [
+          { role: 'user', content: finalUserPrompt }
+        ]
       })
     });
 
     if (!response.ok) {
       const errText = await response.text();
-      console.error('Claude API error:', errText);
-      return res.status(response.status).json({ error: 'Claude API error', details: errText });
+      console.error('Claude API error:', response.status, errText);
+      return res.status(502).json({
+        error: 'Claude API request failed',
+        status: response.status,
+        message: errText
+      });
     }
 
-  const data = await response.json();
+    const data = await response.json();
 
-if (data.stop_reason === 'max_tokens') {
-  console.error('Claude response was truncated because max_tokens was reached.');
-  return res.status(502).json({
-    error: 'AI response was truncated',
-    message: 'The screening output was too large. Reduce database detail or increase max_tokens.'
-  });
-}
+    if (data.stop_reason === 'max_tokens') {
+      console.error('Claude response was truncated because max_tokens was reached.');
+      return res.status(502).json({
+        error: 'AI response was truncated',
+        message: 'The screening output was too large. Reduce database detail or increase max_tokens.'
+      });
+    }
 
-const textContent = Array.isArray(data.content)
-  ? data.content.map(function(part) { return part.text || ''; }).join('\n')
-  : '';
+    const textContent = Array.isArray(data.content)
+      ? data.content.map(function (part) { return part.text || ''; }).join('\n')
+      : '';
 
-    var cleaned = textContent.trim();
+    /* ── Strip markdown code fences if present ── */
+    let cleaned = textContent.trim();
     if (cleaned.startsWith('```')) {
       cleaned = cleaned.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
     }
 
-    function extractJson(text) {
-  const match = text.match(/\{[\s\S]*\}/);
-  return match ? match[0] : null;
-}
+    /* ── Parse JSON safely ── */
+    let parsed;
+    try {
+      const jsonString = extractJson(cleaned);
 
-let parsed;
-try {
-  const jsonString = extractJson(cleaned);
+      if (!jsonString) {
+        throw new Error('No JSON found in AI response');
+      }
 
-  if (!jsonString) {
-    throw new Error("No JSON found in AI response");
-  }
+      if (!jsonString.trim().endsWith('}')) {
+        console.error('TRUNCATED JSON RESPONSE:', jsonString);
+        throw new Error('Incomplete JSON detected. AI response appears truncated.');
+      }
 
-  if (!jsonString.trim().endsWith('}')) {
-    console.error("TRUNCATED JSON RESPONSE:", jsonString);
-    throw new Error("Incomplete JSON detected. AI response appears truncated.");
-  }
+      parsed = JSON.parse(jsonString);
+    } catch (e) {
+      console.error('RAW AI RESPONSE:', cleaned);
+      throw new Error('Invalid JSON from AI: ' + e.message);
+    }
 
-  parsed = JSON.parse(jsonString);
+    parsed.rawDatabaseScreening = {
+      entity: entityScreening || null,
+      ubo: uboScreening || []
+    };
 
-} catch (e) {
-  console.error("RAW AI RESPONSE:", cleaned);
-  throw new Error("Invalid JSON from AI: " + e.message);
-}
+    return res.status(200).json(parsed);
 
-   parsed.rawDatabaseScreening = {
-  entity: entityScreening || null,
-  ubo: uboScreening || []
-};
-
-return res.status(200).json(parsed);
-
-} catch (error) {
+  } catch (error) {
     console.error('Screening API error:', error.message);
     return res.status(500).json({
       error: 'Internal server error',
       message: error.message
     });
   }
-};user
+};
