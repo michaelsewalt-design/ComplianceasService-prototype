@@ -151,8 +151,8 @@ dilisenseContext += entityScreening
       dilisenseContext = '\n\nNo database screening was performed (Dilisense API key not configured). Analyze based on publicly known information only.';
     }
 
-    const userPrompt = 'Screen the following corporate profile for adverse media and open-source sanctions concerns. Return concise professional findings.\n\n'
-      + JSON.stringify(payload, null, 2);
+    let userPrompt = 'Screen the following corporate profile for adverse media and open-source sanctions concerns. Return concise professional findings.\n\n'
+  + JSON.stringify(payload, null, 2);
 
     /* ════════════════════════════════════════
        STEP 3: Call Claude API
@@ -161,11 +161,12 @@ dilisenseContext += entityScreening
 
 const MAX_INPUT_SIZE = 60000;
 
-let fullPrompt = systemPrompt + userPrompt + dilisenseContext;
+let finalUserPrompt = userPrompt + dilisenseContext;
 
-if (fullPrompt.length > MAX_INPUT_SIZE) {
+if ((systemPrompt + finalUserPrompt).length > MAX_INPUT_SIZE) {
   console.warn("Prompt too large, trimming Dilisense context");
   dilisenseContext = dilisenseContext.substring(0, 20000);
+  finalUserPrompt = userPrompt + dilisenseContext;
 }
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -179,7 +180,7 @@ if (fullPrompt.length > MAX_INPUT_SIZE) {
         model: 'claude-sonnet-4-6',
         max_tokens: 4000,
         system: systemPrompt,
-        messages: [{ role: 'user', content: userPrompt }]
+        messages: [{ role: 'user', content: finalUserPrompt }]
       })
     });
 
@@ -241,8 +242,10 @@ try {
 return res.status(200).json(parsed);
 
 } catch (error) {
-  console.error('Screening API error:', error.message);
-}
-    return res.status(500).json({ error: 'Internal server error', message: error.message });
+    console.error('Screening API error:', error.message);
+    return res.status(500).json({
+      error: 'Internal server error',
+      message: error.message
+    });
   }
-};
+};user
