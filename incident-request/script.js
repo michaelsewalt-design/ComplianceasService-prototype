@@ -262,7 +262,7 @@ function buildEmailBody(formData, aiAnalysis) {
   }
   if (aiAnalysis) {
     lines.push(`\n\n══════════════════════════════`);
-    lines.push(`AI COMPLIANCE REVIEW (claude-sonnet-4-20250514)`);
+    lines.push(`AI COMPLIANCE REVIEW (claude-sonnet-4-6)`);
     lines.push(`══════════════════════════════`);
     lines.push(aiAnalysis);
   }
