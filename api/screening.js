@@ -121,16 +121,26 @@ const systemPrompt = [
     if (dilisenseKey) {
       dilisenseContext = '\n\n--- DATABASE SCREENING RESULTS ---\n';
       dilisenseContext += '\nEntity screening for "' + (payload.companyName || '') + '":\n';
-      dilisenseContext += entityScreening
-        ? JSON.stringify(entityScreening, null, 2)
-        : 'No results or API call failed.';
+function summarizeHits(data, limit) {
+  if (!data || !data.matches) return [];
+
+  return data.matches.slice(0, limit).map(m => ({
+    name: m.name,
+    type: m.type,
+    source: m.source
+  }));
+}
+
+dilisenseContext += entityScreening
+  ? JSON.stringify({ hits: summarizeHits(entityScreening, 5) }, null, 2)
+  : 'No results or API call failed.';
 
       if (uboScreening.length > 0) {
         dilisenseContext += '\n\nUBO screening results:\n';
         for (const ubo of uboScreening) {
           dilisenseContext += '\n' + ubo.uboName + ':\n';
           dilisenseContext += ubo.results
-            ? JSON.stringify(ubo.results, null, 2)
+            ? JSON.stringify({ hits: summarizeHits(ubo.results, 3) }, null, 2)
             : 'No results or API call failed.';
         }
       } else {
@@ -148,6 +158,16 @@ const systemPrompt = [
        STEP 3: Call Claude API
        ════════════════════════════════════════ */
 
+
+const MAX_INPUT_SIZE = 60000;
+
+let fullPrompt = systemPrompt + userPrompt + dilisenseContext;
+
+if (fullPrompt.length > MAX_INPUT_SIZE) {
+  console.warn("Prompt too large, trimming Dilisense context");
+  dilisenseContext = dilisenseContext.substring(0, 20000);
+}
+
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -157,7 +177,7 @@ const systemPrompt = [
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
-        max_tokens: 2500,
+        max_tokens: 4000,
         system: systemPrompt,
         messages: [{ role: 'user', content: userPrompt }]
       })
@@ -220,8 +240,9 @@ try {
 
 return res.status(200).json(parsed);
 
-  } catch (error) {
-    console.error('Screening API error:', error);
+} catch (error) {
+  console.error('Screening API error:', error.message);
+}
     return res.status(500).json({ error: 'Internal server error', message: error.message });
   }
 };
