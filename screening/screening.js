@@ -186,6 +186,64 @@ function renderReport(report) {
     + makeBulletList(report.adverseMediaFound, 'No adverse media findings were returned.')
     + '</section>';
 
+/* ── 4a. Latest News ── */
+  html += '<section class="section"><h2>Latest News</h2>';
+
+  var ln = report.latestNews || {};
+
+  // Entity news
+  if (Array.isArray(ln.entity) && ln.entity.length > 0) {
+    html += '<h3>Entity</h3><ul class="list">';
+    ln.entity.forEach(function(n) {
+      html += '<li>'
+        + '<a href="' + escapeHtml(n.link) + '" target="_blank">' + escapeHtml(n.title) + '</a>'
+        + (n.source || n.date ? ' (' + escapeHtml((n.source||'') + (n.date ? ' - ' + n.date : '')) + ')' : '')
+        + (n.relevance ? '<br><em>' + escapeHtml(n.relevance) + '</em>' : '')
+        + '</li>';
+    });
+    html += '</ul>';
+  }
+
+  // UBO news
+  if (Array.isArray(ln.ubos) && ln.ubos.length > 0) {
+    html += '<h3>UBOs</h3>';
+    ln.ubos.forEach(function(u) {
+      html += '<div class="ubo-news-block">';
+      html += '<strong>' + escapeHtml(u.uboName || 'Unknown') + '</strong>';
+      if (Array.isArray(u.items) && u.items.length > 0) {
+        html += '<ul class="list">';
+        u.items.forEach(function(n) {
+          html += '<li>'
+            + '<a href="' + escapeHtml(n.link) + '" target="_blank">' + escapeHtml(n.title) + '</a>'
+            + (n.source || n.date ? ' (' + escapeHtml((n.source||'') + (n.date ? ' - ' + n.date : '')) + ')' : '')
+            + (n.relevance ? '<br><em>' + escapeHtml(n.relevance) + '</em>' : '')
+            + '</li>';
+        });
+        html += '</ul>';
+      } else {
+        html += '<p>No relevant news found.</p>';
+      }
+      html += '</div>';
+    });
+  }
+
+  // Fallback (raw RSS)
+  if ((!ln.entity || ln.entity.length === 0) && report.rawNewsScreening) {
+    if (Array.isArray(report.rawNewsScreening.entity) && report.rawNewsScreening.entity.length > 0) {
+      html += '<h3>Entity (Raw)</h3><ul class="list">';
+      report.rawNewsScreening.entity.forEach(function(n) {
+        html += '<li>'
+          + '<a href="' + escapeHtml(n.link) + '" target="_blank">' + escapeHtml(n.title) + '</a>'
+          + '</li>';
+      });
+      html += '</ul>';
+    }
+  }
+
+  html += '</section>';
+
+
+
   /* ── 5. Analyses of the Company ── */
   html += '<section class="section"><h2>Analyses of the Company</h2>'
     + '<p>' + escapeHtml(report.companyAnalysis || 'No company analysis available.') + '</p></section>';
