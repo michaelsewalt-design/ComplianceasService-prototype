@@ -93,16 +93,16 @@ if (title && link) {
     'warning','compliance','violation','breach','risk'
   ];
 
-  const isAdverse = negativeKeywords.some(k => text.includes(k));
+  const isAdverse = negativeKeywords.some(function(k){ return text.indexOf(k) !== -1; });
 
-  if (!isAdverse) return; // ✅ filter non-relevant news
-
-  items.push({
-    title: title.substring(0, 200),
-    link,
-    source: (source || '').substring(0, 100),
-    date
-  });
+  if (isAdverse) {
+    items.push({
+      title: title.substring(0, 200),
+      link: link,
+      source: (source || '').substring(0, 100),
+      date: date
+    });
+  }
 }
 
 return dedupeNews(items);
