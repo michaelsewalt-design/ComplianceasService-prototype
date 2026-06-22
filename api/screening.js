@@ -48,6 +48,77 @@ async function checkIndividual(apiKey, name) {
   }
 }
 
+/* ── News helper (zelfde logica als news.js) ── */
+
+function dedupeNews(items) {
+  const seen = new Set();
+  return items.filter(i => {
+    const key = i.title.toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+
+async function fetchNews(query, maxItems) {
+  maxItems = maxItems || 5;
+  try {
+    const rssUrl = 'https://news.google.com/rss/search?q='
+      + encodeURIComponent(query) + '&hl=en&gl=US&ceid=US:en';
+    const response = await fetch(rssUrl, { headers: { 'User-Agent': 'CompliancePortal/1.0' } });
+    if (!response.ok) return [];
+    const xml = await response.text();
+    const items = [];
+    const itemRegex = /<item[^>]*>([\s\S]*?)<\/item>/gi;
+    let match;
+    while ((match = itemRegex.exec(xml)) !== null && items.length < maxItems) {
+      const block = match[1];
+      const titleMatch  = block.match(/<title[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/title>/);
+      const linkMatch   = block.match(/<link[^>]*>([\s\S]*?)<\/link>/);
+      const sourceMatch = block.match(/<source[^>]*>([\s\S]*?)<\/source>/);
+      const dateMatch   = block.match(/<pubDate[^>]*>([\s\S]*?)<\/pubDate>/);
+      const title  = titleMatch  ? titleMatch[1].trim()  : '';
+      const link   = linkMatch   ? linkMatch[1].trim()   : '';
+      const source = sourceMatch ? sourceMatch[1].trim() : '';
+      const date   = dateMatch   ? dateMatch[1].trim()   : '';
+if (title && link) {
+
+  const text = (title + ' ' + (source || '')).toLowerCase();
+
+  const negativeKeywords = [
+    'sanction','fraud','money laundering','aml','terror','crime','criminal',
+    'investigation','regulator','fine','penalty','lawsuit','litigation',
+    'corruption','bribery','embezzle','scandal','arrest','charged',
+    'warning','compliance','violation','breach','risk'
+  ];
+
+  const isAdverse = negativeKeywords.some(k => text.includes(k));
+
+  if (!isAdverse) return; // ✅ filter non-relevant news
+
+  items.push({
+    title: title.substring(0, 200),
+    link,
+    source: (source || '').substring(0, 100),
+    date
+  });
+}
+
+return dedupeNews(items);
+
+    }
+    return items;
+  } catch (e) {
+    console.error('fetchNews failed for', query, e);
+    return [];
+  }
+}
+
+
+
+
+
 /* ── Helper: summarize Dilisense hits ── */
 function summarizeHits(data, limit) {
   if (!data || !Array.isArray(data.found_records)) return [];
@@ -113,6 +184,7 @@ module.exports = async (req, res) => {
       '    If no UBOs were provided, return empty array.',
       '    If a UBO has no hits, set hits to [] and summary to "No hits found in sanctions, PEP, or criminal databases for [name]."',
       '  adverseMediaFound - array of strings',
+      '  latestNews        - object with: entity (array), ubos (array)',
       '  companyAnalysis   - string',
       '  amlRisks          - array of strings',
       '  riskAnalysis      - string with a motivated explanation for the risk rating, covering key risk factors (including database screening results), mitigating factors, and an overall assessment (3-5 sentences)',
@@ -120,7 +192,16 @@ module.exports = async (req, res) => {
       '  riskRating        - "HIGH", "MEDIUM", or "LOW"',
       'Base your analysis on the company data, the database screening results, and publicly known information.',
       'Database hits (sanctions, PEP, criminal) should significantly influence the risk rating.',
-      'Be concise and professional.'
+'Be concise and professional.',
+      'Include a section "latestNews" in the JSON output with:',
+      '  latestNews - object with:',
+      '    entity (array of {title, source, date, link, relevance}),',
+      '    ubos (array of {uboName, items: array of {title, source, date, link, relevance}})',
+      'Rules for latestNews:',
+      '  Only include news relevant to AML, sanctions, fraud, litigation or reputational risk.',
+      '  Remove generic or irrelevant articles.',
+      '  Keep entries concise.',
+      '  If no relevant news is relevant, return empty arrays.'
     ].join('\n');
 
     /* ════════════════════════════════════════
@@ -171,6 +252,47 @@ module.exports = async (req, res) => {
       dilisenseContext = '\n\nNo database screening was performed (Dilisense API key not configured). Analyze based on publicly known information only.';
     }
 
+
+  /* ════════════════════════════════════════
+       STEP 1a: Run News screening
+       ════════════════════════════════════════ */
+
+
+/* ── News screening (entiteit + UBOs) ── */
+const newsResults = { entity: [], ubos: [] };
+if (payload.companyName) {
+  newsResults.entity = await fetchNews(payload.companyName, 3);
+}
+if (Array.isArray(payload.ubos)) {
+  for (const ubo of payload.ubos) {
+    const uboName = ubo.name || ubo;
+    if (!uboName) continue;
+    const items = await fetchNews(uboName, 2);
+    newsResults.ubos.push({ uboName, items });
+  }
+}
+
+let newsContext = '\n\n--- LATEST NEWS (Google News RSS) ---\n';
+newsContext += 'Entity (' + (payload.companyName || 'unknown') + '):\n'
+  + (newsResults.entity.length ? JSON.stringify(newsResults.entity, null, 2) : 'No recent news found.');
+if (newsResults.ubos.length) {
+  newsContext += '\n\nUBO news:\n';
+  for (const u of newsResults.ubos) {
+    newsContext += '\n' + u.uboName + ':\n'
+      + (u.items.length ? JSON.stringify(u.items, null, 2) : 'No recent news found.');
+  }
+}
+newsContext += '\n--- END LATEST NEWS ---';
+
+/* ── Trim news context om token overflow te voorkomen ── */
+const MAX_NEWS_CONTEXT = 15000;
+if (newsContext.length > MAX_NEWS_CONTEXT) {
+  console.warn('News context too large, trimming...');
+  newsContext = newsContext.substring(0, MAX_NEWS_CONTEXT);
+}
+
+
+
     /* ════════════════════════════════════════
        STEP 2: Build user prompt
        ════════════════════════════════════════ */
@@ -181,13 +303,14 @@ module.exports = async (req, res) => {
        STEP 3: Call Claude API
        ════════════════════════════════════════ */
     const MAX_INPUT_SIZE = 60000;
-    let finalUserPrompt = userPrompt + dilisenseContext;
+    let finalUserPrompt = userPrompt + dilisenseContext + newsContext;
 
-    if ((systemPrompt + finalUserPrompt).length > MAX_INPUT_SIZE) {
-      console.warn('Prompt too large, trimming Dilisense context');
-      dilisenseContext = dilisenseContext.substring(0, 20000);
-      finalUserPrompt = userPrompt + dilisenseContext;
-    }
+  if ((systemPrompt + finalUserPrompt).length > MAX_INPUT_SIZE) {
+  console.warn('Prompt too large, trimming contexts');
+  dilisenseContext = dilisenseContext.substring(0, 15000);
+  newsContext = newsContext.substring(0, 10000);
+  finalUserPrompt = userPrompt + dilisenseContext + newsContext;
+}
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -262,6 +385,8 @@ module.exports = async (req, res) => {
       ubo: uboScreening || []
     };
 
+    parsed.rawNewsScreening = newsResults;
+    
     return res.status(200).json(parsed);
 
   } catch (error) {
