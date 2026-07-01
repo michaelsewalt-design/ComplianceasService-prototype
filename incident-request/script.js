@@ -60,6 +60,12 @@ function goBack() {
   document.querySelectorAll('.pill').forEach(p => p.classList.remove('selected'));
 }
 
+/* ── Stub: subtype hook (extend later if needed) ── */
+function updateSubtype() {
+  // Placeholder — bedoeld om conditioneel subtype-velden te tonen
+  // op basis van gekozen incident type. Momenteel geen actie nodig.
+}
+
 function selectPill(el, group) {
   document.querySelectorAll(`#${group === 'severity' ? 'severity' : 'priority'}-pills .pill`).forEach(p => p.classList.remove('selected'));
   el.classList.add('selected');
@@ -317,20 +323,29 @@ async function submitForm() {
     resultArea.innerHTML = `<div style="font-size:12px;color:var(--muted);">Error: ${escHtml(e.message)}</div>`;
   }
 
-  /* ── Log submission to compliance register (non-blocking) ── */
+ /* ── Log submission to compliance register (MUST complete before mailto) ── */
+  btn.textContent = '💾 Logging…';
+  let logOk = false;
   try {
-    await logSubmission(d, aiText);
+    const logResult = await logSubmission(d, aiText);
+    console.log('[log-incident] Success:', logResult);
+    logOk = true;
     showToast('📒 Submission logged to compliance register.', 'success');
   } catch(logErr) {
-    console.warn('Log entry failed:', logErr);
-    showToast('⚠️ Log entry failed — email will still be sent. Please notify compliance.', 'error');
+    console.error('[log-incident] Failed:', logErr);
+    showToast('⚠️ Log entry failed: ' + logErr.message + ' — email will still be sent.', 'error');
   }
+
+  // Wait briefly so toast is visible and log request truly completed
+  await new Promise(resolve => setTimeout(resolve, 800));
 
   btn.textContent = '📤 Sending…';
   const subject = `[${d.module.toUpperCase()}] ${d.ref} — ${d.name} (${d.dept || d.email})`;
   const body = buildEmailBody(d, aiText);
-  const mailto = `mailto:${'compliance@yourfirm.com'}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-  window.location.href = mailto;
+  const mailto = `mailto:compliance@yourfirm.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  
+  // Open mailto in NEW tab so current page stays alive (dashboard reachable, log confirmed)
+  window.open(mailto, '_blank');
   if ('') {
     try {
       await fetch('', {
