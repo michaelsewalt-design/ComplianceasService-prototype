@@ -75,6 +75,9 @@ function toRegisterRow(id, submission, aiAnalysis, submittedAt, hash) {
     assigned_to: '',
     resolution_notes: '',
     resolved_at: '',
+    reported_to: [],
+    reported_at: '',
+    regulator_references: '',
     audit_hash: hash,
     raw: s
   };
@@ -213,7 +216,7 @@ async function handlePut(req, res, actor) {
   }
 
   const body = req.body || {};
-  const allowed = ['status', 'assigned_to', 'resolution_notes', 'severity'];
+ const allowed = ['status', 'assigned_to', 'resolution_notes', 'severity', 'reported_to', 'regulator_references'];
   const updates = {};
   for (const key of allowed) {
     if (key in body) updates[key] = body[key];
@@ -249,6 +252,12 @@ async function handlePut(req, res, actor) {
     if (updates.status === 'Resolved' && !record.resolved_at) {
       record.resolved_at = new Date().toISOString();
       changes.push({ field: 'resolved_at', from: '', to: record.resolved_at });
+    }
+
+// Auto-fill reported_at when status → Reported
+    if (updates.status === 'Reported' && !record.reported_at) {
+      record.reported_at = new Date().toISOString();
+      changes.push({ field: 'reported_at', from: '', to: record.reported_at });
     }
 
     // Persist updated record (key lookup)
