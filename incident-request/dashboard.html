@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Compliance Incident Dashboard</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: 'Inter', Arial, sans-serif; margin: 0; padding: 0; background: #F4F6F8; color: #1F2937; }
+  header { background: #1F4E79; color: #fff; padding: 18px 32px; display:flex; align-items:center; justify-content:space-between; }
+  header .brand { display:flex; align-items:center; gap:12px; }
+  header .brand-icon { font-size: 22px; }
+  header h1 { margin: 0; font-size: 20px; }
+  header p.sub { margin: 2px 0 0; font-size: 12px; opacity: 0.85; }
+  header nav { display:flex; align-items:center; gap:12px; }
+  header nav a, header nav button { color:#fff; text-decoration:none; background:transparent; border:1px solid rgba(255,255,255,0.35); padding:6px 12px; border-radius:6px; font-size:13px; cursor:pointer; font-family:inherit; }
+  header nav a:hover, header nav button:hover { background:rgba(255,255,255,0.12); }
+  main { padding: 24px 32px 60px; max-width: 1360px; margin: 0 auto; }
+  .toolbar { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:20px; }
+  .toolbar .btn { background:#fff; border:1px solid #D1D5DB; padding:8px 14px; border-radius:6px; cursor:pointer; font-size:13px; font-weight:500; color:#1F4E79; }
+  .toolbar .btn:hover { background:#F3F4F6; }
+  .toolbar .btn.primary { background:#1F4E79; color:#fff; border-color:#1F4E79; }
+  .toolbar .chips { display:flex; gap:6px; margin-left:auto; }
+  .chip { padding:6px 12px; border-radius:999px; background:#fff; border:1px solid #D1D5DB; font-size:12px; cursor:pointer; color:#374151; }
+  .chip.active { background:#1F4E79; color:#fff; border-color:#1F4E79; }
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 20px; }
+  .kpi { background: #fff; border-radius: 8px; padding: 16px 18px; box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
+  .kpi .label { font-size: 11px; color: #6B7280; text-transform: uppercase; letter-spacing: 0.5px; }
+  .kpi .value { font-size: 24px; font-weight: 700; margin-top: 6px; color:#1F2937; }
+  .severity-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .severity { color: #fff; border-radius: 8px; padding: 12px 16px; }
+  .severity .label { font-size: 11px; letter-spacing: 0.4px; text-transform: uppercase; opacity: 0.9; }
+  .severity .value { font-size: 20px; font-weight: 700; margin-top: 4px; }
+  .module-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 24px; }
+  .modcard { background:#fff; border-radius:8px; padding:14px 18px; box-shadow:0 1px 2px rgba(0,0,0,0.06); border-left:4px solid #1F4E79; }
+  .modcard.incident { border-left-color:#C0392B; }
+  .modcard.approval { border-left-color:#27AE60; }
+  .modcard.disclosure { border-left-color:#E67E22; }
+  .modcard.query { border-left-color:#2E86C1; }
+  .modcard .label { font-size:11px; color:#6B7280; text-transform:uppercase; letter-spacing:0.5px; }
+  .modcard .value { font-size:22px; font-weight:700; margin-top:4px; }
+  section { background: #fff; border-radius: 8px; padding: 20px 24px; margin-bottom: 20px; box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
+  section h2 { font-size: 15px; margin: 0 0 12px; color: #1F4E79; text-transform:uppercase; letter-spacing:0.4px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #E5E7EB; vertical-align: top; }
+  th { background: #F9FAFB; color: #374151; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; }
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 999px; color: #fff; font-size: 11px; font-weight: 600; white-space:nowrap; }
+  .filter-row th { background: #F9FAFB; padding: 6px 8px; }
+  .filter-row input { width: 100%; padding: 4px 6px; font-size: 12px; border: 1px solid #D1D5DB; border-radius: 4px; }
+  .row-action { color:#1F4E79; text-decoration:none; font-weight:500; font-size:12px; }
+  .row-action:hover { text-decoration:underline; }
+  footer { text-align: center; padding: 24px; color: #6B7280; font-size: 12px; }
+</style>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="brand-icon">📊</div>
+    <div>
+      <h1>Compliance Incident Dashboard</h1>
+      <p class="sub" id="hdr-sub">Live audit register · Vercel-hosted</p>
+    </div>
+  </div>
+  <nav>
+    <a href="index.html">← Portal</a>
+    <button id="logoutBtn">Logout</button>
+  </nav>
+</header>
+
+<main>
+  <p style="font-size:13px;color:#6B7280;margin:0 0 14px;">Overview of all compliance submissions logged via the portal. Data refreshes on load.</p>
+
+  <div class="toolbar">
+    <button class="btn primary" id="btn-refresh">🔄 Refresh</button>
+    <button class="btn" id="btn-export">⬇ Export XLSX</button>
+    <div class="chips" id="module-chips">
+      <span class="chip active" data-filter="all">All</span>
+      <span class="chip" data-filter="incident">Incidents</span>
+      <span class="chip" data-filter="approval">Approvals</span>
+      <span class="chip" data-filter="disclosure">Disclosures</span>
+      <span class="chip" data-filter="query">Queries</span>
+    </div>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi"><div class="label">Total submissions</div><div class="value" id="kpi-total">–</div></div>
+    <div class="kpi"><div class="label">Open cases</div><div class="value" id="kpi-open">–</div></div>
+    <div class="kpi"><div class="label">Escalated</div><div class="value" id="kpi-esc">–</div></div>
+    <div class="kpi"><div class="label">Resolved (30d)</div><div class="value" id="kpi-res">–</div></div>
+    <div class="kpi"><div class="label">Avg resolution (days)</div><div class="value" id="kpi-avg">–</div></div>
+    <div class="kpi"><div class="label">Last submission</div><div class="value" id="kpi-last" style="font-size:13px;">–</div></div>
+  </div>
+
+  <div class="severity-grid">
+    <div class="severity" style="background:#C0392B;"><div class="label">Critical</div><div class="value" id="sev-crit">0</div></div>
+    <div class="severity" style="background:#E67E22;"><div class="label">High</div><div class="value" id="sev-high">0</div></div>
+    <div class="severity" style="background:#F39C12;"><div class="label">Medium</div><div class="value" id="sev-med">0</div></div>
+    <div class="severity" style="background:#2E86C1;"><div class="label">Low</div><div class="value" id="sev-low">0</div></div>
+    <div class="severity" style="background:#27AE60;"><div class="label">Resolved</div><div class="value" id="sev-resolved">0</div></div>
+  </div>
+
+  <div class="module-grid">
+    <div class="modcard incident"><div class="label">Incidents</div><div class="value" id="mod-incident">0</div></div>
+    <div class="modcard approval"><div class="label">Approvals</div><div class="value" id="mod-approval">0</div></div>
+    <div class="modcard disclosure"><div class="label">Disclosures</div><div class="value" id="mod-disclosure">0</div></div>
+    <div class="modcard query"><div class="label">Queries</div><div class="value" id="mod-query">0</div></div>
+  </div>
+
+  <section>
+    <h2>Recent submissions</h2>
+    <table id="subTable">
+      <thead>
+        <tr>
+          <th>Ref</th><th>Submitted</th><th>Module</th><th>Type</th>
+          <th>Requester</th><th>Severity / Priority</th><th>Status</th>
+          <th>Assigned to</th><th>Actions</th>
+        </tr>
+        <tr class="filter-row">
+          <th><input data-col="0" placeholder="Filter..."></th>
+          <th><input data-col="1" placeholder="Filter..."></th>
+          <th><input data-col="2" placeholder="Filter..."></th>
+          <th><input data-col="3" placeholder="Filter..."></th>
+          <th><input data-col="4" placeholder="Filter..."></th>
+          <th><input data-col="5" placeholder="Filter..."></th>
+          <th><input data-col="6" placeholder="Filter..."></th>
+          <th><input data-col="7" placeholder="Filter..."></th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="subBody"></tbody>
+    </table>
+    <p style="font-size:12px;color:#888;margin-top:10px;">Rows highlighted in yellow are submissions logged in the last 15 minutes.</p>
+  </section>
+
+  <section>
+    <h2>Audit trail (last 25 events)</h2>
+    <table>
+      <thead><tr><th>ID</th><th>Ref</th><th>Timestamp</th><th>Action</th><th>Actor</th><th>Field</th></tr></thead>
+      <tbody id="auditBody"><tr><td colspan="6" style="text-align:center;color:#888;padding:14px;">No events yet.</td></tr></tbody>
+    </table>
+  </section>
+</main>
+
+<footer>Incident Reporting Portal · Vercel-hosted · Audit trail secured</footer>
+
+<script>
+if (!sessionStorage.getItem('ir_token')) {
+  window.location.href = '/incident-request/login.html';
+}
+document.getElementById('logoutBtn').addEventListener('click', function(){
+  sessionStorage.removeItem('ir_token');
+  window.location.href = '/incident-request/login.html';
+});
+
+const DEMO_SUBMISSIONS = [
+  { ref_id:'REF-20260701-A1B2', submitted_at:new Date(Date.now()-3*60000).toISOString(), module:'incident', subject_type:'AML / STR', requester_name:'Jane de Vries', severity:'High', priority:'', status:'New', assigned_to:'' },
+  { ref_id:'REF-20260630-Z9K3', submitted_at:'2026-06-30T14:22:00Z', module:'approval', subject_type:'New Product Launch', requester_name:'M. van Dijk', severity:'', priority:'Elevated', status:'In Review', assigned_to:'L. Bakker' },
+  { ref_id:'REF-20260628-Q4M1', submitted_at:'2026-06-28T09:00:00Z', module:'disclosure', subject_type:'Conflict of Interest', requester_name:'S. Ibrahim', severity:'', priority:'', status:'Resolved', assigned_to:'K. Boxum', resolved_at:'2026-06-29T16:00:00Z' },
+  { ref_id:'REF-20260627-XY99', submitted_at:'2026-06-27T11:30:00Z', module:'query', subject_type:'DORA / Operational Resilience', requester_name:'P. Berger', severity:'', priority:'', status:'Escalated', assigned_to:'Compliance Board' },
+];
+const DEMO_AUDIT = [
+  { id:1, submission_ref:'REF-20260701-A1B2', timestamp:new Date(Date.now()-3*60000).toISOString(), action:'created', actor:'j.devries@yourfirm.com', field:'-' },
+  { id:2, submission_ref:'REF-20260630-Z9K3', timestamp:'2026-06-30T15:00:00Z', action:'status_change', actor:'l.bakker@yourfirm.com', field:'status' },
+  { id:3, submission_ref:'REF-20260628-Q4M1', timestamp:'2026-06-29T16:00:00Z', action:'resolved', actor:'k.boxum@yourfirm.com', field:'status' },
+];
+
+let SUBMISSIONS = [];
+let AUDIT = [];
+let currentFilter = 'all';
+
+function escapeHtml(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+function fmtDT(iso){ if(!iso) return '—'; try { const d=new Date(iso); return d.toLocaleString('nl-NL',{year:'numeric',month:'short',day:'2-digit',hour:'2-digit',minute:'2-digit'}); } catch { return iso; } }
+function daysBetween(a,b){ return (new Date(b) - new Date(a)) / (1000*60*60*24); }
+function severityBadge(sev){
+  const map = { 'Critical':'#C0392B','High':'#E67E22','Medium':'#F39C12','Low':'#2E86C1' };
+  const color = map[sev] || '#6B7280';
+  return sev ? `<span class="badge" style="background:${color}">${escapeHtml(sev)}</span>` : '';
+}
+function priorityBadge(p){
+  const map = { 'Urgent':'#C0392B','Elevated':'#F39C12','Routine':'#2E86C1' };
+  const color = map[p] || '#6B7280';
+  return p ? `<span class="badge" style="background:${color}">${escapeHtml(p)}</span>` : '';
+}
+function statusBadge(st){
+  const map = { 'New':'#2E86C1','In Review':'#E67E22','Escalated':'#8E44AD','Resolved':'#27AE60','Closed':'#6B7280' };
+  const color = map[st] || '#6B7280';
+  return st ? `<span class="badge" style="background:${color}">${escapeHtml(st)}</span>` : '';
+}
+
+async function loadData(){
+  try {
+    const token = sessionStorage.getItem('ir_token');
+    const resp = await fetch('/api/get-incidents', { headers:{ 'Authorization':'Bearer '+token }});
+    if (!resp.ok) throw new Error('HTTP '+resp.status);
+    const data = await resp.json();
+    SUBMISSIONS = data.submissions || [];
+    AUDIT = data.audit || [];
+  } catch(e) {
+    console.warn('API unavailable — using demo data:', e.message);
+    SUBMISSIONS = DEMO_SUBMISSIONS.slice();
+    AUDIT = DEMO_AUDIT.slice();
+    document.getElementById('hdr-sub').textContent = 'Demo mode · backend not connected';
+  }
+  renderAll();
+}
+
+function renderAll(){
+  const filtered = currentFilter==='all' ? SUBMISSIONS : SUBMISSIONS.filter(s => s.module===currentFilter);
+  renderKPIs();
+  renderSeverity();
+  renderModule();
+  renderTable(filtered);
+  renderAudit();
+}
+
+function renderKPIs(){
+  document.getElementById('kpi-total').textContent = SUBMISSIONS.length;
+  document.getElementById('kpi-open').textContent = SUBMISSIONS.filter(s => ['New','In Review'].includes(s.status)).length;
+  document.getElementById('kpi-esc').textContent = SUBMISSIONS.filter(s => s.status==='Escalated').length;
+  const now = Date.now();
+  const res30 = SUBMISSIONS.filter(s => s.status==='Resolved' && s.resolved_at && (now - new Date(s.resolved_at).getTime()) < 30*24*3600*1000);
+  document.getElementById('kpi-res').textContent = res30.length;
+  const resolved = SUBMISSIONS.filter(s => s.resolved_at && s.submitted_at);
+  const avg = resolved.length ? (resolved.reduce((a,s)=>a+daysBetween(s.submitted_at,s.resolved_at),0)/resolved.length) : 0;
+  document.getElementById('kpi-avg').textContent = resolved.length ? avg.toFixed(1) : '—';
+  const last = SUBMISSIONS.reduce((mx,s)=> !mx || s.submitted_at>mx ? s.submitted_at : mx, null);
+  document.getElementById('kpi-last').textContent = last ? fmtDT(last) : '—';
+}
+
+function renderSeverity(){
+  const c = { Critical:0, High:0, Medium:0, Low:0 };
+  SUBMISSIONS.forEach(s => { if (c[s.severity] !== undefined) c[s.severity]++; });
+  document.getElementById('sev-crit').textContent = c.Critical;
+  document.getElementById('sev-high').textContent = c.High;
+  document.getElementById('sev-med').textContent  = c.Medium;
+  document.getElementById('sev-low').textContent  = c.Low;
+  document.getElementById('sev-resolved').textContent = SUBMISSIONS.filter(s=>s.status==='Resolved').length;
+}
+
+function renderModule(){
+  const c = { incident:0, approval:0, disclosure:0, query:0 };
+  SUBMISSIONS.forEach(s => { if (c[s.module] !== undefined) c[s.module]++; });
+  document.getElementById('mod-incident').textContent = c.incident;
+  document.getElementById('mod-approval').textContent = c.approval;
+  document.getElementById('mod-disclosure').textContent = c.disclosure;
+  document.getElementById('mod-query').textContent = c.query;
+}
+
+function renderTable(rows){
+  const body = document.getElementById('subBody');
+  if (!rows.length){
+    body.innerHTML = `<tr><td colspan="9" style="text-align:center;color:#888;padding:18px;">No submissions match the current filter.</td></tr>`;
+    return;
+  }
+  const now = Date.now();
+  body.innerHTML = rows.slice().sort((a,b)=> (b.submitted_at||'').localeCompare(a.submitted_at||'')).map(s => {
+    const recent = s.submitted_at && (now - new Date(s.submitted_at).getTime()) < 15*60000;
+    const rowStyle = recent ? "style='background:#FFF8C5;'" : '';
+    const sevOrPri = s.severity ? severityBadge(s.severity) : priorityBadge(s.priority);
+    return `<tr ${rowStyle}>
+      <td><strong>${escapeHtml(s.ref_id)}</strong></td>
+      <td>${fmtDT(s.submitted_at)}</td>
+      <td style="text-transform:capitalize;">${escapeHtml(s.module)}</td>
+      <td>${escapeHtml(s.subject_type)}</td>
+      <td>${escapeHtml(s.requester_name)}</td>
+      <td>${sevOrPri}</td>
+      <td>${statusBadge(s.status)}</td>
+      <td>${escapeHtml(s.assigned_to || '—')}</td>
+      <td><a href="#" class="row-action" onclick="alert('Detail view: ${escapeHtml(s.ref_id)}');return false;">View</a></td>
+    </tr>`;
+  }).join('');
+  attachFilterRow();
+}
+
+function renderAudit(){
+  const body = document.getElementById('auditBody');
+  if (!AUDIT.length){
+    body.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#888;padding:14px;">No events yet.</td></tr>`;
+    return;
+  }
+  body.innerHTML = AUDIT.slice(-25).reverse().map(a => `<tr>
+    <td>${a.id}</td><td>${escapeHtml(a.submission_ref)}</td><td>${fmtDT(a.timestamp)}</td>
+    <td>${escapeHtml(a.action)}</td><td>${escapeHtml(a.actor)}</td><td>${escapeHtml(a.field)}</td>
+  </tr>`).join('');
+}
+
+function attachFilterRow(){
+  const inputs = document.querySelectorAll('#subTable .filter-row input');
+  const body = document.getElementById('subBody');
+  inputs.forEach(i => {
+    i.oninput = () => {
+      const filters = Array.from(inputs).map(x => x.value.toLowerCase());
+      Array.from(body.rows).forEach(row => {
+        let visible = true;
+        for (let i=0; i<filters.length; i++){
+          if (!filters[i]) continue;
+          const cell = row.cells[i];
+          if (!cell || !cell.innerText.toLowerCase().includes(filters[i])) { visible = false; break; }
+        }
+        row.style.display = visible ? '' : 'none';
+      });
+    };
+  });
+}
+
+document.querySelectorAll('#module-chips .chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('#module-chips .chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    currentFilter = chip.dataset.filter;
+    renderAll();
+  });
+});
+
+document.getElementById('btn-refresh').addEventListener('click', loadData);
+document.getElementById('btn-export').addEventListener('click', () => {
+  if (!window.XLSX) { alert('XLSX library not loaded'); return; }
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.json_to_sheet(SUBMISSIONS);
+  XLSX.utils.book_append_sheet(wb, ws, 'submissions');
+  const ws2 = XLSX.utils.json_to_sheet(AUDIT);
+  XLSX.utils.book_append_sheet(wb, ws2, 'audit_trail');
+  const today = new Date().toISOString().slice(0,10).replace(/-/g,'');
+  XLSX.writeFile(wb, `incident_log_export_${today}.xlsx`);
+});
+
+loadData();
+</script>
+</body>
+</html>
