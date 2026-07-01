@@ -267,7 +267,8 @@ function renderTable(rows){
       <td>${sevOrPri}</td>
       <td>${statusBadge(s.status)}</td>
       <td>${escapeHtml(s.assigned_to || '—')}</td>
-      <td><a href="#" class="row-action" onclick="alert('Detail view: ${escapeHtml(s.ref_id)}');return false;">View</a></td>
+<td><a href="incident-detail.html?ref=${encodeURIComponent(s.ref_id)}" class="row-action">View →</a></td>
+
     </tr>`;
   }).join('');
   attachFilterRow();
