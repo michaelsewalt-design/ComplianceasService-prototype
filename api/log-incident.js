@@ -12,7 +12,8 @@
  *   KV_REST_API_TOKEN         — auto-injected by Vercel KV integration
  */
 const crypto = require('crypto');
-const { kv } = require('@vercel/kv');
+const { Redis } = require('@upstash/redis');
+const kv = Redis.fromEnv();
 
 /* ── Token verification (same signature as incident-review.js) ── */
 function verifyToken(token, secret) {
