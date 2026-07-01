@@ -133,6 +133,32 @@ async function handlePost(req, res, actor) {
 async function handleGet(req, res) {
   res.setHeader('Cache-Control', 'no-store');
 
+module.exports = async (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+
+  // ── TEMPORARY DEBUG (remove after fix) ──
+  const url = new URL(req.url, 'http://' + (req.headers.host || 'localhost'));
+  if (url.searchParams.get('debug') === '1') {
+    return res.status(200).json({
+      debug: true,
+      env_check: {
+        INCIDENT_AUTH_SECRET: !!process.env.INCIDENT_AUTH_SECRET,
+        INCIDENT_AUTH_SECRET_length: (process.env.INCIDENT_AUTH_SECRET || '').length,
+        KV_REST_API_URL: !!process.env.KV_REST_API_URL,
+        KV_REST_API_TOKEN: !!process.env.KV_REST_API_TOKEN,
+        NODE_ENV: process.env.NODE_ENV,
+      },
+      request_check: {
+        has_auth_header: !!req.headers.authorization,
+        auth_header_format_ok: req.headers.authorization && req.headers.authorization.startsWith('Bearer '),
+        token_length: req.headers.authorization ? req.headers.authorization.slice(7).length : 0,
+      }
+    });
+  }
+  // ── END DEBUG ──
+
+  // ... rest van je bestaande code (auth check, etc.)
+
   const host = req.headers.host || 'localhost';
   const url = new URL(req.url, 'http://' + host);
   const ref = url.searchParams.get('ref');
