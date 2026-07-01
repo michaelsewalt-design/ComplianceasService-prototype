@@ -8,7 +8,7 @@
 /* ══════════════════════════════════════════
    CONFIGURATION — update before deployment
 ══════════════════════════════════════════ */
-const LOG_ENDPOINT = '/api/log-incident';
+const LOG_ENDPOINT = '/api/incidents';
 
 /* ── state ── */
 let currentModule = null;
