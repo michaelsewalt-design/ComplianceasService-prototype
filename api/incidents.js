@@ -1,10 +1,4 @@
-"""
-Regenerate api/incidents.js — clean, complete, tested syntax.
-Run: python generate_incidents.py
-Output: incidents.js in current directory. Move to api/ folder.
-"""
-
-INCIDENTS_JS = r'''/**
+/**
  * /api/incidents — CONSOLIDATED endpoint
  *   POST /api/incidents         → log new submission
  *   GET  /api/incidents         → fetch submissions + audit
@@ -102,11 +96,9 @@ async function handlePost(req, res, actor) {
 
     const row = toRegisterRow(id, submission, aiAnalysis, submittedAt, hash);
 
-    // Persist: list (newest first) + keyed lookup
     await kv.lpush('submissions', JSON.stringify(row));
     await kv.set('submission:' + row.ref_id, JSON.stringify(row));
 
-    // Audit trail entry
     const auditId = await kv.incr('audit:seq');
     const auditEntry = {
       id: auditId,
@@ -150,7 +142,6 @@ async function handleGet(req, res) {
   if (limit > 1000) limit = 1000;
 
   try {
-    // Single-record fast path
     if (ref) {
       const raw = await kv.get('submission:' + ref);
       const record = safeParse(raw);
@@ -160,7 +151,6 @@ async function handleGet(req, res) {
       return res.status(200).json({ success: true, submission: record });
     }
 
-    // Bulk fetch (newest first because we use lpush)
     const subsRaw = await kv.lrange('submissions', 0, limit - 1);
     let submissions = (subsRaw || []).map(safeParse).filter(Boolean);
 
@@ -168,7 +158,6 @@ async function handleGet(req, res) {
       submissions = submissions.filter(function (s) { return s.module === moduleFilter; });
     }
 
-    // Strip heavy raw payload from list view
     const listSubmissions = submissions.map(function (s) {
       const copy = Object.assign({}, s);
       delete copy.raw;
@@ -177,7 +166,6 @@ async function handleGet(req, res) {
 
     const auditRaw = await kv.lrange('audit_trail', 0, 99);
     const audit = (auditRaw || []).map(safeParse).filter(Boolean);
-
     const total = await kv.llen('submissions');
 
     return res.status(200).json({
@@ -201,7 +189,6 @@ async function handleGet(req, res) {
 module.exports = async (req, res) => {
   res.setHeader('Content-Type', 'application/json');
 
-  // Auth check (both methods need it)
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ success: false, error: 'Unauthorized' });
@@ -219,10 +206,3 @@ module.exports = async (req, res) => {
 
   return res.status(405).json({ success: false, error: 'Method not allowed' });
 };
-'''
-
-import os
-with open('incidents.js', 'w', encoding='utf-8') as f:
-    f.write(INCIDENTS_JS)
-print('Written incidents.js — {:,} bytes'.format(os.path.getsize('incidents.js')))
-print('Move it to api/incidents.js (overwrite existing).')
