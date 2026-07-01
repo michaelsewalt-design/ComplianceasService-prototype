@@ -1,12 +1,17 @@
-/**
- * /api/incidents  — CONSOLIDATED endpoint
- *
+"""
+Regenerate api/incidents.js — clean, complete, tested syntax.
+Run: python generate_incidents.py
+Output: incidents.js in current directory. Move to api/ folder.
+"""
+
+INCIDENTS_JS = r'''/**
+ * /api/incidents — CONSOLIDATED endpoint
  *   POST /api/incidents         → log new submission
- *   GET  /api/incidents         → fetch all submissions + audit
+ *   GET  /api/incidents         → fetch submissions + audit
  *   GET  /api/incidents?ref=X   → fetch single submission
  *
- * Auth: Bearer token (same pattern as incident-review.js)
- * Storage: Upstash Redis (via KV_REST_API_URL / KV_REST_API_TOKEN)
+ * Auth: Bearer token (INCIDENT_AUTH_SECRET)
+ * Storage: Upstash Redis (KV_REST_API_URL / KV_REST_API_TOKEN)
  */
 const crypto = require('crypto');
 const { Redis } = require('@upstash/redis');
@@ -77,7 +82,9 @@ function toRegisterRow(id, submission, aiAnalysis, submittedAt, hash) {
 
 /* ── POST handler: log a new submission ── */
 async function handlePost(req, res, actor) {
-  const { submission, aiAnalysis } = req.body || {};
+  const body = req.body || {};
+  const { submission, aiAnalysis } = body;
+
   if (!submission || typeof submission !== 'object') {
     return res.status(400).json({ success: false, error: 'submission is required' });
   }
@@ -95,16 +102,18 @@ async function handlePost(req, res, actor) {
 
     const row = toRegisterRow(id, submission, aiAnalysis, submittedAt, hash);
 
+    // Persist: list (newest first) + keyed lookup
     await kv.lpush('submissions', JSON.stringify(row));
-    await kv.set(`submission:${row.ref_id}`, JSON.stringify(row));
+    await kv.set('submission:' + row.ref_id, JSON.stringify(row));
 
+    // Audit trail entry
     const auditId = await kv.incr('audit:seq');
     const auditEntry = {
       id: auditId,
       submission_ref: row.ref_id,
       timestamp: submittedAt,
       action: 'created',
-      actor,
+      actor: actor,
       field: '-',
       old_value: '',
       new_value: 'submitted',
@@ -113,7 +122,7 @@ async function handlePost(req, res, actor) {
 
     return res.status(200).json({
       success: true,
-      id,
+      id: id,
       ref_id: row.ref_id,
       submitted_at: submittedAt,
       audit_hash: hash,
@@ -123,7 +132,7 @@ async function handlePost(req, res, actor) {
     return res.status(500).json({
       success: false,
       error: 'Failed to persist submission',
-      detail: err && err.message ? err.message : String(err),
+      detail: (err && err.message) ? err.message : String(err),
     });
   }
 }
@@ -132,7 +141,8 @@ async function handlePost(req, res, actor) {
 async function handleGet(req, res) {
   res.setHeader('Cache-Control', 'no-store');
 
-  const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+  const host = req.headers.host || 'localhost';
+  const url = new URL(req.url, 'http://' + host);
   const ref = url.searchParams.get('ref');
   const moduleFilter = url.searchParams.get('module');
   let limit = parseInt(url.searchParams.get('limit') || '200', 10);
@@ -140,8 +150,9 @@ async function handleGet(req, res) {
   if (limit > 1000) limit = 1000;
 
   try {
+    // Single-record fast path
     if (ref) {
-      const raw = await kv.get(`submission:${ref}`);
+      const raw = await kv.get('submission:' + ref);
       const record = safeParse(raw);
       if (!record) {
         return res.status(404).json({ success: false, error: 'Not found' });
@@ -149,25 +160,31 @@ async function handleGet(req, res) {
       return res.status(200).json({ success: true, submission: record });
     }
 
+    // Bulk fetch (newest first because we use lpush)
     const subsRaw = await kv.lrange('submissions', 0, limit - 1);
     let submissions = (subsRaw || []).map(safeParse).filter(Boolean);
+
     if (moduleFilter) {
-      submissions = submissions.filter(s => s.module === moduleFilter);
+      submissions = submissions.filter(function (s) { return s.module === moduleFilter; });
     }
-    const listSubmissions = submissions.map(s => {
-      const { raw, ...rest } = s;
-      return rest;
+
+    // Strip heavy raw payload from list view
+    const listSubmissions = submissions.map(function (s) {
+      const copy = Object.assign({}, s);
+      delete copy.raw;
+      return copy;
     });
 
     const auditRaw = await kv.lrange('audit_trail', 0, 99);
     const audit = (auditRaw || []).map(safeParse).filter(Boolean);
+
     const total = await kv.llen('submissions');
 
     return res.status(200).json({
       success: true,
       submissions: listSubmissions,
-      audit,
-      total,
+      audit: audit,
+      total: total,
       returned: listSubmissions.length,
     });
   } catch (err) {
@@ -175,7 +192,7 @@ async function handleGet(req, res) {
     return res.status(500).json({
       success: false,
       error: 'Failed to fetch submissions',
-      detail: err && err.message ? err.message : String(err),
+      detail: (err && err.message) ? err.message : String(err),
     });
   }
 }
@@ -202,3 +219,10 @@ module.exports = async (req, res) => {
 
   return res.status(405).json({ success: false, error: 'Method not allowed' });
 };
+'''
+
+import os
+with open('incidents.js', 'w', encoding='utf-8') as f:
+    f.write(INCIDENTS_JS)
+print('Written incidents.js — {:,} bytes'.format(os.path.getsize('incidents.js')))
+print('Move it to api/incidents.js (overwrite existing).')
