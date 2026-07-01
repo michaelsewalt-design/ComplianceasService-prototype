@@ -66,7 +66,62 @@
 
   .empty-state { text-align:center; padding:60px 20px; color:#6B7280; }
   .loading { text-align:center; padding:40px; color:#6B7280; }
+
+/* Regulator reporting section */
+.reg-report-block {
+  background:#F0F9FF;
+  border-left:4px solid #0284C7;
+  border-radius:6px;
+  padding:14px 18px;
+  margin-top:14px;
+  grid-column: 1 / -1;
+}
+.reg-report-block h3 {
+  font-size:12px;
+  color:#0369A1;
+  text-transform:uppercase;
+  letter-spacing:0.4px;
+  margin:0 0 10px;
+}
+.reg-checks {
+  display:flex;
+  gap:16px;
+  flex-wrap:wrap;
+  margin-bottom:10px;
+}
+.reg-check {
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-size:13px;
+  cursor:pointer;
+  padding:6px 12px;
+  border:1px solid #E5E7EB;
+  border-radius:6px;
+  background:#fff;
+}
+.reg-check input { margin:0; }
+.reg-check.checked { border-color:#0284C7; background:#E0F2FE; }
+.btn.report {
+  background:#0284C7;
+  color:#fff;
+}
+.btn.report:hover { background:#0369A1; }
+.reported-badge {
+  display:inline-block;
+  padding:2px 8px;
+  background:#0284C7;
+  color:#fff;
+  border-radius:999px;
+  font-size:10px;
+  font-weight:600;
+  margin-left:6px;
+}
+
+
 </style>
+
+<script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.min.js"></script>
 </head>
 <body>
 
@@ -234,6 +289,7 @@ function render() {
     </section>` : ''}
 
     <section>
+  <section>
       <h2>Status &amp; Assignment</h2>
       <div class="update-panel">
         <div>
@@ -242,6 +298,7 @@ function render() {
             <option value="New">New</option>
             <option value="In Review">In Review</option>
             <option value="Escalated">Escalated</option>
+            <option value="Reported">Reported</option>
             <option value="Resolved">Resolved</option>
             <option value="Closed">Closed</option>
           </select>
@@ -264,12 +321,37 @@ function render() {
           <label>Resolution notes</label>
           <textarea id="upd-notes" placeholder="Reasoning, decisions, follow-up…"></textarea>
         </div>
+
+        <div class="reg-report-block">
+          <h3>📤 Regulatory Reporting</h3>
+          <div class="reg-checks" id="reg-checks">
+            <label class="reg-check"><input type="checkbox" value="AFM"> AFM</label>
+            <label class="reg-check"><input type="checkbox" value="DNB"> DNB</label>
+            <label class="reg-check"><input type="checkbox" value="FIU-NL"> FIU-NL</label>
+            <label class="reg-check"><input type="checkbox" value="Internal"> Intern / MB</label>
+          </div>
+          <div>
+            <label>Regulator reference number(s) (optional)</label>
+            <input type="text" id="upd-regref" placeholder="e.g. AFM-2026-STR-4471; DNB-2026-Wwft-882">
+          </div>
+          <div style="margin-top:10px;font-size:11px;color:#0369A1;">
+            💡 Tick the regulators you have reported (or will report) to. Use <strong>Generate Report</strong> to build a Word document with formatted sections per regulator.
+          </div>
+        </div>
+
         <div class="update-actions">
           <button class="btn primary" id="btn-save">💾 Save changes</button>
+          <button class="btn report" id="btn-report">📄 Generate Report</button>
           <button class="btn secondary" id="btn-reset">↺ Reset</button>
         </div>
       </div>
-      ${s.resolved_at ? '<p style="font-size:12px;color:#6B7280;margin-top:14px;">Resolved at: <strong>' + fmtDT(s.resolved_at) + '</strong></p>' : ''}
+      <div style="margin-top:14px;font-size:12px;color:#6B7280;">
+        ${s.resolved_at ? 'Resolved at: <strong>' + fmtDT(s.resolved_at) + '</strong> · ' : ''}
+        ${s.reported_at ? 'Reported at: <strong>' + fmtDT(s.reported_at) + '</strong>' : ''}
+        ${Array.isArray(s.reported_to) && s.reported_to.length > 0
+          ? '<div style="margin-top:6px;">Reported to: ' + s.reported_to.map(r => '<span class="reported-badge">' + escapeHtml(r) + '</span>').join(' ') + '</div>'
+          : ''}
+      </div>
     </section>
 
     <section>
@@ -307,9 +389,34 @@ function render() {
   document.getElementById('upd-notes').value = s.resolution_notes || '';
   document.getElementById('upd-severity').value = '';
 
+document.getElementById('upd-regref').value = s.regulator_references || '';
+
+  // Pre-check reported_to checkboxes
+  const reportedTo = Array.isArray(s.reported_to) ? s.reported_to : [];
+  document.querySelectorAll('#reg-checks input').forEach(cb => {
+    cb.checked = reportedTo.includes(cb.value);
+    cb.parentElement.classList.toggle('checked', cb.checked);
+    cb.addEventListener('change', function() {
+      this.parentElement.classList.toggle('checked', this.checked);
+    });
+  });
+
+  // Bind generate report button
+  document.getElementById('btn-report').addEventListener('click', generateWordReport);
+
   // Bind actions
   document.getElementById('btn-save').addEventListener('click', saveChanges);
   document.getElementById('btn-reset').addEventListener('click', function(){
+    document.getElementById('upd-status').value = s.status || 'New';
+    document.getElementById('upd-assigned').value = s.assigned_to || '';
+    document.getElementById('upd-notes').value = s.resolution_notes || '';
+    document.getElementById('upd-severity').value = '';
+    document.getElementById('upd-regref').value = s.regulator_references || '';
+    document.querySelectorAll('#reg-checks input').forEach(cb => {
+      cb.checked = reportedTo.includes(cb.value);
+      cb.parentElement.classList.toggle('checked', cb.checked);
+    });
+  });
     document.getElementById('upd-status').value = s.status || 'New';
     document.getElementById('upd-assigned').value = s.assigned_to || '';
     document.getElementById('upd-notes').value = s.resolution_notes || '';
@@ -330,10 +437,15 @@ async function saveChanges() {
   btn.disabled = true;
   btn.textContent = '⏳ Saving…';
 
+  const reportedTo = Array.from(document.querySelectorAll('#reg-checks input:checked'))
+    .map(cb => cb.value);
+
   const updates = {
     status: document.getElementById('upd-status').value,
     assigned_to: document.getElementById('upd-assigned').value.trim(),
-    resolution_notes: document.getElementById('upd-notes').value.trim()
+    resolution_notes: document.getElementById('upd-notes').value.trim(),
+    reported_to: reportedTo,
+    regulator_references: document.getElementById('upd-regref').value.trim()
   };
   const sev = document.getElementById('upd-severity').value;
   if (sev) updates.severity = sev;
@@ -369,6 +481,278 @@ async function saveChanges() {
   } finally {
     btn.disabled = false;
     btn.textContent = '💾 Save changes';
+  }
+}
+
+
+/* ── Regulator report templates ── */
+const REGULATOR_META = {
+  'AFM': {
+    fullName: 'Autoriteit Financiële Markten',
+    address: 'Vijzelgracht 50, 1017 HS Amsterdam',
+    context: 'Report submitted pursuant to applicable AFM notification obligations (e.g. MAR Art. 16, MiFID II Art. 26).',
+    fields: ['ref_id', 'submitted_at', 'subject_type', 'severity', 'description', 'actions_taken', 'financial_impact_eur', 'attachments_list']
+  },
+  'DNB': {
+    fullName: 'De Nederlandsche Bank',
+    address: 'Spaklerweg 4, 1096 BA Amsterdam',
+    context: 'Report submitted pursuant to Wwft and prudential supervisory obligations under Wft.',
+    fields: ['ref_id', 'submitted_at', 'subject_type', 'severity', 'description', 'actions_taken', 'financial_impact_eur', 'affected_parties', 'attachments_list']
+  },
+  'FIU-NL': {
+    fullName: 'Financial Intelligence Unit - Nederland',
+    address: 'Postbus 90850, 2509 LW Den Haag',
+    context: 'Unusual Transaction Report (Melding Ongebruikelijke Transactie) pursuant to Article 16 Wwft.',
+    fields: ['ref_id', 'submitted_at', 'subject_type', 'affected_parties', 'financial_impact_eur', 'description', 'actions_taken']
+  },
+  'Internal': {
+    fullName: 'Internal — Management Board / Compliance Committee',
+    address: '',
+    context: 'Internal escalation to Management Board for oversight and record purposes.',
+    fields: ['ref_id', 'submitted_at', 'module', 'subject_type', 'severity', 'status', 'description', 'actions_taken', 'ai_analysis', 'assigned_to', 'resolution_notes']
+  }
+};
+
+const FIELD_LABELS = {
+  ref_id: 'Reference',
+  submitted_at: 'Report Date',
+  reported_at: 'Reported On',
+  module: 'Module',
+  subject_type: 'Subject Type',
+  severity: 'Severity',
+  status: 'Current Status',
+  description: 'Description of Incident',
+  actions_taken: 'Actions Taken by Firm',
+  financial_impact_eur: 'Estimated Financial Impact (€)',
+  attachments_list: 'Supporting Documents',
+  affected_parties: 'Affected Parties / Systems',
+  ai_analysis: 'AI Compliance Review',
+  assigned_to: 'Assigned Compliance Officer',
+  resolution_notes: 'Resolution Notes'
+};
+
+async function generateWordReport() {
+  const s = currentSubmission;
+  const selectedRegulators = Array.from(document.querySelectorAll('#reg-checks input:checked'))
+    .map(cb => cb.value);
+
+  if (selectedRegulators.length === 0) {
+    showToast('⚠️ Select at least one regulator (AFM / DNB / FIU-NL / Internal).', 'error');
+    return;
+  }
+
+  if (typeof docx === 'undefined') {
+    showToast('⚠️ Word library not loaded. Refresh page and try again.', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('btn-report');
+  btn.disabled = true;
+  btn.textContent = '⏳ Building…';
+
+  try {
+    const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle, PageBreak } = docx;
+
+    const children = [];
+
+    // ── Cover / Introduction ──
+    children.push(new Paragraph({
+      text: 'Compliance Incident Report',
+      heading: HeadingLevel.TITLE,
+      alignment: AlignmentType.CENTER,
+    }));
+    children.push(new Paragraph({
+      text: 'Reference: ' + (s.ref_id || '—'),
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 200 }
+    }));
+    children.push(new Paragraph({
+      text: 'Generated on ' + new Date().toLocaleString('nl-NL', { dateStyle: 'long', timeStyle: 'short' }),
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 400 }
+    }));
+    children.push(new Paragraph({
+      text: 'This report was generated by the Compliance Portal. It contains regulator-specific sections for each authority to which this incident is being reported. The compliance officer is responsible for reviewing the content and submitting it via the applicable regulator portal or channel.',
+      spacing: { after: 400 }
+    }));
+
+    // Recipients summary
+    children.push(new Paragraph({
+      text: 'Report Recipients',
+      heading: HeadingLevel.HEADING_2,
+      spacing: { before: 200, after: 100 }
+    }));
+    selectedRegulators.forEach(reg => {
+      children.push(new Paragraph({
+        text: '• ' + reg + ' — ' + REGULATOR_META[reg].fullName,
+        spacing: { after: 60 }
+      }));
+    });
+
+    if (s.regulator_references) {
+      children.push(new Paragraph({
+        text: 'Regulator reference number(s): ' + s.regulator_references,
+        spacing: { before: 200, after: 200 }
+      }));
+    }
+
+    // ── Sections per regulator ──
+    selectedRegulators.forEach((reg, idx) => {
+      const meta = REGULATOR_META[reg];
+
+      children.push(new Paragraph({ children: [new PageBreak()] }));
+
+      children.push(new Paragraph({
+        text: reg + ' — ' + meta.fullName,
+        heading: HeadingLevel.HEADING_1,
+        spacing: { before: 200, after: 200 }
+      }));
+
+      if (meta.address) {
+        children.push(new Paragraph({
+          text: meta.address,
+          spacing: { after: 100 }
+        }));
+      }
+
+      children.push(new Paragraph({
+        text: meta.context,
+        spacing: { after: 300 },
+        italics: true
+      }));
+
+      // Structured table
+      const rows = [];
+      meta.fields.forEach(field => {
+        const label = FIELD_LABELS[field] || field;
+        let value = s[field];
+        if (Array.isArray(value)) value = value.join('; ');
+        if (typeof value === 'number') value = value.toLocaleString('nl-NL');
+        if (field === 'submitted_at' && value) {
+          value = new Date(value).toLocaleString('nl-NL', { dateStyle: 'long', timeStyle: 'short' });
+        }
+        if (!value) value = '—';
+
+        rows.push(new TableRow({
+          children: [
+            new TableCell({
+              width: { size: 30, type: WidthType.PERCENTAGE },
+              children: [new Paragraph({ children: [new TextRun({ text: label, bold: true })] })]
+            }),
+            new TableCell({
+              width: { size: 70, type: WidthType.PERCENTAGE },
+              children: [new Paragraph(String(value))]
+            })
+          ]
+        }));
+      });
+
+      children.push(new Table({
+        rows: rows,
+        width: { size: 100, type: WidthType.PERCENTAGE }
+      }));
+
+      children.push(new Paragraph({ text: '', spacing: { after: 300 } }));
+
+      // Signature block
+      children.push(new Paragraph({
+        text: 'Certification',
+        heading: HeadingLevel.HEADING_2,
+        spacing: { before: 300, after: 100 }
+      }));
+      children.push(new Paragraph({
+        text: 'I certify that the information contained in this report is accurate and complete to the best of my knowledge and belief.',
+        spacing: { after: 400 }
+      }));
+      children.push(new Paragraph({ text: 'Signed: _____________________________' , spacing: { after: 100 } }));
+      children.push(new Paragraph({ text: 'Name: ' + (s.assigned_to || '_____________________________'), spacing: { after: 100 } }));
+      children.push(new Paragraph({ text: 'Date: _____________________________', spacing: { after: 100 } }));
+    });
+
+    // ── Appendix: AI review + audit trail ──
+    if (s.ai_analysis) {
+      children.push(new Paragraph({ children: [new PageBreak()] }));
+      children.push(new Paragraph({
+        text: 'Appendix A — AI Compliance Review',
+        heading: HeadingLevel.HEADING_1,
+        spacing: { before: 200, after: 200 }
+      }));
+      children.push(new Paragraph({
+        text: 'The following review was generated by an AI model (Claude, Anthropic) at intake. It is provided for context and does not constitute legal or regulatory advice.',
+        italics: true,
+        spacing: { after: 300 }
+      }));
+      s.ai_analysis.split('\n').forEach(line => {
+        children.push(new Paragraph({ text: line, spacing: { after: 60 } }));
+      });
+    }
+
+    if (Array.isArray(currentAudit) && currentAudit.length > 0) {
+      children.push(new Paragraph({ children: [new PageBreak()] }));
+      children.push(new Paragraph({
+        text: 'Appendix B — Audit Trail',
+        heading: HeadingLevel.HEADING_1,
+        spacing: { before: 200, after: 200 }
+      }));
+      currentAudit.slice().reverse().forEach(a => {
+        children.push(new Paragraph({
+          text: '[' + new Date(a.timestamp).toLocaleString('nl-NL') + '] ' +
+                a.action + ' by ' + a.actor +
+                (a.field !== '-' ? ' — ' + a.field + ': "' + (a.old_value || '') + '" → "' + (a.new_value || '') + '"' : ''),
+          spacing: { after: 60 }
+        }));
+      });
+    }
+
+    // Build document
+    const doc = new Document({
+      creator: 'Compliance Portal',
+      title: 'Incident Report ' + s.ref_id,
+      description: 'Regulatory incident report',
+      styles: {
+        default: {
+          document: { run: { font: 'Calibri', size: 22 } }
+        }
+      },
+      sections: [{ children: children }]
+    });
+
+    const blob = await Packer.toBlob(doc);
+    const filename = 'IncidentReport_' + s.ref_id + '_' + selectedRegulators.join('-') + '.docx';
+
+    // Trigger download
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    // Log to audit trail (via PUT with a marker field — using a lightweight approach)
+    try {
+      const token = sessionStorage.getItem('ir_token');
+      await fetch('/api/incidents?ref=' + encodeURIComponent(s.ref_id), {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({
+          resolution_notes: (s.resolution_notes || '') +
+            (s.resolution_notes ? '\n' : '') +
+            '[' + new Date().toISOString() + '] Report generated for: ' + selectedRegulators.join(', ')
+        })
+      });
+    } catch (e) {
+      console.warn('Audit log for report generation failed:', e);
+    }
+
+    showToast('✅ Report generated and downloaded. Ready to submit via regulator portal.', 'success');
+  } catch (err) {
+    console.error('Report generation error:', err);
+    showToast('⚠️ Report generation failed: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '📄 Generate Report';
   }
 }
 
