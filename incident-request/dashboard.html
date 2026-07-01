@@ -191,7 +191,7 @@ function statusBadge(st){
 async function loadData(){
   try {
     const token = sessionStorage.getItem('ir_token');
-const resp = await fetch('/api/incidents', { headers:{ 'Authorization':'Bearer '+token }});
+const resp = await fetch('/api/incident-review?action=list', { headers:{ 'Authorization':'Bearer '+token }});
     if (!resp.ok) throw new Error('HTTP '+resp.status);
     const data = await resp.json();
     SUBMISSIONS = data.submissions || [];
