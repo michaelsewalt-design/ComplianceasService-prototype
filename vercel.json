@@ -127,6 +127,8 @@
       "src": "/incident-request/(.*)",
       "dest": "/incident-request/$1"
     },
+
+    { "src": "/api/incidents", "dest": "/api/incidents.js" }
     {
       "src": "/api/vendor-auth",
       "dest": "/api/vendor-auth.js"
