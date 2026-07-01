@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Incident Detail — Compliance Portal</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: 'Inter', Arial, sans-serif; margin: 0; padding: 0; background: #F4F6F8; color: #1F2937; }
+  header { background: #1F4E79; color: #fff; padding: 18px 32px; display:flex; align-items:center; justify-content:space-between; }
+  header .brand { display:flex; align-items:center; gap:12px; }
+  header .brand-icon { font-size: 22px; }
+  header h1 { margin: 0; font-size: 20px; }
+  header p.sub { margin: 2px 0 0; font-size: 12px; opacity: 0.85; }
+  header nav { display:flex; align-items:center; gap:12px; }
+  header nav a, header nav button { color:#fff; text-decoration:none; background:transparent; border:1px solid rgba(255,255,255,0.35); padding:6px 12px; border-radius:6px; font-size:13px; cursor:pointer; font-family:inherit; }
+  header nav a:hover, header nav button:hover { background:rgba(255,255,255,0.12); }
+
+  main { padding: 24px 32px 60px; max-width: 1100px; margin: 0 auto; }
+  section { background: #fff; border-radius: 8px; padding: 20px 24px; margin-bottom: 20px; box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
+  section h2 { font-size: 14px; margin: 0 0 14px; color: #1F4E79; text-transform:uppercase; letter-spacing:0.4px; border-bottom:1px solid #E5E7EB; padding-bottom:8px; }
+
+  .top-bar { display:flex; align-items:center; gap:14px; margin-bottom:16px; }
+  .ref { font-size:20px; font-weight:700; color:#1F4E79; }
+  .badge { display: inline-block; padding: 4px 12px; border-radius: 999px; color: #fff; font-size: 12px; font-weight: 600; }
+
+  .meta-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:14px; }
+  .meta-item { background:#F9FAFB; border-radius:6px; padding:10px 14px; }
+  .meta-item .label { font-size:10px; color:#6B7280; text-transform:uppercase; letter-spacing:0.5px; }
+  .meta-item .value { font-size:14px; color:#111827; margin-top:4px; word-break:break-word; }
+  .meta-item .value.empty { color:#9CA3AF; font-style:italic; }
+
+  .desc-block { white-space:pre-wrap; background:#F9FAFB; border-radius:6px; padding:14px; font-size:13px; line-height:1.6; color:#1F2937; margin-bottom:10px; }
+  .ai-block { background:#EEF2FF; border-left:4px solid #6366F1; border-radius:6px; padding:14px 18px; font-size:13px; line-height:1.6; color:#1F2937; white-space:pre-wrap; max-height:500px; overflow-y:auto; }
+
+  .attach-list { margin:0; padding:0; list-style:none; }
+  .attach-list li { padding:8px 12px; background:#F9FAFB; border-radius:4px; margin-bottom:6px; font-size:13px; }
+
+  /* Status update panel */
+  .update-panel { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px; align-items:end; }
+  .update-panel label { display:block; font-size:12px; color:#6B7280; text-transform:uppercase; letter-spacing:0.3px; margin-bottom:4px; }
+  .update-panel select, .update-panel input, .update-panel textarea { width:100%; padding:8px 10px; border:1px solid #D1D5DB; border-radius:6px; font-size:13px; font-family:inherit; }
+  .update-panel textarea { min-height:70px; grid-column: 1 / -1; }
+  .update-actions { display:flex; gap:10px; margin-top:14px; grid-column: 1 / -1; }
+  .btn { padding:9px 18px; border:none; border-radius:6px; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; }
+  .btn.primary { background:#1F4E79; color:#fff; }
+  .btn.primary:hover { background:#164060; }
+  .btn.secondary { background:#fff; color:#1F4E79; border:1px solid #D1D5DB; }
+  .btn.secondary:hover { background:#F3F4F6; }
+  .btn:disabled { opacity:0.5; cursor:not-allowed; }
+
+  /* Audit trail table */
+  table { width:100%; border-collapse:collapse; font-size:12px; }
+  th, td { padding:8px 10px; text-align:left; border-bottom:1px solid #E5E7EB; vertical-align:top; }
+  th { background:#F9FAFB; color:#374151; font-weight:600; font-size:10px; text-transform:uppercase; letter-spacing:0.4px; }
+  td.change { font-family:'Consolas', monospace; font-size:11px; }
+  td.old { color:#DC2626; text-decoration:line-through; }
+  td.new { color:#059669; font-weight:600; }
+
+  footer { text-align:center; padding:24px; color:#6B7280; font-size:12px; }
+
+  .toast { position:fixed; bottom:24px; right:24px; padding:14px 20px; background:#1F4E79; color:#fff; border-radius:8px; font-size:13px; box-shadow:0 4px 12px rgba(0,0,0,0.15); opacity:0; transform:translateY(20px); transition:all 0.3s; z-index:9999; max-width:400px; }
+  .toast.show { opacity:1; transform:translateY(0); }
+  .toast.error { background:#DC2626; }
+  .toast.success { background:#059669; }
+
+  .empty-state { text-align:center; padding:60px 20px; color:#6B7280; }
+  .loading { text-align:center; padding:40px; color:#6B7280; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="brand-icon">📋</div>
+    <div>
+      <h1>Incident Detail</h1>
+      <p class="sub" id="hdr-sub">Loading…</p>
+    </div>
+  </div>
+  <nav>
+    <a href="dashboard.html">← Dashboard</a>
+    <a href="index.html">Portal</a>
+    <button id="logoutBtn">Logout</button>
+  </nav>
+</header>
+
+<main id="main-content">
+  <div class="loading">Loading incident details…</div>
+</main>
+
+<footer>Compliance Portal · Confidential · Audit trail secured</footer>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ── Session check ── */
+if (!sessionStorage.getItem('ir_token')) {
+  window.location.href = 'login.html';
+}
+document.getElementById('logoutBtn').addEventListener('click', function(){
+  sessionStorage.removeItem('ir_token');
+  window.location.href = 'login.html';
+});
+
+/* ── State ── */
+let currentSubmission = null;
+let currentAudit = [];
+
+/* ── Helpers ── */
+function escapeHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function fmtDT(iso) {
+  if (!iso) return '—';
+  try {
+    return new Date(iso).toLocaleString('nl-NL', {
+      year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit'
+    });
+  } catch { return iso; }
+}
+function severityColor(sev) {
+  const map = { 'Critical':'#C0392B','High':'#E67E22','Medium':'#F39C12','Low':'#2E86C1' };
+  return map[sev] || '#6B7280';
+}
+function statusColor(st) {
+  const map = { 'New':'#2E86C1','In Review':'#E67E22','Escalated':'#8E44AD','Resolved':'#059669','Closed':'#6B7280' };
+  return map[st] || '#6B7280';
+}
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + (type || '');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(function(){ t.classList.remove('show'); }, 4500);
+}
+function getRefFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get('ref');
+}
+
+/* ── Data load ── */
+async function loadDetail() {
+  const ref = getRefFromUrl();
+  if (!ref) {
+    document.getElementById('main-content').innerHTML =
+      '<div class="empty-state">No incident reference provided. Return to <a href="dashboard.html">dashboard</a>.</div>';
+    return;
+  }
+  document.getElementById('hdr-sub').textContent = ref;
+
+  try {
+    const token = sessionStorage.getItem('ir_token');
+    const resp = await fetch('/api/incidents?ref=' + encodeURIComponent(ref), {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+
+    if (resp.status === 404) {
+      document.getElementById('main-content').innerHTML =
+        '<div class="empty-state">Incident <strong>' + escapeHtml(ref) + '</strong> not found.</div>';
+      return;
+    }
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+
+    const data = await resp.json();
+    currentSubmission = data.submission;
+    currentAudit = data.audit || [];
+    render();
+  } catch (err) {
+    console.error('Load error:', err);
+    document.getElementById('main-content').innerHTML =
+      '<div class="empty-state">Failed to load: ' + escapeHtml(err.message) + '</div>';
+  }
+}
+
+/* ── Render ── */
+function render() {
+  const s = currentSubmission;
+  if (!s) return;
+
+  const html = `
+    <div class="top-bar">
+      <span class="ref">${escapeHtml(s.ref_id)}</span>
+      <span class="badge" style="background:${statusColor(s.status)}">${escapeHtml(s.status)}</span>
+      ${s.severity ? `<span class="badge" style="background:${severityColor(s.severity)}">${escapeHtml(s.severity)}</span>` : ''}
+      ${s.priority ? `<span class="badge" style="background:#6B7280">Priority: ${escapeHtml(s.priority)}</span>` : ''}
+    </div>
+
+    <section>
+      <h2>Overview</h2>
+      <div class="meta-grid">
+        ${metaItem('Module', s.module)}
+        ${metaItem('Subject type', s.subject_type)}
+        ${metaItem('Submitted at', fmtDT(s.submitted_at))}
+        ${metaItem('Event date', s.event_date)}
+        ${metaItem('Discovered date', s.discovered_date)}
+        ${metaItem('Deadline', s.deadline)}
+        ${metaItem('Regulatory reporting', s.regulatory_reporting)}
+        ${metaItem('Financial impact', s.financial_impact_eur ? '€ ' + Number(s.financial_impact_eur).toLocaleString('nl-NL') : '')}
+        ${metaItem('Legal consulted', s.legal_consulted ? 'Yes' : 'No')}
+      </div>
+    </section>
+
+    <section>
+      <h2>Requester</h2>
+      <div class="meta-grid">
+        ${metaItem('Name', s.requester_name)}
+        ${metaItem('Email', s.requester_email)}
+        ${metaItem('Department', s.department)}
+        ${metaItem('Manager', s.manager)}
+        ${metaItem('Affected parties', s.affected_parties)}
+      </div>
+    </section>
+
+    <section>
+      <h2>Description</h2>
+      <div class="desc-block">${escapeHtml(s.description || '(no description)')}</div>
+      ${s.actions_taken ? '<h2 style="margin-top:20px;">Actions taken</h2><div class="desc-block">' + escapeHtml(s.actions_taken) + '</div>' : ''}
+    </section>
+
+    ${s.attachments_list ? `
+    <section>
+      <h2>Attachments (${s.attachments_count})</h2>
+      <ul class="attach-list">
+        ${s.attachments_list.split(';').map(f => '<li>📎 ' + escapeHtml(f.trim()) + '</li>').join('')}
+      </ul>
+    </section>` : ''}
+
+    ${s.ai_analysis ? `
+    <section>
+      <h2>AI Compliance Review</h2>
+      <div class="ai-block">${escapeHtml(s.ai_analysis)}</div>
+    </section>` : ''}
+
+    <section>
+      <h2>Status &amp; Assignment</h2>
+      <div class="update-panel">
+        <div>
+          <label>Status</label>
+          <select id="upd-status">
+            <option value="New">New</option>
+            <option value="In Review">In Review</option>
+            <option value="Escalated">Escalated</option>
+            <option value="Resolved">Resolved</option>
+            <option value="Closed">Closed</option>
+          </select>
+        </div>
+        <div>
+          <label>Severity (reclassify)</label>
+          <select id="upd-severity">
+            <option value="">— unchanged —</option>
+            <option value="Low">Low</option>
+            <option value="Medium">Medium</option>
+            <option value="High">High</option>
+            <option value="Critical">Critical</option>
+          </select>
+        </div>
+        <div>
+          <label>Assigned to</label>
+          <input type="text" id="upd-assigned" placeholder="e.g. L. Bakker">
+        </div>
+        <div>
+          <label>Resolution notes</label>
+          <textarea id="upd-notes" placeholder="Reasoning, decisions, follow-up…"></textarea>
+        </div>
+        <div class="update-actions">
+          <button class="btn primary" id="btn-save">💾 Save changes</button>
+          <button class="btn secondary" id="btn-reset">↺ Reset</button>
+        </div>
+      </div>
+      ${s.resolved_at ? '<p style="font-size:12px;color:#6B7280;margin-top:14px;">Resolved at: <strong>' + fmtDT(s.resolved_at) + '</strong></p>' : ''}
+    </section>
+
+    <section>
+      <h2>Audit trail (${currentAudit.length} events)</h2>
+      <table>
+        <thead>
+          <tr><th>Timestamp</th><th>Action</th><th>Actor</th><th>Field</th><th>Change</th></tr>
+        </thead>
+        <tbody>
+          ${currentAudit.length === 0
+            ? '<tr><td colspan="5" style="text-align:center;color:#888;padding:16px;">No audit events yet.</td></tr>'
+            : currentAudit.slice().reverse().map(a => `
+              <tr>
+                <td>${fmtDT(a.timestamp)}</td>
+                <td>${escapeHtml(a.action)}</td>
+                <td>${escapeHtml(a.actor)}</td>
+                <td>${escapeHtml(a.field)}</td>
+                <td class="change">
+                  ${a.old_value ? '<span class="old">' + escapeHtml(a.old_value.slice(0,80)) + '</span> → ' : ''}
+                  <span class="new">${escapeHtml((a.new_value || '').slice(0,80))}</span>
+                </td>
+              </tr>
+            `).join('')
+          }
+        </tbody>
+      </table>
+    </section>
+  `;
+
+  document.getElementById('main-content').innerHTML = html;
+
+  // Pre-fill form with current values
+  document.getElementById('upd-status').value = s.status || 'New';
+  document.getElementById('upd-assigned').value = s.assigned_to || '';
+  document.getElementById('upd-notes').value = s.resolution_notes || '';
+  document.getElementById('upd-severity').value = '';
+
+  // Bind actions
+  document.getElementById('btn-save').addEventListener('click', saveChanges);
+  document.getElementById('btn-reset').addEventListener('click', function(){
+    document.getElementById('upd-status').value = s.status || 'New';
+    document.getElementById('upd-assigned').value = s.assigned_to || '';
+    document.getElementById('upd-notes').value = s.resolution_notes || '';
+    document.getElementById('upd-severity').value = '';
+  });
+}
+
+function metaItem(label, value) {
+  const isEmpty = !value || value === '' || value === '—';
+  const displayVal = isEmpty ? '—' : escapeHtml(value);
+  return '<div class="meta-item"><div class="label">' + escapeHtml(label) + '</div>' +
+         '<div class="value' + (isEmpty ? ' empty' : '') + '">' + displayVal + '</div></div>';
+}
+
+/* ── Save changes ── */
+async function saveChanges() {
+  const btn = document.getElementById('btn-save');
+  btn.disabled = true;
+  btn.textContent = '⏳ Saving…';
+
+  const updates = {
+    status: document.getElementById('upd-status').value,
+    assigned_to: document.getElementById('upd-assigned').value.trim(),
+    resolution_notes: document.getElementById('upd-notes').value.trim()
+  };
+  const sev = document.getElementById('upd-severity').value;
+  if (sev) updates.severity = sev;
+
+  try {
+    const token = sessionStorage.getItem('ir_token');
+    const ref = getRefFromUrl();
+    const resp = await fetch('/api/incidents?ref=' + encodeURIComponent(ref), {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+      },
+      body: JSON.stringify(updates)
+    });
+
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(err.error || 'HTTP ' + resp.status);
+    }
+
+    const data = await resp.json();
+    if (data.changes && data.changes.length === 0) {
+      showToast('No changes to save.', 'success');
+    } else {
+      showToast('✅ Saved ' + data.changes.length + ' change(s). Audit updated.', 'success');
+    }
+    // Reload to reflect audit trail
+    setTimeout(loadDetail, 600);
+  } catch (err) {
+    console.error('Save error:', err);
+    showToast('⚠️ Save failed: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '💾 Save changes';
+  }
+}
+
+/* ── Init ── */
+loadDetail();
+</script>
+
+</body>
+</html>
