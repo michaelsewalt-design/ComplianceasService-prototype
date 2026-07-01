@@ -13,30 +13,34 @@ const kv = Redis.fromEnv();
 
 function verifyToken(token, secret) {
   try {
-    const parts = token.split('.');
-    if (parts.length !== 2) return false;
-    const data = parts[0];
-    const signature = parts[1];
+    const [data, signature] = token.split('.');
     if (!data || !signature) return false;
-    const expected = crypto.createHmac('sha256', secret).update(data).digest('hex');
-    const a = Buffer.from(signature, 'hex');
-    const b = Buffer.from(expected, 'hex');
-    if (a.length !== b.length) return false;
-    return crypto.timingSafeEqual(a, b);
-  } catch (e) {
+
+    const expectedSig = crypto
+      .createHmac('sha256', secret)
+      .update(data)
+      .digest('base64url');
+
+    if (signature !== expectedSig) return false;
+
+    const payload = JSON.parse(Buffer.from(data, 'base64url').toString());
+    if (payload.exp < Date.now()) return false;
+
+    return payload.authenticated === true;
+  } catch {
     return false;
   }
 }
 
 function extractActor(token) {
   try {
-    const decoded = JSON.parse(Buffer.from(token.split('.')[0], 'base64').toString('utf8'));
-    return decoded.email || decoded.sub || 'unknown';
-  } catch (e) {
+    const data = token.split('.')[0];
+    const payload = JSON.parse(Buffer.from(data, 'base64url').toString());
+    return payload.email || payload.sub || payload.user || 'authenticated-user';
+  } catch {
     return 'unknown';
   }
 }
-
 function safeParse(x) {
   if (x == null) return null;
   if (typeof x === 'object') return x;
