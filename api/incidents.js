@@ -196,32 +196,7 @@ async function handleGet(req, res) {
 module.exports = async function (req, res) {
   res.setHeader('Content-Type', 'application/json');
 
-  // DEBUG endpoint — no auth required, returns env-check only
-  try {
-    const host = req.headers.host || 'localhost';
-    const debugUrl = new URL(req.url, 'http://' + host);
-    if (debugUrl.searchParams.get('debug') === '1') {
-      const authSecret = process.env.INCIDENT_AUTH_SECRET || '';
-      return res.status(200).json({
-        debug: true,
-        env_check: {
-          INCIDENT_AUTH_SECRET_present: authSecret.length > 0,
-          INCIDENT_AUTH_SECRET_length: authSecret.length,
-          KV_REST_API_URL_present: !!process.env.KV_REST_API_URL,
-          KV_REST_API_TOKEN_present: !!process.env.KV_REST_API_TOKEN,
-          NODE_ENV: process.env.NODE_ENV || 'unset'
-        },
-        request_check: {
-          method: req.method,
-          has_auth_header: !!req.headers.authorization,
-          auth_starts_with_bearer: !!(req.headers.authorization && req.headers.authorization.startsWith('Bearer ')),
-          token_length: req.headers.authorization ? req.headers.authorization.slice(7).length : 0
-        }
-      });
-    }
-  } catch (e) {
-    // Fall through to normal handling
-  }
+ 
 
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
