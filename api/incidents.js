@@ -11,37 +11,42 @@ const crypto = require('crypto');
 const { Redis } = require('@upstash/redis');
 const kv = Redis.fromEnv();
 
-/* ── Auth helpers ── */
 function verifyToken(token, secret) {
   try {
-    const [data, signature] = token.split('.');
+    const parts = token.split('.');
+    if (parts.length !== 2) return false;
+    const data = parts[0];
+    const signature = parts[1];
     if (!data || !signature) return false;
     const expected = crypto.createHmac('sha256', secret).update(data).digest('hex');
     const a = Buffer.from(signature, 'hex');
     const b = Buffer.from(expected, 'hex');
     if (a.length !== b.length) return false;
     return crypto.timingSafeEqual(a, b);
-  } catch { return false; }
+  } catch (e) {
+    return false;
+  }
 }
 
 function extractActor(token) {
   try {
     const decoded = JSON.parse(Buffer.from(token.split('.')[0], 'base64').toString('utf8'));
     return decoded.email || decoded.sub || 'unknown';
-  } catch { return 'unknown'; }
+  } catch (e) {
+    return 'unknown';
+  }
 }
 
 function safeParse(x) {
   if (x == null) return null;
   if (typeof x === 'object') return x;
-  try { return JSON.parse(x); } catch { return null; }
+  try { return JSON.parse(x); } catch (e) { return null; }
 }
 
-/* ── Field mapping ── */
 function toRegisterRow(id, submission, aiAnalysis, submittedAt, hash) {
   const s = submission || {};
   return {
-    id,
+    id: id,
     ref_id: s.ref || '',
     submitted_at: submittedAt,
     module: s.module || '',
@@ -61,7 +66,7 @@ function toRegisterRow(id, submission, aiAnalysis, submittedAt, hash) {
     actions_taken: s.incActions || '',
     financial_impact_eur: Number(s.incImpact || s.discValue || 0) || 0,
     regulatory_reporting: s.incReporting || '',
-    legal_consulted: !!s.aprLegal,
+    legal_consulted: s.aprLegal === true,
     attachments_count: Array.isArray(s.files) ? s.files.length : 0,
     attachments_list: Array.isArray(s.files) ? s.files.join('; ') : '',
     ai_analysis: aiAnalysis || '',
@@ -70,14 +75,14 @@ function toRegisterRow(id, submission, aiAnalysis, submittedAt, hash) {
     resolution_notes: '',
     resolved_at: '',
     audit_hash: hash,
-    raw: s,
+    raw: s
   };
 }
 
-/* ── POST handler: log a new submission ── */
 async function handlePost(req, res, actor) {
   const body = req.body || {};
-  const { submission, aiAnalysis } = body;
+  const submission = body.submission;
+  const aiAnalysis = body.aiAnalysis;
 
   if (!submission || typeof submission !== 'object') {
     return res.status(400).json({ success: false, error: 'submission is required' });
@@ -91,7 +96,7 @@ async function handlePost(req, res, actor) {
     const submittedAt = new Date().toISOString();
     const hash = crypto
       .createHash('sha256')
-      .update(JSON.stringify({ submission, aiAnalysis, submittedAt }))
+      .update(JSON.stringify({ submission: submission, aiAnalysis: aiAnalysis, submittedAt: submittedAt }))
       .digest('hex');
 
     const row = toRegisterRow(id, submission, aiAnalysis, submittedAt, hash);
@@ -108,7 +113,7 @@ async function handlePost(req, res, actor) {
       actor: actor,
       field: '-',
       old_value: '',
-      new_value: 'submitted',
+      new_value: 'submitted'
     };
     await kv.lpush('audit_trail', JSON.stringify(auditEntry));
 
@@ -117,47 +122,20 @@ async function handlePost(req, res, actor) {
       id: id,
       ref_id: row.ref_id,
       submitted_at: submittedAt,
-      audit_hash: hash,
+      audit_hash: hash
     });
   } catch (err) {
     console.error('POST /api/incidents error:', err);
     return res.status(500).json({
       success: false,
       error: 'Failed to persist submission',
-      detail: (err && err.message) ? err.message : String(err),
+      detail: (err && err.message) ? err.message : String(err)
     });
   }
 }
 
-/* ── GET handler: fetch submissions or single record ── */
 async function handleGet(req, res) {
   res.setHeader('Cache-Control', 'no-store');
-
-module.exports = async (req, res) => {
-  res.setHeader('Content-Type', 'application/json');
-
-  // ── TEMPORARY DEBUG (remove after fix) ──
-  const url = new URL(req.url, 'http://' + (req.headers.host || 'localhost'));
-  if (url.searchParams.get('debug') === '1') {
-    return res.status(200).json({
-      debug: true,
-      env_check: {
-        INCIDENT_AUTH_SECRET: !!process.env.INCIDENT_AUTH_SECRET,
-        INCIDENT_AUTH_SECRET_length: (process.env.INCIDENT_AUTH_SECRET || '').length,
-        KV_REST_API_URL: !!process.env.KV_REST_API_URL,
-        KV_REST_API_TOKEN: !!process.env.KV_REST_API_TOKEN,
-        NODE_ENV: process.env.NODE_ENV,
-      },
-      request_check: {
-        has_auth_header: !!req.headers.authorization,
-        auth_header_format_ok: req.headers.authorization && req.headers.authorization.startsWith('Bearer '),
-        token_length: req.headers.authorization ? req.headers.authorization.slice(7).length : 0,
-      }
-    });
-  }
-  // ── END DEBUG ──
-
-  // ... rest van je bestaande code (auth check, etc.)
 
   const host = req.headers.host || 'localhost';
   const url = new URL(req.url, 'http://' + host);
@@ -199,21 +177,47 @@ module.exports = async (req, res) => {
       submissions: listSubmissions,
       audit: audit,
       total: total,
-      returned: listSubmissions.length,
+      returned: listSubmissions.length
     });
   } catch (err) {
     console.error('GET /api/incidents error:', err);
     return res.status(500).json({
       success: false,
       error: 'Failed to fetch submissions',
-      detail: (err && err.message) ? err.message : String(err),
+      detail: (err && err.message) ? err.message : String(err)
     });
   }
 }
 
-/* ── Main handler ── */
-module.exports = async (req, res) => {
+module.exports = async function (req, res) {
   res.setHeader('Content-Type', 'application/json');
+
+  // DEBUG endpoint — no auth required, returns env-check only
+  try {
+    const host = req.headers.host || 'localhost';
+    const debugUrl = new URL(req.url, 'http://' + host);
+    if (debugUrl.searchParams.get('debug') === '1') {
+      const authSecret = process.env.INCIDENT_AUTH_SECRET || '';
+      return res.status(200).json({
+        debug: true,
+        env_check: {
+          INCIDENT_AUTH_SECRET_present: authSecret.length > 0,
+          INCIDENT_AUTH_SECRET_length: authSecret.length,
+          KV_REST_API_URL_present: !!process.env.KV_REST_API_URL,
+          KV_REST_API_TOKEN_present: !!process.env.KV_REST_API_TOKEN,
+          NODE_ENV: process.env.NODE_ENV || 'unset'
+        },
+        request_check: {
+          method: req.method,
+          has_auth_header: !!req.headers.authorization,
+          auth_starts_with_bearer: !!(req.headers.authorization && req.headers.authorization.startsWith('Bearer ')),
+          token_length: req.headers.authorization ? req.headers.authorization.slice(7).length : 0
+        }
+      });
+    }
+  } catch (e) {
+    // Fall through to normal handling
+  }
 
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
